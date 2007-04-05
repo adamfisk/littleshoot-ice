@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+
+    <!--
+        The factory for creating SDP attributes for ICE candidates.
+    -->
+    <bean id="iceCandidateAttributeFactory"
+          class="org.lastbamboo.common.ice.IceCandidateAttributeFactoryImpl">
+        <constructor-arg>
+            <ref bean="stackSdpFactory"/>
+            </constructor-arg>
+        </bean>
+
+
+    <!--
+        Creates ICE candidates from SDP data.
+    -->
+    <bean id="iceCandidateFactory"
+          class="org.lastbamboo.common.ice.IceCandidateFactoryImpl"/>
+
+</beans>
