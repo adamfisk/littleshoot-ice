@@ -26,14 +26,20 @@ public abstract class AbstractIceCandidateTracker
     /**
      * <code>Collection</code> of UDP candidates to try.
      */
-    protected final Queue<IceCandidate> m_udpCandidates = 
-        new PriorityBlockingQueue<IceCandidate>(4,new IceCandidateComparator());
+    protected final Queue<UdpIceCandidate> m_udpCandidates = 
+        new PriorityBlockingQueue<UdpIceCandidate>(4, new IceCandidateComparator());
     
     /**
-     * Collection of TCP candidates from the remote host.
+     * Collection of active TCP candidates from the remote host.
      */
-    protected final Queue<IceCandidate> m_tcpPassiveRemoteCandidates = 
-        new PriorityBlockingQueue<IceCandidate>(4,new IceCandidateComparator());
+    protected final Queue<TcpActiveIceCandidate> m_tcpActiveRemoteCandidates = 
+        new PriorityBlockingQueue<TcpActiveIceCandidate>(4, new IceCandidateComparator());
+    
+    /**
+     * Collection of passive TCP candidates from the remote host.
+     */
+    protected final Queue<TcpPassiveIceCandidate> m_tcpPassiveRemoteCandidates = 
+        new PriorityBlockingQueue<TcpPassiveIceCandidate>(4, new IceCandidateComparator());
     
     
     /**
@@ -43,7 +49,7 @@ public abstract class AbstractIceCandidateTracker
         new PriorityBlockingQueue<TcpSoIceCandidate>(4,
             new IceCandidateComparator());
 
-    public final void visitCandidates(final Collection candidates)
+    public void visitCandidates(final Collection candidates)
         {
         final Closure trackerClosure = new Closure()
             {
@@ -57,19 +63,27 @@ public abstract class AbstractIceCandidateTracker
         CollectionUtils.forAllDo(candidates, trackerClosure);
         }
     
-    public void visitTcpPassiveIceCandidate(final IceCandidate candidate)
+    public void visitTcpPassiveIceCandidate(
+        final TcpPassiveIceCandidate candidate)
         {
-        LOG.trace("Visiting ICE TCP Candidate...");
+        LOG.trace("Visiting ICE passive TCP Candidate...");
         this.m_tcpPassiveRemoteCandidates.add(candidate);
         }
     
+    public void visitTcpActiveIceCandidate(
+        final TcpActiveIceCandidate candidate)
+        {
+        LOG.trace("Visiting ICE active TCP Candidate...");
+        this.m_tcpActiveRemoteCandidates.add(candidate);
+        }
+
     public void visitTcpSoIceCandidate(final TcpSoIceCandidate candidate)
         {
         LOG.trace("Visiting TCP Simultaneous Open Candidate...");
         this.m_tcpSoCandidates.add(candidate);
         }
 
-    public void visitUdpIceCandidate(final IceCandidate candidate)
+    public void visitUdpIceCandidate(final UdpIceCandidate candidate)
         {
         LOG.trace("Visiting ICE STUN Candidate: "+candidate);
         

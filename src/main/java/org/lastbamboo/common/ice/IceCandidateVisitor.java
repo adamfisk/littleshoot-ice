@@ -18,10 +18,18 @@ public interface IceCandidateVisitor
 
     /**
      * Visits an ICE candidate that uses TCP for transport.  This candidate is
-     * passive, so it wait for connection attempts from the remote host.
+     * passive, so it waits for connection attempts from the remote host.
+     * 
      * @param candidate The candidate to visit.
      */
-    void visitTcpPassiveIceCandidate(IceCandidate candidate);
+    void visitTcpPassiveIceCandidate(TcpPassiveIceCandidate candidate);
+    
+    /**
+     * Visits a TCP active candidate.
+     * 
+     * @param candidate The candidate.
+     */
+    void visitTcpActiveIceCandidate(TcpActiveIceCandidate candidate);
     
     /**
      * Visits a TCP simultaneous open candidate.
@@ -34,7 +42,7 @@ public interface IceCandidateVisitor
      * Visits a UDP ICE candidate.
      * @param candidate The candidate to visit.
      */
-    void visitUdpIceCandidate(IceCandidate candidate);
+    void visitUdpIceCandidate(UdpIceCandidate candidate);
 
     /**
      * Visits an ICE candidate with an unknown protocol.

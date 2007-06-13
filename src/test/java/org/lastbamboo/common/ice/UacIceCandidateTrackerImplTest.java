@@ -27,7 +27,7 @@ public class UacIceCandidateTrackerImplTest extends TestCase
         
         final InetAddress ia = InetAddress.getByName("www.google.com");
         final InetSocketAddress socketAddress = new InetSocketAddress(ia, 80);
-        final IceCandidate candidate = new TcpPassiveIceCandidate(1, 
+        final TcpPassiveIceCandidate candidate = new TcpPassiveIceCandidate(1, 
             UUID.randomUUID(), 1, socketAddress);
         tracker.visitTcpPassiveIceCandidate(candidate);
         
