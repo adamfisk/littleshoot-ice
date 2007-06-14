@@ -4,7 +4,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.apache.commons.id.uuid.UUID;
-import org.lastbamboo.common.protocol.ReaderWriter;
 
 /**
  * Class that abstracts out general attributes of all ICE session candidates.
