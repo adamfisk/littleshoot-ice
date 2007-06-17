@@ -8,11 +8,11 @@ import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.lastbamboo.client.util.settings.HttpSettings;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.client.StunClientFactory;
 import org.lastbamboo.common.turn.client.TurnClient;
 import org.lastbamboo.common.util.NetworkUtils;
+import org.lastbamboo.common.util.ShootConstants;
 
 
 /**
@@ -67,9 +67,9 @@ public final class BindingTrackerImpl implements BindingTracker
             // Use the default STUN server.
             final StunClient client = 
                 this.m_stunClientFactory.createUdpClient();
-            return client.getPublicAddress(HttpSettings.HTTP_PORT.getValue());
+            return client.getPublicAddress(ShootConstants.HTTP_PORT);
             }
-        return new InetSocketAddress(lh, HttpSettings.HTTP_PORT.getValue());
+        return new InetSocketAddress(lh, ShootConstants.HTTP_PORT);
         }
 
     public InetSocketAddress getStunUdpBinding()

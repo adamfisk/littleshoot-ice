@@ -10,7 +10,6 @@ import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.lastbamboo.client.util.settings.HttpSettings;
 import org.lastbamboo.common.ice.BindingTracker;
 import org.lastbamboo.common.ice.IceCandidateAttributeFactory;
 import org.lastbamboo.common.ice.IceConstants;
@@ -25,6 +24,7 @@ import org.lastbamboo.common.sdp.api.SessionName;
 import org.lastbamboo.common.sdp.api.TimeDescription;
 import org.lastbamboo.common.sdp.api.Version;
 import org.lastbamboo.common.util.NetworkUtils;
+import org.lastbamboo.common.util.ShootConstants;
 
 /**
  * Implementation of the class for generating SDP data.
@@ -149,8 +149,9 @@ public final class SdpFactoryImpl implements SdpFactory
         try
             {
             final InetAddress ia = NetworkUtils.getLocalHost();
-            final int port = HttpSettings.HTTP_PORT.getValue();
-            final InetSocketAddress localAddress = new InetSocketAddress(ia, port);
+            final int port = ShootConstants.HTTP_PORT;
+            final InetSocketAddress localAddress = 
+                new InetSocketAddress(ia, port);
             final Vector localTcpAttributes = new Vector(); 
             
             // This has a higher priority than the TURN address.
