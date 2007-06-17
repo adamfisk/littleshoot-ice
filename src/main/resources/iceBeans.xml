@@ -7,16 +7,56 @@
     -->
     <bean id="iceCandidateAttributeFactory"
           class="org.lastbamboo.common.ice.IceCandidateAttributeFactoryImpl">
-        <constructor-arg>
-            <ref bean="stackSdpFactory"/>
-            </constructor-arg>
+        <constructor-arg><ref bean="stackSdpFactory"/></constructor-arg>
         </bean>
-
 
     <!--
         Creates ICE candidates from SDP data.
     -->
     <bean id="iceCandidateFactory"
           class="org.lastbamboo.common.ice.IceCandidateFactoryImpl"/>
+          
+    <!--
+        The object that keeps track of all available bindings for accessing
+        this peer.
+    -->
+    <bean id="bindingTracker"
+          class="org.lastbamboo.common.ice.BindingTrackerImpl">
+        <constructor-arg><ref bean="turnClient"/></constructor-arg>
+        <constructor-arg><ref bean="stunClientFactory"/></constructor-arg>
+        </bean>
 
-</beans>
+    <!--
+        The object that creates the SIP stack SDP factory.  XXX: THIS CAN THROW
+        AN EXCEPTION, APPARENTLY, BUT THAT SHOULD NEVER HAPPEN.
+    -->
+    <bean id="stackSdpFactory"
+          class="org.lastbamboo.common.sdp.api.SdpFactory"
+          factory-method="getInstance"/>
+
+    <!--
+        The factory for creating SDP messages.
+    -->
+    <bean id="sdpFactory"
+          class="org.lastbamboo.common.ice.sdp.SdpFactoryImpl">
+        <constructor-arg index="0">
+            <ref local="bindingTracker"/>
+            </constructor-arg>
+        <constructor-arg index="1">
+            <ref bean="iceCandidateAttributeFactory"/>
+            </constructor-arg>
+        <constructor-arg index="2">
+            <ref local="stackSdpFactory"/>
+            </constructor-arg>
+        </bean>
+
+
+    <!--
+        The factory for creating processors for ICE offers.  The offer is
+        in the form of SDP.
+    -->
+    <bean id="offerProcessorFactory"
+          class="org.lastbamboo.common.ice.offer.IceOfferProcessorFactory">
+        <constructor-arg><ref local="sdpFactory"/></constructor-arg>
+        </bean>
+    </beans>

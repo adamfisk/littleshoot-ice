@@ -50,7 +50,7 @@ public final class IceCandidateAttributeFactoryImpl implements
     
     private Attribute createIceCandidateAttribute(final IceCandidate candidate)
         {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append(candidate.getCandidateId());
         sb.append(" ");
         sb.append(candidate.getTransportId());

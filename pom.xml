@@ -30,10 +30,40 @@
             <groupId>commons-discovery</groupId>
             <artifactId>commons-discovery</artifactId>
             </dependency>
-          
+      
+        <dependency>
+            <groupId>easymock</groupId>
+            <artifactId>easymock</artifactId>
+            </dependency>
+ 
+        <dependency>
+            <groupId>org.lastbamboo</groupId>
+            <artifactId>lastbamboo-common-offer-answer</artifactId>
+            </dependency>
+                           
         <dependency>
             <groupId>org.lastbamboo</groupId>
             <artifactId>lastbamboo-common-sdp</artifactId>
+            </dependency>
+  
+        <dependency>
+            <groupId>org.lastbamboo</groupId>
+            <artifactId>lastbamboo-common-sip-client</artifactId>
+            </dependency>
+            
+        <dependency>
+            <groupId>org.lastbamboo</groupId>
+            <artifactId>lastbamboo-common-sip-stack</artifactId>
+            </dependency>
+                      
+        <dependency>
+            <groupId>org.lastbamboo</groupId>
+            <artifactId>lastbamboo-common-stun-client</artifactId>
+            </dependency>
+            
+        <dependency>
+            <groupId>org.lastbamboo</groupId>
+            <artifactId>lastbamboo-common-turn-client</artifactId>
             </dependency>
          
         <dependency>

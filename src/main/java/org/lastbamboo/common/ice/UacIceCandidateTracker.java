@@ -81,9 +81,9 @@ public final class UacIceCandidateTracker extends AbstractIceCandidateTracker
                 }
             }
         
-        if (LOG.isTraceEnabled())
+        if (LOG.isDebugEnabled())
             {
-            LOG.trace("Visiting " + this.m_tcpPassiveRemoteCandidates.size() + 
+            LOG.debug("Visiting " + this.m_tcpPassiveRemoteCandidates.size() + 
                 " TCP candidates...");
             }
         
@@ -144,7 +144,11 @@ public final class UacIceCandidateTracker extends AbstractIceCandidateTracker
         final IceCandidate bestCandidate = this.m_resolvedCandidates.peek();
         if (bestCandidate == null)
             {
-            LOG.warn("Could not connect to any ICE candidates....");
+            LOG.warn("Could not connect to any ICE candidates from: "+
+                this.m_tcpPassiveRemoteCandidates + "\n" +
+                this.m_tcpActiveRemoteCandidates + "\n" +
+                this.m_tcpSoCandidates + "\n" +
+                this.m_udpCandidates);
             throw new IceException("Could not connect to ICE candidates");
             }
         

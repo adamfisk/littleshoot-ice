@@ -18,20 +18,6 @@ public final class UasIceCandidateTracker extends AbstractIceCandidateTracker
      */
     private static final Log LOG = 
         LogFactory.getLog(UasIceCandidateTracker.class);
-
-    private final SocketHandler m_socketHandler;
-
-    /**
-     * Creates a new tracker for TURN sockets created for a SIP User-Agent 
-     * Server.  
-     * 
-     * @param socketHandler The class for handling the socket directly, 
-     * typically passing it to an HTTP server.
-     */
-    public UasIceCandidateTracker(final SocketHandler socketHandler)
-        {
-        this.m_socketHandler = socketHandler;
-        }
     
     public void visitCandidates(final Collection candidates)
         {
