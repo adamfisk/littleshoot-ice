@@ -66,8 +66,10 @@ public class IceOfferProcessor implements OfferProcessor
         
         try
             {
+            final String sdpString = sdpData.toString();
+            LOG.debug("Returning SDP: {}", sdpString);
             final ByteBuffer answer = 
-                ByteBuffer.wrap(sdpData.toString().getBytes("US-ASCII"));
+                ByteBuffer.wrap(sdpString.getBytes("US-ASCII"));
             return answer;
             }
         catch (final UnsupportedEncodingException e)
