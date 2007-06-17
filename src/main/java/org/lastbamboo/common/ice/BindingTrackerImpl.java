@@ -114,6 +114,10 @@ public final class BindingTrackerImpl implements BindingTracker
             {
             final InetSocketAddress turnAddress = 
                 this.m_turnClient.getAllocatedAddress();
+            if (turnAddress == null)
+                {
+                LOG.warn("No TURN address for client!!");
+                }
             addAddress(addresses, turnAddress);
             }
         
