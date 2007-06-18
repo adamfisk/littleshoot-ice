@@ -1,12 +1,10 @@
 package org.lastbamboo.common.ice.offer;
 
-import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 
 import org.apache.mina.common.ByteBuffer;
-import org.lastbamboo.common.ice.sdp.SdpFactory;
+import org.lastbamboo.common.answer.AnswerGenerator;
 import org.lastbamboo.common.offer.OfferProcessor;
-import org.lastbamboo.common.sdp.api.SdpException;
-import org.lastbamboo.common.sdp.api.SessionDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,20 +16,20 @@ public class IceOfferProcessor implements OfferProcessor
     {
     
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    private final SdpFactory m_sdpFactory;
+    private final AnswerGenerator m_iceAnswerGenerator;
     private static final ByteBuffer EMPTY_RESPONSE = ByteBuffer.allocate(0);
     
     /**
      * Creates a new offer processor.
      * 
-     * @param sdpFactory The factory for generating the SDP answer.
+     * @param answerGenerator The class for generating the ICE answer.
      */
-    public IceOfferProcessor(final SdpFactory sdpFactory)
+    public IceOfferProcessor(final AnswerGenerator answerGenerator)
         {
-        this.m_sdpFactory = sdpFactory;
+        this.m_iceAnswerGenerator = answerGenerator;
         }
     
-    public ByteBuffer answer(final ByteBuffer offer)
+    public ByteBuffer answer(final ByteBuffer offer) throws IOException
         {
         if (!offer.hasRemaining())
             {
@@ -49,34 +47,10 @@ public class IceOfferProcessor implements OfferProcessor
         return createAnswer();
         }
 
-    private ByteBuffer createAnswer()
+    private ByteBuffer createAnswer() throws IOException
         {
-        // Create the SDP.
-        final SessionDescription sdpData;
-        try
-            {
-            sdpData = this.m_sdpFactory.createSdp();
-            }
-        catch (final SdpException e)
-            {
-            // This should not happen when we're generating our own SDP.
-            LOG.error("Failed to Generate an SDP description", e);
-            return EMPTY_RESPONSE;
-            }
-        
-        try
-            {
-            final String sdpString = sdpData.toString();
-            LOG.debug("Returning SDP: {}", sdpString);
-            final ByteBuffer answer = 
-                ByteBuffer.wrap(sdpString.getBytes("US-ASCII"));
-            return answer;
-            }
-        catch (final UnsupportedEncodingException e)
-            {
-            LOG.error("Unsupported encoding??", e);
-            return EMPTY_RESPONSE;
-            }
+        final byte[] answer = this.m_iceAnswerGenerator.generateAnswer();
+        return ByteBuffer.wrap(answer);
         }
 
     }

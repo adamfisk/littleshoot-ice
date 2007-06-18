@@ -1,6 +1,6 @@
 package org.lastbamboo.common.ice.offer;
 
-import org.lastbamboo.common.ice.sdp.SdpFactory;
+import org.lastbamboo.common.ice.answer.IceAnswerGenerator;
 import org.lastbamboo.common.offer.OfferProcessor;
 import org.lastbamboo.common.offer.OfferProcessorFactory;
 
@@ -11,21 +11,21 @@ import org.lastbamboo.common.offer.OfferProcessorFactory;
 public class IceOfferProcessorFactory implements OfferProcessorFactory
     {
 
-    private final SdpFactory m_sdpFactory;
+    private final IceAnswerGenerator m_answerGenerator;
 
     /**
      * Creates a new factory for processing ICE offer messages.
      * 
-     * @param sdpFactory The factory for creating the SDP.
+     * @param answerGenerator The class for creating an ICE answer.
      */
-    public IceOfferProcessorFactory(final SdpFactory sdpFactory)
+    public IceOfferProcessorFactory(final IceAnswerGenerator answerGenerator)
         {
-        this.m_sdpFactory = sdpFactory;
+        this.m_answerGenerator = answerGenerator;
         }
     
     public OfferProcessor createOfferProcessor()
         {
-        return new IceOfferProcessor(this.m_sdpFactory);
+        return new IceOfferProcessor(this.m_answerGenerator);
         }
 
     }
