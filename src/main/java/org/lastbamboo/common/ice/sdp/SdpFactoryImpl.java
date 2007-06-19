@@ -11,7 +11,6 @@ import java.util.Vector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.lastbamboo.common.ice.BindingTracker;
-import org.lastbamboo.common.ice.IceCandidateAttributeFactory;
 import org.lastbamboo.common.ice.IceConstants;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.Connection;
@@ -116,7 +115,7 @@ public final class SdpFactoryImpl implements SdpFactory
         final Vector descriptions = new Vector();
         addUdpMediaDescription(descriptions);
         
-        final Collection turnTcpAddresses = 
+        final Collection<InetSocketAddress> turnTcpAddresses = 
             this.m_bindingTracker.getTurnTcpBindings();
         
         // TODO: support multiple TURN servers in the future.
@@ -124,7 +123,7 @@ public final class SdpFactoryImpl implements SdpFactory
         if (iter.hasNext())
             {
             final InetSocketAddress turnTcpAddress = 
-                (InetSocketAddress) turnTcpAddresses.iterator().next();
+                turnTcpAddresses.iterator().next();
             
             final Vector turnTcpAttributes = new Vector(); 
             final Attribute turnTcpAttribute = 
@@ -152,7 +151,8 @@ public final class SdpFactoryImpl implements SdpFactory
             final int port = ShootConstants.HTTP_PORT;
             final InetSocketAddress localAddress = 
                 new InetSocketAddress(ia, port);
-            final Vector localTcpAttributes = new Vector(); 
+            final Vector<Attribute> localTcpAttributes = 
+                new Vector<Attribute>(); 
             
             // This has a higher priority than the TURN address.
             final Attribute turnTcpAttribute = 
@@ -210,7 +210,7 @@ public final class SdpFactoryImpl implements SdpFactory
         final Attribute stunCandidateAttribute = 
             this.m_iceCandidateAttributeFactory.createUdpIceCandidateAttribute(
                 udpAddress, 1, 1);
-        final Vector attributes = new Vector();
+        final Vector<Attribute> attributes = new Vector<Attribute>();
         attributes.add(stunCandidateAttribute);
         //final Vector attributes = 
           //  createCandidateAttributes(udpAddress, "udp", 1);

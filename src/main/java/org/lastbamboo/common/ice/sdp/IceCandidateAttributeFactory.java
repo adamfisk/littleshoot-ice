@@ -1,4 +1,4 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.sdp;
 
 import java.net.InetSocketAddress;
 

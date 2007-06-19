@@ -7,6 +7,8 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
+import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
+import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
 import org.lastbamboo.common.sdp.api.SessionDescription;
 
 /**
@@ -21,7 +23,7 @@ public class IceCandidateFactoryImplTest extends TestCase
      */
     public void testCreateCandidates() throws Exception
         {
-        final IceCandidateFactory factory = new IceCandidateFactoryImpl();
+        final IceCandidateSdpDecoder factory = new IceCandidateSdpDecoderImpl();
         
         final String tcpLocalHostString = "192.168.1.6";
         final String tcpHostString = "72.3.139.235";
@@ -57,7 +59,7 @@ public class IceCandidateFactoryImplTest extends TestCase
             sdpFactory.createSessionDescription(candidateString);
 
         final TestIceCandidateVisitor visitor = new TestIceCandidateVisitor();
-        final Collection candidates = factory.createCandidates(sdp);
+        final Collection candidates = factory.decode(sdp);
         assertEquals("Unexpected number of candidates", 3, candidates.size());
         
         visitor.visitCandidates(candidates);
@@ -72,15 +74,16 @@ public class IceCandidateFactoryImplTest extends TestCase
         assertFalse(udpCandidates.isEmpty());
         
         final Iterator tcpIter = tcpCandidates.iterator();
-        final IceCandidate tcpLocalCandidate = (IceCandidate) tcpIter.next();
+        
         final IceCandidate tcpCandidate = (IceCandidate) tcpIter.next();
+        final IceCandidate tcpLocalCandidate = (IceCandidate) tcpIter.next();
         
         final Iterator udpIter = udpCandidates.iterator();
         final IceCandidate udpCandidate = (IceCandidate) udpIter.next();
         
-        assertEquals("tcp-pass", tcpLocalCandidate.getTransport());
-        assertEquals("tcp-pass", tcpCandidate.getTransport());
-        assertEquals("udp", udpCandidate.getTransport());
+        assertEquals("tcp-pass", tcpLocalCandidate.getTransport().getName());
+        assertEquals("tcp-pass", tcpCandidate.getTransport().getName());
+        assertEquals("udp", udpCandidate.getTransport().getName());
         
         final InetSocketAddress tcpLocalSocketAddress = 
             new InetSocketAddress(tcpLocalHostString, tcpLocalPort);

@@ -24,9 +24,9 @@ public final class UdpIceCandidate extends AbstractIceCandidate
         super(candidateId, transportId, priority, socketAddress);
         }
 
-    public String getTransport()
+    public IceTransportProtocol getTransport()
         {
-        return "udp";
+        return IceTransportProtocol.UDP;
         }
 
     public void accept(final IceCandidateVisitor visitor)

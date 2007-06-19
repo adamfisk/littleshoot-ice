@@ -18,15 +18,15 @@ public class TcpSoIceCandidate extends AbstractIceCandidate
      * @param priority The priority of this candidate versus other candidates.
      * @param socketAddress The address and port of the candidate.
      */
-    protected TcpSoIceCandidate(final int candidateId, final UUID transportId, 
+    public TcpSoIceCandidate(final int candidateId, final UUID transportId, 
         final int priority, final InetSocketAddress socketAddress)
         {
         super(candidateId, transportId, priority, socketAddress);
         }
 
-    public String getTransport()
+    public IceTransportProtocol getTransport()
         {
-        return IceConstants.TCP_SO;
+        return IceTransportProtocol.TCP_SO;
         }
 
     public void accept(final IceCandidateVisitor visitor)

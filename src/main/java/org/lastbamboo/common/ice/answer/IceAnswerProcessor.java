@@ -6,10 +6,10 @@ import java.util.Collection;
 
 import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.answer.AnswerProcessor;
-import org.lastbamboo.common.ice.IceCandidateFactory;
 import org.lastbamboo.common.ice.IceCandidateTracker;
 import org.lastbamboo.common.ice.IceException;
 import org.lastbamboo.common.ice.UacIceCandidateTracker;
+import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.sdp.api.SdpException;
 import org.lastbamboo.common.sdp.api.SdpFactory;
 import org.lastbamboo.common.sdp.api.SdpParseException;
@@ -29,7 +29,7 @@ public class IceAnswerProcessor implements AnswerProcessor
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
     private final SdpFactory m_sdpFactory;
-    private final IceCandidateFactory m_iceCandidateFactory;
+    private final IceCandidateSdpDecoder m_iceCandidateFactory;
     private final IceCandidateTracker m_iceCandidateTracker;
     
     /**
@@ -39,7 +39,7 @@ public class IceAnswerProcessor implements AnswerProcessor
      * @param iceCandidateFactory The factory for creating ICE candidates.
      */
     public IceAnswerProcessor(final SdpFactory sdpFactory,
-        final IceCandidateFactory iceCandidateFactory)
+        final IceCandidateSdpDecoder iceCandidateFactory)
         {
         m_sdpFactory = sdpFactory;
         m_iceCandidateFactory = iceCandidateFactory;
@@ -67,7 +67,7 @@ public class IceAnswerProcessor implements AnswerProcessor
         final Collection iceCandidates;
         try
             {
-            iceCandidates = m_iceCandidateFactory.createCandidates(sdp);
+            iceCandidates = m_iceCandidateFactory.decode(sdp);
             }
         catch (final SdpException e)
             {

@@ -1,14 +1,15 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.sdp;
 
 import java.util.Collection;
 
+import org.lastbamboo.common.ice.IceCandidate;
 import org.lastbamboo.common.sdp.api.SdpException;
 import org.lastbamboo.common.sdp.api.SessionDescription;
 
 /**
- * Factory for generating ICE candidate classes.
+ * Factory for generating ICE candidate classes from SDP.
  */
-public interface IceCandidateFactory
+public interface IceCandidateSdpDecoder
     {
 
     /**
@@ -20,6 +21,5 @@ public interface IceCandidateFactory
      * @throws SdpException If there's an error parsing out a candidate from 
      * the SDP.
      */
-    Collection createCandidates(final SessionDescription sdp) 
-        throws SdpException;
+    Collection<IceCandidate> decode(SessionDescription sdp) throws SdpException;
     }

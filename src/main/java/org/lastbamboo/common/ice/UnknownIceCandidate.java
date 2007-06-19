@@ -22,9 +22,9 @@ public final class UnknownIceCandidate extends AbstractIceCandidate
         this.m_transport = transport;
         }
 
-    public String getTransport()
+    public IceTransportProtocol getTransport()
         {
-        return this.m_transport;
+        return IceTransportProtocol.UNKNOWN;
         }
 
     public void accept(final IceCandidateVisitor visitor)

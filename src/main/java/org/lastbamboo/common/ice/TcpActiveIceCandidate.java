@@ -26,9 +26,9 @@ public final class TcpActiveIceCandidate extends AbstractIceCandidate
         super(candidateId, transportId, priority, socketAddress);
         }
 
-    public String getTransport()
+    public IceTransportProtocol getTransport()
         {
-        return IceConstants.TCP_ACT;
+        return IceTransportProtocol.TCP_ACT;
         }
 
     public void accept(final IceCandidateVisitor visitor)

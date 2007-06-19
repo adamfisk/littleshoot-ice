@@ -1,9 +1,12 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.sdp;
 
 import java.net.InetSocketAddress;
 
 
 import org.apache.commons.id.uuid.UUID;
+import org.lastbamboo.common.ice.IceCandidate;
+import org.lastbamboo.common.ice.TcpPassiveIceCandidate;
+import org.lastbamboo.common.ice.UdpIceCandidate;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.SdpFactory;
 
@@ -55,7 +58,7 @@ public final class IceCandidateAttributeFactoryImpl implements
         sb.append(" ");
         sb.append(candidate.getTransportId());
         sb.append(" ");
-        sb.append(candidate.getTransport());
+        sb.append(candidate.getTransport().getName());
         sb.append(" ");
         sb.append(candidate.getPriority());
         sb.append(" ");

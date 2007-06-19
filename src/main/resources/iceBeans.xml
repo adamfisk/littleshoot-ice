@@ -6,7 +6,7 @@
         The factory for creating SDP attributes for ICE candidates.
     -->
     <bean id="iceCandidateAttributeFactory"
-          class="org.lastbamboo.common.ice.IceCandidateAttributeFactoryImpl">
+          class="org.lastbamboo.common.ice.sdp.IceCandidateAttributeFactoryImpl">
         <constructor-arg><ref bean="stackSdpFactory"/></constructor-arg>
         </bean>
 
@@ -14,7 +14,7 @@
         Creates ICE candidates from SDP data.
     -->
     <bean id="iceCandidateFactory"
-          class="org.lastbamboo.common.ice.IceCandidateFactoryImpl"/>
+          class="org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl"/>
           
     <!--
         The object that keeps track of all available bindings for accessing
@@ -34,20 +34,17 @@
           class="org.lastbamboo.common.sdp.api.SdpFactory"
           factory-method="getInstance"/>
 
+    <bean id="iceTcpPassiveServer"
+        class="org.lastbamboo.common.ice.IceTcpPassiveServerImpl">
+        </bean>
+
+        
     <!--
         The class for generating ICE candidates.
     -->
     <bean id="iceCandidateGenerator"
-          class="org.lastbamboo.common.ice.TcpIceCandidateGenerator">
-        <constructor-arg index="0">
-            <ref local="bindingTracker"/>
-            </constructor-arg>
-        <constructor-arg index="1">
-            <ref bean="iceCandidateAttributeFactory"/>
-            </constructor-arg>
-        <constructor-arg index="2">
-            <ref local="stackSdpFactory"/>
-            </constructor-arg>
+          class="org.lastbamboo.common.ice.IceCandidateGeneratorImpl">
+        <constructor-arg><ref local="bindingTracker"/></constructor-arg>
         </bean>
         
     <!--

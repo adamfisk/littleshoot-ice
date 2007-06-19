@@ -43,9 +43,10 @@ public interface IceCandidate
     /**
      * Accessor for the type of transport of this candidate, such as TCP or
      * UDP.
+     * 
      * @return The transport for this candidate.
      */
-    String getTransport();
+    IceTransportProtocol getTransport();
 
     /**
      * Accepts the specified visitor to an ICE candidate.

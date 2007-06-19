@@ -37,6 +37,6 @@ public interface BindingTracker
      * @return The <code>Collection</code> of <code>InetSocketAddress</code>es
      * for the available TURN-derived TCP bindings for this client.
      */
-    Collection getTurnTcpBindings();
+    Collection<InetSocketAddress> getTurnTcpBindings();
 
     }

@@ -1,4 +1,4 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.sdp;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -13,6 +13,12 @@ import java.util.StringTokenizer;
 import org.apache.commons.id.uuid.UUID;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.lastbamboo.common.ice.IceCandidate;
+import org.lastbamboo.common.ice.IceConstants;
+import org.lastbamboo.common.ice.TcpPassiveIceCandidate;
+import org.lastbamboo.common.ice.TcpSoIceCandidate;
+import org.lastbamboo.common.ice.UdpIceCandidate;
+import org.lastbamboo.common.ice.UnknownIceCandidate;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.MediaDescription;
 import org.lastbamboo.common.sdp.api.SdpException;
@@ -22,19 +28,19 @@ import org.lastbamboo.common.sdp.api.SessionDescription;
 /**
  * Factory class for creating ICE candidates from offer/answer data.
  */
-public final class IceCandidateFactoryImpl implements IceCandidateFactory
+public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
     {
     
     /**
      * Logger for this class.
      */
     private static final Log LOG = 
-        LogFactory.getLog(IceCandidateFactoryImpl.class);
+        LogFactory.getLog(IceCandidateSdpDecoderImpl.class);
     
     private static final String CANDIDATE_KEY = "candidate";
     
-    public Collection createCandidates(final SessionDescription sdp) 
-        throws SdpException
+    public Collection<IceCandidate> decode(
+        final SessionDescription sdp) throws SdpException
         {
         final Collection mediaDescriptions = sdp.getMediaDescriptions(true);
         LOG.trace("Creating candidates from media descs: "+mediaDescriptions);
@@ -49,10 +55,11 @@ public final class IceCandidateFactoryImpl implements IceCandidateFactory
      * description's from the peer's SDP.  Each media description will contain
      * some number of candidates for exchanging media.
      */
-    private Collection createCandidatesFromMediaDescriptions(
+    private Collection<IceCandidate> createCandidatesFromMediaDescriptions(
         final Collection remoteMediaDescriptions)
         {
-        final Collection candidates = new LinkedList();
+        final Collection<IceCandidate> candidates = 
+            new LinkedList<IceCandidate>();
         for (final Iterator iter = remoteMediaDescriptions.iterator(); 
             iter.hasNext();)
             {
@@ -98,11 +105,11 @@ public final class IceCandidateFactoryImpl implements IceCandidateFactory
      * TURN send request to the server in the candidate.
      * @throws UnknownHostException If we could not parse the host 
      */
-    private Collection createCandidates(final String attribute) 
+    private Collection<IceCandidate> createCandidates(final String attribute) 
         throws UnknownHostException
         {
         LOG.trace("Parsing attribute: "+attribute);
-        final List candidates = new LinkedList();
+        final List<IceCandidate> candidates = new LinkedList<IceCandidate>();
         final StringTokenizer st = new StringTokenizer(attribute, " ");
         while (st.hasMoreTokens())
             {

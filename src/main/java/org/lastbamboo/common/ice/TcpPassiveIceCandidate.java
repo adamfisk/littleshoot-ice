@@ -14,6 +14,7 @@ public final class TcpPassiveIceCandidate extends AbstractIceCandidate
     /**
      * Creates a new ICE candidate for a specific media.  This encapsulates
      * the data for one ICE candidate.
+     * 
      * @param candidateId The unique ID of the candidate.
      * @param transportId The unique ID of the tranport address.
      * @param priority The priority of this candidate versus other candidates.
@@ -25,9 +26,9 @@ public final class TcpPassiveIceCandidate extends AbstractIceCandidate
         super(candidateId, transportId, priority, socketAddress);
         }
 
-    public String getTransport()
+    public IceTransportProtocol getTransport()
         {
-        return IceConstants.TCP_PASS;
+        return IceTransportProtocol.TCP_PASS;
         }
 
     public void accept(final IceCandidateVisitor visitor)

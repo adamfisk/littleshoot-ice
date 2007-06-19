@@ -14,7 +14,7 @@ public interface IceCandidateVisitor
      * Visits the specified <code>Collection</code> of ICE candidates.
      * @param candidates The <code>Collection</code> of candidates to visit.
      */
-    void visitCandidates(Collection candidates);
+    void visitCandidates(Collection<IceCandidate> candidates);
 
     /**
      * Visits an ICE candidate that uses TCP for transport.  This candidate is
