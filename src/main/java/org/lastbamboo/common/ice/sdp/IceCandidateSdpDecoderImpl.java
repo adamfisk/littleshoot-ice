@@ -9,12 +9,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-
 import org.apache.commons.id.uuid.UUID;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.lastbamboo.common.ice.IceCandidate;
-import org.lastbamboo.common.ice.IceConstants;
+import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.TcpPassiveIceCandidate;
 import org.lastbamboo.common.ice.TcpSoIceCandidate;
 import org.lastbamboo.common.ice.UdpIceCandidate;
@@ -130,17 +129,17 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
         
         final int port = Integer.parseInt(st.nextToken());
         
-        if (transportString.equalsIgnoreCase(IceConstants.TCP_PASS))
+        if (transportString.equalsIgnoreCase(IceTransportProtocol.TCP_PASS.getName()))
             {
             return new TcpPassiveIceCandidate(candidateId, transportId, qValue, 
                 new InetSocketAddress(address, port));
             }
-        else if (transportString.equalsIgnoreCase(IceConstants.TCP_SO))
+        else if (transportString.equalsIgnoreCase(IceTransportProtocol.TCP_SO.getName()))
             {
             return new TcpSoIceCandidate(candidateId, transportId, qValue,
                 new InetSocketAddress(address, port));
             }
-        else if (transportString.equalsIgnoreCase("udp"))
+        else if (transportString.equalsIgnoreCase(IceTransportProtocol.UDP.getName()))
             {
             return new UdpIceCandidate(candidateId, transportId, qValue,
                 new InetSocketAddress(address, port));

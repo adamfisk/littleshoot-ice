@@ -9,7 +9,7 @@ import java.util.Vector;
 
 import org.lastbamboo.common.ice.IceCandidate;
 import org.lastbamboo.common.ice.IceCandidateVisitor;
-import org.lastbamboo.common.ice.IceConstants;
+import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.TcpActiveIceCandidate;
 import org.lastbamboo.common.ice.TcpPassiveIceCandidate;
 import org.lastbamboo.common.ice.TcpSoIceCandidate;
@@ -33,7 +33,8 @@ import org.slf4j.LoggerFactory;
 public class IceCandidateSdpEncoder implements IceCandidateVisitor
     {
     
-    private final Logger LOG = LoggerFactory.getLogger(IceCandidateSdpEncoder.class);
+    private final Logger LOG = 
+        LoggerFactory.getLogger(IceCandidateSdpEncoder.class);
     
     private final SdpFactory m_sdpFactory;
     private final SessionDescription m_sessionDescription;
@@ -140,7 +141,8 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
         attributes.add(attribute);
         try
             {
-            addTcpMediaDescription(address, attributes, IceConstants.TCP_PASS);
+            addTcpMediaDescription(address, attributes, 
+                IceTransportProtocol.TCP_PASS.getName());
             }
         catch (final SdpException e)
             {

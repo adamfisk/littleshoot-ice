@@ -11,7 +11,7 @@ import java.util.Vector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.lastbamboo.common.ice.BindingTracker;
-import org.lastbamboo.common.ice.IceConstants;
+import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.Connection;
 import org.lastbamboo.common.sdp.api.MediaDescription;
@@ -131,7 +131,7 @@ public final class SdpFactoryImpl implements SdpFactory
                     turnTcpAddress, 1, 3);
             turnTcpAttributes.add(turnTcpAttribute);
             addTcpMediaDescription(descriptions, turnTcpAddress, 
-                turnTcpAttributes, IceConstants.TCP_PASS);
+                turnTcpAttributes, IceTransportProtocol.TCP_PASS.getName());
             }
         
         // Now add the local address.
@@ -160,7 +160,7 @@ public final class SdpFactoryImpl implements SdpFactory
                     localAddress, 1, 1);
             localTcpAttributes.add(turnTcpAttribute);
             addTcpMediaDescription(descriptions, localAddress, 
-                localTcpAttributes, IceConstants.TCP_PASS);
+                localTcpAttributes, IceTransportProtocol.TCP_PASS.getName());
             }
         catch (final UnknownHostException e)
             {
@@ -183,7 +183,7 @@ public final class SdpFactoryImpl implements SdpFactory
                 tcpSoAddress, 1, 2);
         tcpSoAttributes.add(attribute);
         addTcpMediaDescription(descriptions, tcpSoAddress, tcpSoAttributes, 
-            IceConstants.TCP_SO);
+            IceTransportProtocol.TCP_SO.getName());
         return descriptions;
         }
     

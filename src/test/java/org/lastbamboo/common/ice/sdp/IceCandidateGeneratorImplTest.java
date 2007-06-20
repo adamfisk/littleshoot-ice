@@ -17,7 +17,7 @@ import org.easymock.MockControl;
 import org.lastbamboo.common.ice.BindingTracker;
 import org.lastbamboo.common.ice.IceCandidateGenerator;
 import org.lastbamboo.common.ice.IceCandidateGeneratorImpl;
-import org.lastbamboo.common.ice.IceConstants;
+import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.MediaDescription;
 import org.lastbamboo.common.sdp.api.SessionDescription;
@@ -96,10 +96,11 @@ public final class IceCandidateGeneratorImplTest extends TestCase
         //udpBindings.add(udpBinding);
         //verifyCandidates(udpMediaDesc, udpBindings, "udp");
         final int relayPriority = 
-            verifyCandidates(tcpMediaDesc, tcpBindings, IceConstants.TCP_PASS);
+            verifyCandidates(tcpMediaDesc, tcpBindings, 
+                IceTransportProtocol.TCP_PASS.getName());
         final int hostPriority = 
             verifyCandidates(localTcpMediaDesc, localTcpBindings, 
-            IceConstants.TCP_PASS);
+            IceTransportProtocol.TCP_PASS.getName());
         
         assertFalse(relayPriority == -1);
         assertFalse(hostPriority == -1);

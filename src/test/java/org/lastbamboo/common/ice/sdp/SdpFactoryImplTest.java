@@ -15,8 +15,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.easymock.MockControl;
 import org.lastbamboo.common.ice.BindingTracker;
-import org.lastbamboo.common.ice.IceConstants;
-import org.lastbamboo.common.ice.sdp.SdpFactoryImpl;
+import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.MediaDescription;
 import org.lastbamboo.common.sdp.api.SdpFactory;
@@ -88,8 +87,10 @@ public final class SdpFactoryImplTest extends TestCase
             new HashSet<InetSocketAddress>();
         udpBindings.add(udpBinding);
         verifyCandidates(udpMediaDesc, udpBindings, "udp");
-        verifyCandidates(tcpMediaDesc, tcpBindings, IceConstants.TCP_PASS);
-        verifyCandidates(localTcpMediaDesc, localTcpBindings, IceConstants.TCP_PASS);
+        verifyCandidates(tcpMediaDesc, tcpBindings, 
+            IceTransportProtocol.TCP_PASS.getName());
+        verifyCandidates(localTcpMediaDesc, localTcpBindings, 
+            IceTransportProtocol.TCP_PASS.getName());
         }
 
     /**
