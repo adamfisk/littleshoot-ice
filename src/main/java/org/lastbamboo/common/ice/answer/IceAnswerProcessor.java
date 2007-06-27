@@ -6,6 +6,7 @@ import java.util.Collection;
 
 import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.answer.AnswerProcessor;
+import org.lastbamboo.common.ice.IceCandidate;
 import org.lastbamboo.common.ice.IceCandidateTracker;
 import org.lastbamboo.common.ice.IceException;
 import org.lastbamboo.common.ice.UacIceCandidateTracker;
@@ -29,24 +30,23 @@ public class IceAnswerProcessor implements AnswerProcessor
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
     private final SdpFactory m_sdpFactory;
-    private final IceCandidateSdpDecoder m_iceCandidateFactory;
-    private final IceCandidateTracker m_iceCandidateTracker;
+    private final IceCandidateSdpDecoder m_iceCandidateDecoder;
     
     /**
      * Creates a new offer processor.
      * 
      * @param sdpFactory The factory for creating SDP.
-     * @param iceCandidateFactory The factory for creating ICE candidates.
+     * @param iceCandidateDecoder The factory for creating ICE candidates.
      */
     public IceAnswerProcessor(final SdpFactory sdpFactory,
-        final IceCandidateSdpDecoder iceCandidateFactory)
+        final IceCandidateSdpDecoder iceCandidateDecoder)
         {
         m_sdpFactory = sdpFactory;
-        m_iceCandidateFactory = iceCandidateFactory;
+        m_iceCandidateDecoder = iceCandidateDecoder;
         
         // Create our new tracker for ICE connection candidates now, as this
         // will be collecting data at various points of the SIP negotiation.
-        this.m_iceCandidateTracker = new UacIceCandidateTracker();
+        //this.m_iceCandidateTracker = new UacIceCandidateTracker();
         }
 
     public Socket processAnswer(final ByteBuffer answer) throws IOException
@@ -64,10 +64,10 @@ public class IceAnswerProcessor implements AnswerProcessor
             throw new IoExceptionWithCause("Could not parse SDP", e);
             }
         
-        final Collection iceCandidates;
+        final Collection<IceCandidate> iceCandidates;
         try
             {
-            iceCandidates = m_iceCandidateFactory.decode(sdp);
+            iceCandidates = m_iceCandidateDecoder.decode(sdp);
             }
         catch (final SdpException e)
             {
@@ -82,11 +82,15 @@ public class IceAnswerProcessor implements AnswerProcessor
                 "No candidates in SDP: " + responseBodyString);
             }
 
-        this.m_iceCandidateTracker.visitCandidates(iceCandidates);
+        // We only currently process ICE "answers" on the UAC side.  This
+        // could theoretically use an IceCandidateTrackerFactory type class
+        // here though.
+        final IceCandidateTracker tracker = new UacIceCandidateTracker();
+        tracker.visitCandidates(iceCandidates);
         
         try
             {
-            final Socket socket = m_iceCandidateTracker.getBestSocket();
+            final Socket socket = tracker.getBestSocket();
             return socket;
             }
         catch (final IceException e)
