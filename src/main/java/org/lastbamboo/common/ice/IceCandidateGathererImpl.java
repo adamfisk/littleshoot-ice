@@ -58,6 +58,23 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
     private static final int TCP_PASSIVE_RELAY_PRIORITY = 0;
     
     /**
+     * This priority is really high because we can likely traverse the firewall
+     * using this priority.  It's higher than the TCP passive local priority 
+     * because it's unlikely both hosts are on the same subnet. 
+     * 
+     * TODO: Figure out all the passive versus active stuff.
+     */
+    private static final int UDP_SERVER_REFLEXIVE_PRIORITY = 20;
+    
+    /**
+     * The local UDP candidate priority. This is lower than the local TCP
+     * one because we'd prefer TCP if we're on the same subnet.
+     * 
+     * TODO: Figure out all the passive versus active stuff.
+     */
+    private static final int UDP_HOST_PRIORITY = 9;
+    
+    /**
      * Because we're transferring files and not media, we give TCP the
      * highest possible transport preference.
      */
@@ -81,14 +98,19 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
 
     private final BindingTracker m_bindingTracker;
 
+
+    //private final StunClientFactory m_stunClientFactory;
+
     /**
      * Creates a new class for gathering ICE candidates.
      * 
      * @param bindingTracker The class that keeps track of bindings.
+     * @param stunClientFactory The factory for creating new STUN clients.
      */
     public IceCandidateGathererImpl(final BindingTracker bindingTracker)
         {
         m_bindingTracker = bindingTracker;
+        //m_stunClientFactory = stunClientFactory;
         }
 
     public Collection<IceCandidate> gatherCandidates()
@@ -111,7 +133,23 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         {
         final Collection<UdpIceCandidate> candidates =
             new LinkedList<UdpIceCandidate>();
+
+        final IceStunClient iceClient = new IceUdpStunClient();
         
+        final InetSocketAddress hostSocketAddress = iceClient.getHostAddress(); 
+        final InetSocketAddress serverReflexiveAddress = 
+            iceClient.getServerReflexiveAddress();
+        
+        final UdpIceCandidate hostCandidate = 
+            new UdpIceCandidate(COMPONENT_ID, UUID.randomUUID(), 
+                UDP_HOST_PRIORITY, hostSocketAddress);
+        
+        final UdpIceCandidate serverReflexiveCandidate = 
+            new UdpIceCandidate(COMPONENT_ID, UUID.randomUUID(), 
+                UDP_SERVER_REFLEXIVE_PRIORITY, serverReflexiveAddress);
+        
+        candidates.add(hostCandidate);
+        candidates.add(serverReflexiveCandidate);
         return candidates;
         }
 
