@@ -9,7 +9,6 @@ import java.util.Vector;
 
 import org.lastbamboo.common.ice.IceCandidate;
 import org.lastbamboo.common.ice.IceCandidateVisitor;
-import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.TcpActiveIceCandidate;
 import org.lastbamboo.common.ice.TcpPassiveIceCandidate;
 import org.lastbamboo.common.ice.TcpSoIceCandidate;
@@ -73,7 +72,8 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
             
             this.m_mediaDescriptions = new Vector<MediaDescription>();
             this.m_sessionDescription = createSessionDescription(); 
-            this.m_sessionDescription.setVersion(this.m_sdpFactory.createVersion(0));
+            this.m_sessionDescription.setVersion(
+                this.m_sdpFactory.createVersion(0));
             this.m_sessionDescription.setOrigin(o);
             this.m_sessionDescription.setSessionName(s);
             this.m_sessionDescription.setTimeDescriptions(timeDescriptions);
@@ -83,6 +83,17 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
             LOG.error("Could not create SDP", e);
             throw new IllegalArgumentException("Could not create SDP", e);
             }
+        }
+    
+
+    /**
+     * Accesses the SDP as an array of bytes.
+     * 
+     * @return The SDP as an array of bytes.
+     */
+    public byte[] getSdp()
+        {
+        return this.m_sessionDescription.toBytes();
         }
 
     private InetAddress getAddress()
@@ -133,16 +144,32 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
         final TcpPassiveIceCandidate candidate)
         {
         final InetSocketAddress address = candidate.getSocketAddress();
-        
-        final Vector<Attribute> attributes = new Vector<Attribute>(); 
         final Attribute attribute = 
             this.m_iceCandidateAttributeFactory.createTcpIceCandidateAttribute(
                 address, candidate.getCandidateId(), candidate.getPriority());
+        addCandidate(candidate, attribute);
+        }
+
+    public void visitUdpIceCandidate(final UdpIceCandidate candidate)
+        {
+        final InetSocketAddress address = candidate.getSocketAddress();
+        final Attribute attribute = 
+            this.m_iceCandidateAttributeFactory.createUdpIceCandidateAttribute(
+                address, candidate.getCandidateId(), candidate.getPriority());
+        addCandidate(candidate, attribute);
+        }
+    
+
+    private void addCandidate(final IceCandidate candidate, 
+        final Attribute attribute)
+        {
+        final InetSocketAddress address = candidate.getSocketAddress();
+        final Vector<Attribute> attributes = new Vector<Attribute>(); 
         attributes.add(attribute);
         try
             {
-            addTcpMediaDescription(address, attributes, 
-                IceTransportProtocol.TCP_PASS.getName());
+            addMediaDescription(address, attributes, 
+                candidate.getTransport().getName());
             }
         catch (final SdpException e)
             {
@@ -150,20 +177,6 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
             }
         }
 
-    public void visitUdpIceCandidate(final UdpIceCandidate candidate)
-        {
-        final InetSocketAddress address = candidate.getSocketAddress();
-        try
-            {
-            final MediaDescription md = createMessageMediaDesc(address, "udp");
-            this.m_mediaDescriptions.add(md);
-            }
-        catch (final SdpException e)
-            {
-            LOG.error("Could not create media description");
-            }
-        }
-    
 
     public void visitTcpActiveIceCandidate(
         final TcpActiveIceCandidate candidate)
@@ -182,16 +195,6 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
         // TODO Auto-generated method stub
 
         }
-
-    /**
-     * Accesses the SDP as an array of bytes.
-     * 
-     * @return The SDP as an array of bytes.
-     */
-    public byte[] getSdp()
-        {
-        return this.m_sessionDescription.toBytes();
-        }
     
     /**
      * Creates a new media description for transferring arbitrary TCP data.
@@ -204,7 +207,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
      * @param transportType 
      * @throws SdpException If there's any error generating SDP data.
      */
-    private void addTcpMediaDescription(final InetSocketAddress address, 
+    private void addMediaDescription(final InetSocketAddress address, 
         final Vector attributes, final String transportType) 
         throws SdpException
         {    
@@ -213,6 +216,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
         
         md.setAttributes(attributes);
         
+        LOG.debug("Adding media description");
         this.m_mediaDescriptions.add(md);
         }
     

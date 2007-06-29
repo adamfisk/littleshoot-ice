@@ -98,19 +98,14 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
 
     private final BindingTracker m_bindingTracker;
 
-
-    //private final StunClientFactory m_stunClientFactory;
-
     /**
      * Creates a new class for gathering ICE candidates.
      * 
      * @param bindingTracker The class that keeps track of bindings.
-     * @param stunClientFactory The factory for creating new STUN clients.
      */
     public IceCandidateGathererImpl(final BindingTracker bindingTracker)
         {
         m_bindingTracker = bindingTracker;
-        //m_stunClientFactory = stunClientFactory;
         }
 
     public Collection<IceCandidate> gatherCandidates()

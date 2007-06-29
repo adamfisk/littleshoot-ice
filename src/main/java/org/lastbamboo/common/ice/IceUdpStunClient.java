@@ -1,7 +1,6 @@
 package org.lastbamboo.common.ice;
 
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,7 +24,6 @@ import org.lastbamboo.common.stun.stack.transaction.StunTransactionFactoryImpl;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionListener;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
-import org.lastbamboo.common.util.NetworkUtils;
 
 /**
  * STUN client implementation for ICE UDP. 
@@ -104,7 +102,6 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
         
         this.m_transactionFactory.createClientTransaction(bindingRequest, this);
         
-        //final InetSocketAddress localAddress = getLocalAddress(port); 
         int requests = 0;
         
         // Use an RTO of 100ms, as discussed in 
@@ -126,7 +123,6 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
                 // estimated round-trip-time to the server.  This is because
                 // some requests can be lost with UDP.
                 m_ioSession.write(bindingRequest);
-                //requestMappedAddress(bindingRequest, localAddress);
                 
                 // Wait a little longer with each send.
                 waitTime = (2 * waitTime) + rto;
