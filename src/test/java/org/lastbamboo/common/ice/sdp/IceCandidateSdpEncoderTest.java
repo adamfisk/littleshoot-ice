@@ -31,7 +31,8 @@ public final class IceCandidateSdpEncoderTest extends TestCase
     /**
      * Logger for this class.
      */
-    private static final Log LOG = LogFactory.getLog(IceCandidateSdpEncoderTest.class);
+    private static final Log LOG = 
+        LogFactory.getLog(IceCandidateSdpEncoderTest.class);
     
     /**
      * Tests the method for creating SDP for the local host.
