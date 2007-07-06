@@ -1,7 +1,10 @@
 package org.lastbamboo.common.ice;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,8 +28,6 @@ import org.lastbamboo.common.stun.stack.transaction.StunTransactionFactoryImpl;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionListener;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
-
-import sun.security.action.GetLongAction;
 
 /**
  * STUN client implementation for ICE UDP. 
@@ -57,6 +58,8 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
         new ConcurrentHashMap<UUID, StunMessage>();
 
     private final IoSession m_ioSession;
+
+    private final InetSocketAddress m_localAddress;
     
     /**
      * Creates a new STUN client for ICE processing.  This client is capable
@@ -73,6 +76,7 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
             new StunClientMessageVisitorFactory(tracker);
         
         m_connector = new DatagramConnector();
+        m_connector.getDefaultConfig().getSessionConfig().setReuseAddress(true);
         m_stunServer = new InetSocketAddress("stun01.sipphone.com", STUN_PORT);
         m_ioHandler = new StunClientIoHandler(messageVisitorFactory);
         final ProtocolCodecFactory codecFactory = 
@@ -85,12 +89,58 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
             m_connector.connect(m_stunServer, m_ioHandler);
         connectFuture.join();
         m_ioSession = connectFuture.getSession();
+        this.m_localAddress = getLocalAddress(m_ioSession);
         }
     
 
+    private InetSocketAddress getLocalAddress(final IoSession ioSession)
+        {
+        // This insanity is needed because IoSession.getLocalAddress does
+        // not, in fact, return the local address!!
+        try
+            {
+            final Method getChannel = 
+                ioSession.getClass().getDeclaredMethod("getChannel", new Class[0]);
+            getChannel.setAccessible(true);
+            
+            final DatagramChannel channel = 
+                (DatagramChannel) getChannel.invoke(ioSession, new Object[0]);
+            return (InetSocketAddress) channel.socket().getLocalSocketAddress();
+            }
+        catch (SecurityException e)
+            {
+            LOG.error("Error accessing local address", e);
+            }
+        catch (NoSuchMethodException e)
+            {
+            LOG.error("Error accessing local address", e);
+            }
+        catch (IllegalAccessException e)
+            {
+            LOG.error("Error accessing local address", e);
+            }
+        catch (InvocationTargetException e)
+            {
+            LOG.error("Error accessing local address", e);
+            }
+
+        return null;
+        }
+
+
     public InetSocketAddress getHostAddress()
         {
-        return (InetSocketAddress) this.m_ioSession.getLocalAddress();
+        return m_localAddress;
+        }
+    
+    public InetAddress getStunServerAddress()
+        {
+        return this.m_stunServer.getAddress();
+        }
+
+    public InetSocketAddress getBaseAddress()
+        {
+        return getHostAddress();
         }
     
 
@@ -187,17 +237,4 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
             request.notify();
             }
         }
-
-
-    public InetAddress getStunServerAddress()
-        {
-        return this.m_stunServer.getAddress();
-        }
-
-
-    public InetSocketAddress getBaseAddress()
-        {
-        return getHostAddress();
-        }
-
     }
