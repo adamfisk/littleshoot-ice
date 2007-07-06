@@ -21,7 +21,10 @@ public abstract class AbstractIceCandidate implements IceCandidate
 
     private final IceCandidateType m_candidateType;
     
-    private final int m_componentId = 1;
+    /**
+     * We only have one component for our media streams for now.
+     */
+    private final static int s_componentId = 1;
 
     private final int m_priority;
 
@@ -38,32 +41,50 @@ public abstract class AbstractIceCandidate implements IceCandidate
         final InetAddress baseAddress, 
         final IceCandidateType type, final IceTransportProtocol transport)
         {
-        this.m_address = socketAddress;
-        this.m_candidateType = type;
-        this.m_transport = transport;
-        this.m_priority = calculatePriority(type);
-        this.m_foundation = 
-            IceFoundationCalculator.calculateFoundation(type, baseAddress, transport);
+        this(socketAddress, 
+            IceFoundationCalculator.calculateFoundation(type, baseAddress, transport), 
+            type, transport, 
+            calculatePriority(type));
         }
     
     public AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final int foundation, final IceCandidateType type, 
         final IceTransportProtocol transport)
         {
+        this(socketAddress, foundation, type, transport, 
+            calculatePriority(type));
+        }
+
+    private AbstractIceCandidate(final InetSocketAddress socketAddress, 
+        final int foundation, final IceCandidateType type, 
+        final IceTransportProtocol transport, final int priority)
+        {
+        if (socketAddress == null)
+            {
+            throw new NullPointerException("Null socket address");
+            }
+        if (type == null)
+            {
+            throw new NullPointerException("Null type");
+            }
+        if (transport == null)
+            {
+            throw new NullPointerException("Null transport");
+            }
         this.m_address = socketAddress;
         this.m_candidateType = type;
         this.m_transport = transport;
-        this.m_priority = calculatePriority(type);
+        this.m_priority = priority;
         this.m_foundation = foundation;
         }
 
-    private int calculatePriority(final IceCandidateType type)
+    private static int calculatePriority(final IceCandidateType type)
         {
         // See draft-ietf-mmusic-ice-16.txt section 4.1.2.1.
         return 
             (2 ^ 24) * type.getTypePreference() +
             (2 ^ 8)  * LOCAL_PREFERENCE  +
-            (2 ^ 0)  * (256 - this.m_componentId);
+            (2 ^ 0)  * (256 - s_componentId);
         }
 
     public IceTransportProtocol getTransport()
@@ -98,7 +119,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
 
     public int getComponentId()
         {
-        return m_componentId;
+        return s_componentId;
         }
 
     public int getFoundation()

@@ -266,7 +266,9 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         sb.append(space);
         sb.append(candidate.getPriority());
         sb.append(space);
-        sb.append(candidate.getSocketAddress().getAddress().getHostAddress());
+        final InetSocketAddress sa = candidate.getSocketAddress();
+        final InetAddress ia = sa.getAddress();
+        sb.append(ia.getHostAddress());
         sb.append(space);
         sb.append(candidate.getSocketAddress().getPort());
         sb.append(space);
