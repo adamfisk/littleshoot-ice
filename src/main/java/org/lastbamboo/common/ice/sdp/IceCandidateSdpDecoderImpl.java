@@ -17,6 +17,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.MediaDescription;
 import org.lastbamboo.common.sdp.api.SdpException;
@@ -152,7 +153,9 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                     case PEER_REFLEXIVE:
                         break;
                     case SERVER_REFLEXIVE:
-                        break;
+                        final InetSocketAddress related = parseRelated(scanner);
+                        return new IceUdpServerReflexiveCandidate(socketAddress, 
+                            foundation, related.getAddress(), related.getPort());
                     }
                 break;
             case TCP_PASS:
@@ -162,23 +165,9 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                         return new IceTcpHostPassiveCandidate(socketAddress);
                     case RELAYED:
                         LOG.debug("Received a TCP relay passive candidate");
-                        final String raddr = scanner.next();
-                        if (!raddr.equals("raddr"))
-                            {
-                            LOG.error("Bad related address: "+raddr);
-                            }
-                        final InetAddress relatedAddress = 
-                            InetAddress.getByName(scanner.next());
-                        
-                        final String rport = scanner.next();
-                        if (!rport.equals("rport"))
-                            {
-                            LOG.error("Bad related port: "+rport);
-                            }
-                        final int relatedPort = 
-                            Integer.parseInt(scanner.next());
+                        final InetSocketAddress related = parseRelated(scanner);
                         return new IceTcpRelayPassiveCandidate(socketAddress, 
-                            foundation, relatedAddress, relatedPort);
+                            foundation, related.getAddress(), related.getPort());
                     case PEER_REFLEXIVE:
                         break;
                     case SERVER_REFLEXIVE:
@@ -221,5 +210,27 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
             }
         
         return null;
+        }
+
+    private InetSocketAddress parseRelated(final Scanner scanner) 
+        throws UnknownHostException
+        {
+        final String raddr = scanner.next();
+        if (!raddr.equals("raddr"))
+            {
+            LOG.error("Bad related address: "+raddr);
+            }
+        final InetAddress relatedAddress = 
+            InetAddress.getByName(scanner.next());
+        
+        final String rport = scanner.next();
+        if (!rport.equals("rport"))
+            {
+            LOG.error("Bad related port: "+rport);
+            }
+        final int relatedPort = 
+            Integer.parseInt(scanner.next());
+        
+        return new InetSocketAddress(relatedAddress, relatedPort);
         }
     }

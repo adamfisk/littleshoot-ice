@@ -37,6 +37,27 @@ public class IceUdpServerReflexiveCandidate
             stunServerAddress, relatedAddress, relatedPort);
         }
 
+    /**
+     * Creates a new UDP ICE candidate for the server reflexive candidate.
+     * 
+     * @param serverReflexiveAddress The address of the server reflexive 
+     * candidate.
+     * the candidate address.
+     * @param foundation The foundation.
+     * @param relatedAddress The address related to this candidate.  In this
+     * case, the base address.
+     * @param relatedPort The port related to this candidate.  In this
+     * case, the base port.
+     */
+    public IceUdpServerReflexiveCandidate(
+        final InetSocketAddress serverReflexiveAddress, final int foundation, 
+        final InetAddress relatedAddress, final int relatedPort)
+        {
+        super(serverReflexiveAddress, foundation, 
+            IceCandidateType.SERVER_REFLEXIVE, IceTransportProtocol.UDP, 
+            relatedAddress, relatedPort);
+        }
+
     public void accept(final IceCandidateVisitor visitor)
         {
         visitor.visitUdpServerReflexiveCandidate(this);
