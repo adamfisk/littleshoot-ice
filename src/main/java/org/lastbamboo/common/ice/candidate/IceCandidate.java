@@ -1,9 +1,11 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.candidate;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import org.apache.commons.id.uuid.UUID;
+import org.lastbamboo.common.ice.IceCandidateType;
+import org.lastbamboo.common.ice.IceCandidateVisitor;
+import org.lastbamboo.common.ice.IceTransportProtocol;
 
 /**
  * This is an interface for an ICE "candidate" as defined in 
@@ -14,6 +16,7 @@ import org.apache.commons.id.uuid.UUID;
  */
 public interface IceCandidate
     {
+    
     /**
      * Accessor for the address and port of the candidate.
      * @return The address and port of the candidate.
@@ -21,24 +24,11 @@ public interface IceCandidate
     InetSocketAddress getSocketAddress();
 
     /**
-     * Accessor the ID of the candidate.
-     * 
-     * @return The ID of the candidate.
-     */
-    int getCandidateId();
-
-    /**
      * Accessor for the priority of the candidate.
      * 
      * @return The priority of the candidate.
      */
     int getPriority();
-
-    /**
-     * Accessor for the unique ID of the transport for the candidate.
-     * @return The unique ID of the transport for the candidate.
-     */
-    UUID getTransportId();
 
     /**
      * Accessor for the type of transport of this candidate, such as TCP or
@@ -67,4 +57,30 @@ public interface IceCandidate
      * @return The socket.
      */
     Socket getSocket();
+
+    /**
+     * Gets the type of the ICE candidate.
+     * 
+     * @return The type of the ICE candidate.
+     */
+    IceCandidateType getType();
+
+    /**
+     * Accessor for the component ID of this candidate.  A component of a
+     * candidate is the number of the component of the media stream it 
+     * represents.  Many media streams will only have one component, starting
+     * with "1", but others might have two or more, such as a media stream 
+     * with RTP and RTCP.
+     * 
+     * @return The component ID.
+     */
+    int getComponentId();
+    
+    /**
+     * Accessor for the candidate's foundation.
+     * 
+     * @return The candidate's foundation.
+     */
+    int getFoundation();
+
     }

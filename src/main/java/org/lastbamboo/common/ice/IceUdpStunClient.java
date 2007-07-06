@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +25,8 @@ import org.lastbamboo.common.stun.stack.transaction.StunTransactionFactoryImpl;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionListener;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
+
+import sun.security.action.GetLongAction;
 
 /**
  * STUN client implementation for ICE UDP. 
@@ -183,6 +186,18 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
             this.m_idsToResponses.put(request.getTransactionId(), response);
             request.notify();
             }
+        }
+
+
+    public InetAddress getStunServerAddress()
+        {
+        return this.m_stunServer.getAddress();
+        }
+
+
+    public InetSocketAddress getBaseAddress()
+        {
+        return getHostAddress();
         }
 
     }

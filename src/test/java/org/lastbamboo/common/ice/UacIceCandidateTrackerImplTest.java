@@ -7,7 +7,7 @@ import java.net.Socket;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.id.uuid.UUID;
+import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 
 /**
  * Tests the tracker for UAC ICE candidates.
@@ -27,9 +27,10 @@ public class UacIceCandidateTrackerImplTest extends TestCase
         
         final InetAddress ia = InetAddress.getByName("www.google.com");
         final InetSocketAddress socketAddress = new InetSocketAddress(ia, 80);
-        final TcpPassiveIceCandidate candidate = new TcpPassiveIceCandidate(1, 
-            UUID.randomUUID(), 1, socketAddress);
-        tracker.visitTcpPassiveIceCandidate(candidate);
+        final IceTcpHostPassiveCandidate candidate = 
+            new IceTcpHostPassiveCandidate(socketAddress);
+        
+        tracker.visitTcpHostPassiveCandidate(candidate);
         
         final Socket sock = tracker.getBestSocket();
         assertNotNull(sock);

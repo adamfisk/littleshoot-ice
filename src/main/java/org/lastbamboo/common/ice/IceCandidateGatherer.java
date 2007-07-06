@@ -2,6 +2,8 @@ package org.lastbamboo.common.ice;
 
 import java.util.Collection;
 
+import org.lastbamboo.common.ice.candidate.IceCandidate;
+
 /**
  * Interface for classes that gather ICE candidates.
  */

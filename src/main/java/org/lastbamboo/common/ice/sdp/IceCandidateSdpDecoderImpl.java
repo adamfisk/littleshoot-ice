@@ -7,17 +7,16 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.StringTokenizer;
+import java.util.Scanner;
 
-import org.apache.commons.id.uuid.UUID;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.lastbamboo.common.ice.IceCandidate;
+import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.ice.TcpPassiveIceCandidate;
-import org.lastbamboo.common.ice.TcpSoIceCandidate;
-import org.lastbamboo.common.ice.UdpIceCandidate;
-import org.lastbamboo.common.ice.UnknownIceCandidate;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.MediaDescription;
 import org.lastbamboo.common.sdp.api.SdpException;
@@ -109,46 +108,100 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
         {
         LOG.trace("Parsing attribute: "+attribute);
         final List<IceCandidate> candidates = new LinkedList<IceCandidate>();
-        final StringTokenizer st = new StringTokenizer(attribute, " ");
-        while (st.hasMoreTokens())
+        final Scanner scanner = new Scanner(attribute);
+        scanner.useDelimiter(" ");
+        while (scanner.hasNext())
             {
-            final IceCandidate candidate = createIceCandidate(st);
+            final IceCandidate candidate = createIceCandidate(scanner);
             candidates.add(candidate);
             }
         return candidates;
         }
     
-    private IceCandidate createIceCandidate(final StringTokenizer st) 
+    private IceCandidate createIceCandidate(final Scanner scanner) 
         throws UnknownHostException 
         {
-        final int candidateId = Integer.parseInt(st.nextToken());
-        final UUID transportId = UUID.fromString(st.nextToken());
-        final String transportString = st.nextToken();
-        final int qValue = Integer.parseInt(st.nextToken());
-        final InetAddress address = InetAddress.getByName(st.nextToken());
+        final int foundation = Integer.parseInt(scanner.next());
+        final int componentId = Integer.parseInt(scanner.next());
+        final String transportString = scanner.next();
+        final IceTransportProtocol transportProtocol = 
+            IceTransportProtocol.valueOf(transportString);
+        final int priority = Integer.parseInt(scanner.next());
+        final InetAddress address = InetAddress.getByName(scanner.next());
+        final int port = Integer.parseInt(scanner.next());
+        final InetSocketAddress socketAddress = 
+            new InetSocketAddress(address, port);
+        final IceCandidateType type = IceCandidateType.valueOf(scanner.next());
         
-        final int port = Integer.parseInt(st.nextToken());
+        switch (transportProtocol)
+            {
+            case UDP:
+                switch (type)
+                    {
+                    case HOST:
+                        return new IceUdpHostCandidate(socketAddress);
+                    case RELAYED:
+                        break;
+                    case PEER_REFLEXIVE:
+                        break;
+                    case SERVER_REFLEXIVE:
+                        break;
+                    }
+                break;
+            case TCP_PASS:
+                switch (type)
+                    {
+                    case HOST:
+                        return new IceTcpHostPassiveCandidate(socketAddress);
+                    case RELAYED:
+                        LOG.debug("Received a TCP relay passive candidate");
+                        final InetAddress relatedAddress = 
+                            InetAddress.getByName(scanner.next());
+                        final int relatedPort = 
+                            Integer.parseInt(scanner.next());
+                        return new IceTcpRelayPassiveCandidate(socketAddress, 
+                            foundation, relatedAddress, relatedPort);
+                    case PEER_REFLEXIVE:
+                        break;
+                    case SERVER_REFLEXIVE:
+                        break;
+                    }
+                break;
+            case TCP_SO:
+                // Not currently used.  Awaiting progress on the ICE TCP
+                // draft before implementing things that could change.
+                switch (type)
+                    {
+                    case HOST:
+                        break;
+                    case RELAYED:
+                        break;
+                    case PEER_REFLEXIVE:
+                        break;
+                    case SERVER_REFLEXIVE:
+                        break;
+                    }
+                break;
+            case TCP_ACT:
+                // Not currently used.  Awaiting progress on the ICE TCP
+                // draft before implementing things that could change.
+                switch (type)
+                    {
+                    case HOST:
+                        break;
+                    case RELAYED:
+                        break;
+                    case PEER_REFLEXIVE:
+                        break;
+                    case SERVER_REFLEXIVE:
+                        break;
+                    }
+                break;
+            case UNKNOWN:
+                LOG.warn("Received unknown transport: "+transportString);
+                break;
+            }
         
-        if (transportString.equalsIgnoreCase(IceTransportProtocol.TCP_PASS.getName()))
-            {
-            return new TcpPassiveIceCandidate(candidateId, transportId, qValue, 
-                new InetSocketAddress(address, port));
-            }
-        else if (transportString.equalsIgnoreCase(IceTransportProtocol.TCP_SO.getName()))
-            {
-            return new TcpSoIceCandidate(candidateId, transportId, qValue,
-                new InetSocketAddress(address, port));
-            }
-        else if (transportString.equalsIgnoreCase(IceTransportProtocol.UDP.getName()))
-            {
-            return new UdpIceCandidate(candidateId, transportId, qValue,
-                new InetSocketAddress(address, port));
-            }
-        else 
-            {
-            return new UnknownIceCandidate(candidateId, transportId, qValue,
-                new InetSocketAddress(address, port), transportString);
-            }
+        return null;
         }
-
     }

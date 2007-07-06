@@ -3,14 +3,6 @@
 <beans>
 
     <!--
-        The factory for creating SDP attributes for ICE candidates.
-    -->
-    <bean id="iceCandidateAttributeFactory"
-          class="org.lastbamboo.common.ice.sdp.IceCandidateAttributeFactoryImpl">
-        <constructor-arg><ref bean="stackSdpFactory"/></constructor-arg>
-        </bean>
-
-    <!--
         Creates ICE candidates from SDP data.
     -->
     <bean id="iceCandidateFactory"
@@ -44,7 +36,7 @@
     -->
     <bean id="iceCandidateGenerator"
           class="org.lastbamboo.common.ice.IceCandidateGeneratorImpl">
-        <constructor-arg><ref local="bindingTracker"/></constructor-arg>
+        <constructor-arg><ref bean="turnClient"/></constructor-arg>
         </bean>
         
     <!--

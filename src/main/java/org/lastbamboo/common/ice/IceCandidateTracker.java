@@ -4,8 +4,10 @@ import java.net.Socket;
 
 /**
  * Interface for keeping track of available ICE candidates.
+ * 
+ * @param <T> The type of objects returned in visitor methods.
  */
-public interface IceCandidateTracker extends IceCandidateVisitor
+public interface IceCandidateTracker<T> extends IceCandidateVisitor<T>
     {
 
     /**

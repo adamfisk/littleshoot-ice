@@ -5,7 +5,7 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.lastbamboo.common.util.SocketHandler;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 
 /**
  * Tracks ICE candidates for a SIP User-Agent Server.
@@ -19,11 +19,11 @@ public final class UasIceCandidateTracker extends AbstractIceCandidateTracker
     private static final Log LOG = 
         LogFactory.getLog(UasIceCandidateTracker.class);
     
-    public void visitCandidates(final Collection candidates)
+    public void visitCandidates(final Collection<IceCandidate> candidates)
         {
         super.visitCandidates(candidates);
 
-        for (final TcpActiveIceCandidate candidate : super.m_tcpActiveRemoteCandidates)
+        for (final IceCandidate candidate : super.m_tcpActiveRemoteCandidates)
             {
             // TODO: Send TURN connect requests here to passive and active 
             // candidates?

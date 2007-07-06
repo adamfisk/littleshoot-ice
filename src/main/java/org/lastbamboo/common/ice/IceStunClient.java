@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 /**
@@ -25,5 +26,20 @@ public interface IceStunClient
      * @return The server reflexive address for this ICE candidate.
      */
     InetSocketAddress getServerReflexiveAddress();
+
+    /**
+     * Accessor for the address of the STUN server.
+     * 
+     * @return The address of the STUN server.
+     */
+    InetAddress getStunServerAddress();
+
+    /**
+     * Gets the base address on the local network (could be public Internet
+     * address) -- the address of this network interface on the local network.
+     * 
+     * @return The base address.
+     */
+    InetSocketAddress getBaseAddress();
 
     }

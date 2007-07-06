@@ -6,10 +6,10 @@ import java.util.Collection;
 
 import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.answer.AnswerProcessor;
-import org.lastbamboo.common.ice.IceCandidate;
 import org.lastbamboo.common.ice.IceCandidateTracker;
 import org.lastbamboo.common.ice.IceException;
 import org.lastbamboo.common.ice.UacIceCandidateTracker;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.sdp.api.SdpException;
 import org.lastbamboo.common.sdp.api.SdpFactory;

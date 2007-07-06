@@ -7,12 +7,18 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Vector;
 
-import org.lastbamboo.common.ice.IceCandidate;
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.ObjectUtils.Null;
 import org.lastbamboo.common.ice.IceCandidateVisitor;
-import org.lastbamboo.common.ice.TcpActiveIceCandidate;
-import org.lastbamboo.common.ice.TcpPassiveIceCandidate;
-import org.lastbamboo.common.ice.TcpSoIceCandidate;
-import org.lastbamboo.common.ice.UdpIceCandidate;
+import org.lastbamboo.common.ice.candidate.AbstractStunServerIceCandidate;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.Connection;
 import org.lastbamboo.common.sdp.api.MediaDescription;
@@ -29,7 +35,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Class for encoding ICE candidates into SDP.
  */
-public class IceCandidateSdpEncoder implements IceCandidateVisitor
+public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
     {
     
     private final Logger LOG = 
@@ -37,9 +43,6 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
     
     private final SdpFactory m_sdpFactory;
     private final SessionDescription m_sessionDescription;
-
-    private final IceCandidateAttributeFactory 
-        m_iceCandidateAttributeFactory;
 
     private final Vector<MediaDescription> m_mediaDescriptions;
 
@@ -49,9 +52,6 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
     public IceCandidateSdpEncoder()
         {
         this.m_sdpFactory = new SdpFactory();
-        this.m_iceCandidateAttributeFactory = 
-            new IceCandidateAttributeFactoryImpl(this.m_sdpFactory);
-        
         final InetAddress address = getAddress();
         final String addrType = 
             address instanceof Inet6Address ? "IP6" : "IP4";
@@ -139,85 +139,94 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
             LOG.error("Could not add the media descriptions", e);
             }
         }
-
-    public void visitTcpPassiveIceCandidate(
-        final TcpPassiveIceCandidate candidate)
+    
+    public Null visitTcpHostPassiveCandidate(
+        final IceTcpHostPassiveCandidate candidate)
         {
-        final InetSocketAddress address = candidate.getSocketAddress();
-        final Attribute attribute = 
-            this.m_iceCandidateAttributeFactory.createTcpIceCandidateAttribute(
-                address, candidate.getCandidateId(), candidate.getPriority());
-        addCandidate(candidate, attribute);
+        addCandidate(candidate);
+        return ObjectUtils.NULL;
         }
 
-    public void visitUdpIceCandidate(final UdpIceCandidate candidate)
+
+    public Null visitTcpRelayPassiveCandidate(
+        final IceTcpRelayPassiveCandidate candidate)
         {
-        final InetSocketAddress address = candidate.getSocketAddress();
-        final Attribute attribute = 
-            this.m_iceCandidateAttributeFactory.createUdpIceCandidateAttribute(
-                address, candidate.getCandidateId(), candidate.getPriority());
+        final Attribute attribute = createAttributeWithRelated(candidate);
         addCandidate(candidate, attribute);
+        return ObjectUtils.NULL;
+        }
+
+
+    public Null visitTcpServerReflexiveSoCandidate(
+        final IceTcpServerReflexiveSoCandidate candidate)
+        {
+        final Attribute attribute = createAttributeWithRelated(candidate);
+        addCandidate(candidate, attribute);
+        return ObjectUtils.NULL;
+        }
+
+
+    public Null visitUdpHostCandidate(final IceUdpHostCandidate candidate)
+        {
+        addCandidate(candidate);
+        return ObjectUtils.NULL;
+        }
+
+
+    public Null visitUdpPeerReflexiveCandidate(
+        final IceUdpPeerReflexiveCandidate candidate)
+        {
+        final Attribute attribute = createAttributeWithRelated(candidate);
+        addCandidate(candidate, attribute);
+        return ObjectUtils.NULL;
+        }
+
+
+    public Null visitUdpRelayCandidate(final IceUdpRelayCandidate candidate)
+        {
+        final Attribute attribute = createAttributeWithRelated(candidate);
+        addCandidate(candidate, attribute);
+        return ObjectUtils.NULL;
+        }
+
+
+    public Null visitUdpServerReflexiveCandidate(
+        final IceUdpServerReflexiveCandidate candidate)
+        {
+        final Attribute attribute = createAttributeWithRelated(candidate);
+        addCandidate(candidate, attribute);
+        return ObjectUtils.NULL;
         }
     
+    private void addCandidate(final IceCandidate candidate)
+        {
+        final Attribute attribute = createAttribute(candidate);
+        addCandidate(candidate, attribute);
+        }
 
     private void addCandidate(final IceCandidate candidate, 
         final Attribute attribute)
         {
         final InetSocketAddress address = candidate.getSocketAddress();
-        final Vector<Attribute> attributes = new Vector<Attribute>(); 
+        final Vector<Attribute> attributes = new Vector<Attribute>();
         attributes.add(attribute);
         try
             {
-            addMediaDescription(address, attributes, 
-                candidate.getTransport().getName());
+            // TODO: Shouldn't there be multiple attributes for each media
+            // description?  Should we have multiple media descriptions here?
+            final MediaDescription md = 
+                createMessageMediaDesc(address, 
+                    candidate.getTransport().getName());
+            
+            md.setAttributes(attributes);
+            
+            LOG.debug("Adding media description");
+            this.m_mediaDescriptions.add(md);
             }
         catch (final SdpException e)
             {
             LOG.error("Could not encode SDP!!", e);
             }
-        }
-
-
-    public void visitTcpActiveIceCandidate(
-        final TcpActiveIceCandidate candidate)
-        {
-        // TODO Auto-generated method stub
-
-        }
-    
-    public void visitTcpSoIceCandidate(final TcpSoIceCandidate candidate)
-        {
-        // TODO We don't support this yet.
-        }
-
-    public void visitUnknownIceCandidate(final IceCandidate candidate)
-        {
-        // TODO Auto-generated method stub
-
-        }
-    
-    /**
-     * Creates a new media description for transferring arbitrary TCP data.
-     * This will include all ICE candidates for the media, such as TURN
-     * or STUN-derived addresses.
-     * @param descriptions The descriptions to add this description to.
-     * @param address The available endpoint for this description.
-     * @param priority The priority of this TCP ICE candidate.
-     * @param attributes The SDP attributes this ICE candidate.
-     * @param transportType 
-     * @throws SdpException If there's any error generating SDP data.
-     */
-    private void addMediaDescription(final InetSocketAddress address, 
-        final Vector attributes, final String transportType) 
-        throws SdpException
-        {    
-        final MediaDescription md = 
-            createMessageMediaDesc(address, transportType);
-        
-        md.setAttributes(attributes);
-        
-        LOG.debug("Adding media description");
-        this.m_mediaDescriptions.add(md);
         }
     
     /**
@@ -243,5 +252,48 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor
         md.setConnection(conn);
         return md;
         }
+    
+    private StringBuilder createBaseCandidateAttribute(
+        final IceCandidate candidate)
+        {
+        final String space = " ";
+        final StringBuilder sb = new StringBuilder();
+        sb.append(candidate.getFoundation());
+        sb.append(space);
+        sb.append(candidate.getComponentId());
+        sb.append(space);
+        sb.append(candidate.getTransport().getName());
+        sb.append(space);
+        sb.append(candidate.getPriority());
+        sb.append(space);
+        sb.append(candidate.getSocketAddress().getAddress().getHostAddress());
+        sb.append(space);
+        sb.append(candidate.getSocketAddress().getPort());
+        return sb;
+        }
 
+    private Attribute createAttribute(final IceCandidate candidate)
+        {
+        final StringBuilder sb = createBaseCandidateAttribute(candidate);
+        return this.m_sdpFactory.createAttribute("candidate", sb.toString());
+        }
+    
+    /**
+     * Encodes a candidate attribute with the related address and related
+     * port field filled in.
+     * 
+     * @param candidate The candidate.
+     * @return The new attribute.
+     */
+    private Attribute createAttributeWithRelated(
+        final AbstractStunServerIceCandidate candidate)
+        {
+        final StringBuilder sb = createBaseCandidateAttribute(candidate);
+        final String space = " ";
+        sb.append(space);
+        sb.append(candidate.getRelatedAddress().getHostAddress());
+        sb.append(space);
+        sb.append(candidate.getRelatedPort());
+        return this.m_sdpFactory.createAttribute("candidate", sb.toString());
+        }
     }

@@ -2,7 +2,7 @@ package org.lastbamboo.common.ice.sdp;
 
 import java.util.Collection;
 
-import org.lastbamboo.common.ice.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.sdp.api.SdpException;
 import org.lastbamboo.common.sdp.api.SessionDescription;
 

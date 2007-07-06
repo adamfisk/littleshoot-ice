@@ -2,13 +2,14 @@ package org.lastbamboo.common.ice;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 
-import org.apache.commons.id.uuid.UUID;
-import org.lastbamboo.common.util.NetworkUtils;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
+import org.lastbamboo.common.turn.client.TurnClient;
 import org.lastbamboo.common.util.ShootConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,16 +97,20 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
      */
     private static final int TCP_PASSIVE_DIRECTION_PREF = 2;
 
-    private final BindingTracker m_bindingTracker;
+    //private final BindingTracker m_bindingTracker;
+
+
+    private final TurnClient m_turnClient;
 
     /**
      * Creates a new class for gathering ICE candidates.
      * 
-     * @param bindingTracker The class that keeps track of bindings.
+     * @param turnClient The TURN client for getting data about TURN 
+     * candidates.
      */
-    public IceCandidateGathererImpl(final BindingTracker bindingTracker)
+    public IceCandidateGathererImpl(final TurnClient turnClient)
         {
-        m_bindingTracker = bindingTracker;
+        m_turnClient = turnClient;
         }
 
     public Collection<IceCandidate> gatherCandidates()
@@ -113,98 +118,68 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
         
-        final Collection<TcpPassiveIceCandidate> tcpCandidates = 
+        final Collection<IceCandidate> tcpCandidates = 
             createTcpCandidates();
         candidates.addAll(tcpCandidates);
         
-        final Collection<UdpIceCandidate> udpCandidates =
+        final Collection<IceCandidate> udpCandidates =
             createUdpCandidates();
         
         candidates.addAll(udpCandidates);
         return candidates; 
         }
     
-    private Collection<UdpIceCandidate> createUdpCandidates()
+    private Collection<IceCandidate> createUdpCandidates()
         {
-        final Collection<UdpIceCandidate> candidates =
-            new LinkedList<UdpIceCandidate>();
+        final Collection<IceCandidate> candidates =
+            new LinkedList<IceCandidate>();
 
         final IceStunClient iceClient = new IceUdpStunClient();
         
-        final InetSocketAddress hostSocketAddress = iceClient.getHostAddress(); 
         final InetSocketAddress serverReflexiveAddress = 
             iceClient.getServerReflexiveAddress();
         
-        final UdpIceCandidate hostCandidate = 
-            new UdpIceCandidate(COMPONENT_ID, UUID.randomUUID(), 
-                UDP_HOST_PRIORITY, hostSocketAddress);
+        final InetSocketAddress baseSocketAddress = iceClient.getBaseAddress();
         
-        final UdpIceCandidate serverReflexiveCandidate = 
-            new UdpIceCandidate(COMPONENT_ID, UUID.randomUUID(), 
-                UDP_SERVER_REFLEXIVE_PRIORITY, serverReflexiveAddress);
+        final IceUdpServerReflexiveCandidate serverReflexiveCandidate =
+            new IceUdpServerReflexiveCandidate(serverReflexiveAddress, 
+                baseSocketAddress.getAddress(), 
+                iceClient.getStunServerAddress(),
+                baseSocketAddress.getAddress(), baseSocketAddress.getPort());
         
-        candidates.add(hostCandidate);
         candidates.add(serverReflexiveCandidate);
         return candidates;
         }
 
-    private Collection<TcpPassiveIceCandidate> createTcpCandidates()
+    private Collection<IceCandidate> createTcpCandidates()
         {
-        final Collection<InetSocketAddress> turnTcpAddresses = 
-            this.m_bindingTracker.getTurnTcpBindings();
-        final Collection<TcpPassiveIceCandidate> candidates = 
-            new LinkedList<TcpPassiveIceCandidate>();
+        final InetSocketAddress relayAddress = 
+            this.m_turnClient.getRelayAddress();
+        final InetAddress stunServerAddress = 
+            this.m_turnClient.getStunServerAddress();
         
-        // TODO: This does not follow the encoding from the latest ICE drafts!!
-        for (final InetSocketAddress address : turnTcpAddresses)
-            {
-            final TcpPassiveIceCandidate candidate = 
-                new TcpPassiveIceCandidate(COMPONENT_ID, UUID.randomUUID(), 
-                    TCP_PASSIVE_RELAY_PRIORITY, address);
-            candidates.add(candidate);
-            }
+        final InetSocketAddress baseSocketAddress = 
+            this.m_turnClient.getBaseAddress();
+        final InetAddress baseRelayAddress = baseSocketAddress.getAddress();
+        final int baseRelayPort = baseSocketAddress.getPort();
         
-        try
-            {
-            final InetAddress ia = NetworkUtils.getLocalHost();
-            final int port = ShootConstants.HTTP_PORT;
-            final InetSocketAddress address = 
-                new InetSocketAddress(ia, port);
-            final TcpPassiveIceCandidate candidate = 
-                new TcpPassiveIceCandidate(COMPONENT_ID, UUID.randomUUID(), 
-                    TCP_PASSIVE_LOCAL_PRIORITY, address);
-            candidates.add(candidate);
-            }
-        catch (final UnknownHostException e)
-            {
-            LOG.error("Could not determine the local host", e);
-            }
+        // Add the relay candidate.
+        final Collection<IceCandidate> candidates = 
+            new LinkedList<IceCandidate>();
+        
+        final IceTcpRelayPassiveCandidate candidate = 
+            new IceTcpRelayPassiveCandidate(relayAddress, baseRelayAddress, 
+                stunServerAddress, baseRelayAddress, baseRelayPort);
+        candidates.add(candidate);
+        
+        // Add the host candidate.
+        final int port = ShootConstants.HTTP_PORT;
+        final InetSocketAddress address = 
+            new InetSocketAddress(baseRelayAddress, port);
+        final IceTcpHostPassiveCandidate hostCandidate = 
+            new IceTcpHostPassiveCandidate(address);
+        candidates.add(hostCandidate);
         
         return candidates;
         }
-    
-    private Collection<TcpPassiveIceCandidate> createTcpPassiveIceCandidates()
-        {
-        /*
-        final InetSocketAddress localAddress = 
-            this.m_iceTcpPassiveServer.getLocalAddress();
-        final InetSocketAddress publicAddress = 
-            this.m_iceTcpPassiveServer.getPublicAddress();
-        
-        final TcpPassiveIceCandidate localCandidate = 
-            new TcpPassiveIceCandidate(1, UUID.randomUUID(), 
-                 TCP_PASSIVE_LOCAL_PRIORITY, localAddress);
-        final TcpPassiveIceCandidate publicCandidate = 
-            new TcpPassiveIceCandidate(1, UUID.randomUUID(), 
-                 TCP_PASSIVE_LOCAL_PRIORITY, publicAddress);
-        
-        final Collection<TcpPassiveIceCandidate> candidates = 
-            new LinkedList<TcpPassiveIceCandidate>();
-        candidates.add(localCandidate);
-        candidates.add(publicCandidate);
-        return candidates;
-        */
-        return Collections.emptySet();
-        }
-
     }

@@ -10,17 +10,18 @@ import java.util.StringTokenizer;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.id.uuid.UUID;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.lastbamboo.common.ice.IceCandidate;
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.ice.TcpPassiveIceCandidate;
-import org.lastbamboo.common.ice.UdpIceCandidate;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.MediaDescription;
 import org.lastbamboo.common.sdp.api.SessionDescription;
+import org.lastbamboo.common.util.NetworkUtils;
 
 /**
  * Test for the class for generating SDP data.
@@ -46,6 +47,8 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         
         final IceCandidateSdpEncoder encoder = new IceCandidateSdpEncoder();
         
+        final InetAddress stunServerAddress = 
+            InetAddress.getByName("23.42.4.96");
         final InetSocketAddress sa1 = 
             new InetSocketAddress("46.2.62.1", 5466);
         final InetSocketAddress sa2 = 
@@ -53,21 +56,32 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         final InetSocketAddress sa3 = 
             new InetSocketAddress("192.168.1.3", 7652);
         
-        final UdpIceCandidate udpCandidate = 
-            new UdpIceCandidate(1, UUID.randomUUID(), 3, sa1);
+        final InetAddress relatedAddress = InetAddress.getByName("42.12.32.1");
+        final int relatedPort = 4728;
         
-        final TcpPassiveIceCandidate tcpPassiveCandidate = 
-            new TcpPassiveIceCandidate(1, UUID.randomUUID(), 5, sa2);
+        final IceUdpServerReflexiveCandidate udpServerReflexiveCandidate = 
+            new IceUdpServerReflexiveCandidate(sa1, NetworkUtils.getLocalHost(), 
+                sa1.getAddress(), relatedAddress, relatedPort);
+        //final UdpIceCandidate udpCandidate = 
+          //  new UdpIceCandidate(1, UUID.randomUUID(), 3, sa1);
         
-        final TcpPassiveIceCandidate localCandidate = 
-            new TcpPassiveIceCandidate(1, UUID.randomUUID(), 5, sa3);
+        final IceTcpRelayPassiveCandidate tcpRelayPassiveCandidate =
+            new IceTcpRelayPassiveCandidate(sa2, NetworkUtils.getLocalHost(), 
+                stunServerAddress, relatedAddress, relatedPort);
+        //final TcpPassiveIceCandidate tcpPassiveCandidate = 
+          //  new TcpPassiveIceCandidate(1, UUID.randomUUID(), 5, sa2);
+        
+        final IceTcpHostPassiveCandidate tcpHostPassiveCandidate =
+            new IceTcpHostPassiveCandidate(sa3);
+        //final TcpPassiveIceCandidate localCandidate = 
+          //  new TcpPassiveIceCandidate(1, UUID.randomUUID(), 5, sa3);
         
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
         
-        candidates.add(udpCandidate);
-        candidates.add(tcpPassiveCandidate);
-        candidates.add(localCandidate);
+        candidates.add(udpServerReflexiveCandidate);
+        candidates.add(tcpRelayPassiveCandidate);
+        candidates.add(tcpHostPassiveCandidate);
         encoder.visitCandidates(candidates);
         final byte[] sdpBytes = encoder.getSdp();
         
@@ -100,18 +114,12 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         verifyCandidates(tcpMediaDesc, tcpBindings, 
             IceTransportProtocol.TCP_PASS.getName());
         verifyCandidates(localTcpMediaDesc, localTcpBindings, 
-            IceTransportProtocol.TCP_PASS.getName());
+            IceTransportProtocol.TCP_PASS.getName(), 6);
         }
 
-    /**
-     * Verifies that the candidates listed in the given media description
-     * match the expected candidate addresses.
-     * @param mediaDesc The media description to check.
-     * @param bindings The expected candidate bindings.
-     * @param transport The transport for the candidate, such as TCP or UDP. 
-     */
-    private void verifyCandidates(final MediaDescription mediaDesc, 
-        final Collection bindings, final String transport) throws Exception
+    private void verifyCandidates(MediaDescription mediaDesc, 
+        final Collection<InetSocketAddress> bindings, 
+        final String transport, final int numElements) throws Exception
         {
         final Collection attributes = mediaDesc.getAttributes(true);
         assertTrue(attributes.size() >= bindings.size());
@@ -128,11 +136,14 @@ public final class IceCandidateSdpEncoderTest extends TestCase
             final StringTokenizer st = 
                 new StringTokenizer(attribute.getValue(), " ");
             
-            assertEquals(6, st.countTokens());
-            assertEquals("1", st.nextToken());
+            assertEquals(numElements, st.countTokens());
             
-            // Just parse the TID for now.
-            st.nextToken();
+            // Parse the foundation.
+            assertTrue(NumberUtils.isNumber(st.nextToken()));
+            //assertEquals("1", st.nextToken());
+            
+            // Just parse the component ID.
+            assertTrue(NumberUtils.isNumber(st.nextToken()));
             
             assertEquals(transport, st.nextToken());
             assertTrue(NumberUtils.isNumber(st.nextToken()));
@@ -142,11 +153,31 @@ public final class IceCandidateSdpEncoderTest extends TestCase
             final InetSocketAddress socketAddress = 
                 new InetSocketAddress(address, port);
             
-            
             assertTrue("Address "+socketAddress+" not in: "+bindings, 
                 bindings.contains(socketAddress));
+            
+            if (st.hasMoreElements())
+                {
+                // Just make sure this doesn't throw an exception.
+                InetAddress.getByName(st.nextToken());
+                assertTrue(NumberUtils.isNumber(st.nextToken()));
+                }
             }
         
         assertEquals(bindings.size(), numCandidates);
+        }
+
+    /**
+     * Verifies that the candidates listed in the given media description
+     * match the expected candidate addresses.
+     * @param mediaDesc The media description to check.
+     * @param bindings The expected candidate bindings.
+     * @param transport The transport for the candidate, such as TCP or UDP. 
+     */
+    private void verifyCandidates(final MediaDescription mediaDesc, 
+        final Collection<InetSocketAddress> bindings, final String transport) 
+        throws Exception
+        {
+        verifyCandidates(mediaDesc, bindings, transport, 8);
         }
     }

@@ -2,6 +2,8 @@ package org.lastbamboo.common.ice;
 
 import java.util.Comparator;
 
+import org.lastbamboo.common.ice.candidate.IceCandidate;
+
 /**
  * Comparator for ICE candidates.  Candidates with a higher priority come
  * before candidates with a lower priority.

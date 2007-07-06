@@ -10,6 +10,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.util.NetworkUtils;
 
 /**
@@ -89,21 +90,17 @@ public final class UacIceCandidateTracker extends AbstractIceCandidateTracker
         
         synchronized (this.m_tcpPassiveRemoteCandidates)
             {
-            for (final Iterator iter = this.m_tcpPassiveRemoteCandidates.iterator(); 
-                iter.hasNext();)
+            for (final IceCandidate candidate : this.m_tcpPassiveRemoteCandidates)
                 {
-                final IceCandidate candidate = (IceCandidate) iter.next();
-                connectToTcpCandidate(candidate);   
+                connectToTcpCandidate(candidate);
                 }
             }
         
         synchronized (this.m_tcpSoCandidates)
             {
-            for (final Iterator<TcpSoIceCandidate> iter = 
-                this.m_tcpSoCandidates.iterator(); iter.hasNext();)
+            for (final IceCandidate candidate : this.m_tcpSoCandidates)
                 {
-                final TcpSoIceCandidate candidate = iter.next();
-                connectToTcpSoCandidate(candidate);   
+                connectToTcpSoCandidate(candidate);
                 }
             }
         
@@ -172,7 +169,7 @@ public final class UacIceCandidateTracker extends AbstractIceCandidateTracker
         return sock;
         }
 
-    private void connectToTcpSoCandidate(final TcpSoIceCandidate candidate)
+    private void connectToTcpSoCandidate(final IceCandidate candidate)
         {
         // TODO Use the STUNT code here?  Implement it ourselves? The STUNT 
         // code would look something like the code here:

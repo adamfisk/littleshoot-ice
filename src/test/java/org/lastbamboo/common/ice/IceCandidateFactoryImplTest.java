@@ -7,6 +7,7 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
 import org.lastbamboo.common.sdp.api.SessionDescription;
