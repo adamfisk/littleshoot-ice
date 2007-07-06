@@ -13,6 +13,7 @@ import junit.framework.TestCase;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
@@ -114,7 +115,7 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         verifyCandidates(tcpMediaDesc, tcpBindings, 
             IceTransportProtocol.TCP_PASS.getName());
         verifyCandidates(localTcpMediaDesc, localTcpBindings, 
-            IceTransportProtocol.TCP_PASS.getName(), 6);
+            IceTransportProtocol.TCP_PASS.getName(), 8);
         }
 
     private void verifyCandidates(MediaDescription mediaDesc, 
@@ -156,10 +157,24 @@ public final class IceCandidateSdpEncoderTest extends TestCase
             assertTrue("Address "+socketAddress+" not in: "+bindings, 
                 bindings.contains(socketAddress));
             
+            final String typeToken = st.nextToken();
+            assertEquals("typ", typeToken);
+            
+            final String typeString = st.nextToken();
+            
+            // Just make sure it's there.
+            final IceCandidateType type = IceCandidateType.toType(typeString);
+            assertNotNull(type);
+            
             if (st.hasMoreElements())
                 {
+                final String raddr = st.nextToken();
+                assertEquals("raddr", raddr);
                 // Just make sure this doesn't throw an exception.
                 InetAddress.getByName(st.nextToken());
+                
+                final String rport = st.nextToken();
+                assertEquals("rport", rport);
                 assertTrue(NumberUtils.isNumber(st.nextToken()));
                 }
             }
@@ -178,6 +193,6 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         final Collection<InetSocketAddress> bindings, final String transport) 
         throws Exception
         {
-        verifyCandidates(mediaDesc, bindings, transport, 8);
+        verifyCandidates(mediaDesc, bindings, transport, 12);
         }
     }

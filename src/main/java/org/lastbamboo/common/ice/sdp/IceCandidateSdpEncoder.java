@@ -269,6 +269,10 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         sb.append(candidate.getSocketAddress().getAddress().getHostAddress());
         sb.append(space);
         sb.append(candidate.getSocketAddress().getPort());
+        sb.append(space);
+        sb.append("typ");
+        sb.append(space);
+        sb.append(candidate.getType().toSdp());
         return sb;
         }
 
@@ -291,7 +295,11 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         final StringBuilder sb = createBaseCandidateAttribute(candidate);
         final String space = " ";
         sb.append(space);
+        sb.append("raddr");
+        sb.append(space);
         sb.append(candidate.getRelatedAddress().getHostAddress());
+        sb.append(space);
+        sb.append("rport");
         sb.append(space);
         sb.append(candidate.getRelatedPort());
         return this.m_sdpFactory.createAttribute("candidate", sb.toString());

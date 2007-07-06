@@ -125,13 +125,20 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
         final int componentId = Integer.parseInt(scanner.next());
         final String transportString = scanner.next();
         final IceTransportProtocol transportProtocol = 
-            IceTransportProtocol.valueOf(transportString);
+            IceTransportProtocol.toTransport(transportString);
         final int priority = Integer.parseInt(scanner.next());
         final InetAddress address = InetAddress.getByName(scanner.next());
         final int port = Integer.parseInt(scanner.next());
         final InetSocketAddress socketAddress = 
             new InetSocketAddress(address, port);
-        final IceCandidateType type = IceCandidateType.valueOf(scanner.next());
+        
+        final String typeToken = scanner.next();
+        if (!typeToken.equals("typ"))
+            {
+            LOG.error("Unexpected type token: "+typeToken);
+            }
+        
+        final IceCandidateType type = IceCandidateType.toType(scanner.next());
         
         switch (transportProtocol)
             {
@@ -155,8 +162,19 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                         return new IceTcpHostPassiveCandidate(socketAddress);
                     case RELAYED:
                         LOG.debug("Received a TCP relay passive candidate");
+                        final String raddr = scanner.next();
+                        if (!raddr.equals("raddr"))
+                            {
+                            LOG.error("Bad related address: "+raddr);
+                            }
                         final InetAddress relatedAddress = 
                             InetAddress.getByName(scanner.next());
+                        
+                        final String rport = scanner.next();
+                        if (!rport.equals("rport"))
+                            {
+                            LOG.error("Bad related port: "+rport);
+                            }
                         final int relatedPort = 
                             Integer.parseInt(scanner.next());
                         return new IceTcpRelayPassiveCandidate(socketAddress, 

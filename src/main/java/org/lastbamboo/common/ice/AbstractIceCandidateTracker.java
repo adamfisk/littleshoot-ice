@@ -98,6 +98,8 @@ public abstract class AbstractIceCandidateTracker
     public Null visitUdpHostCandidate(
         final IceUdpHostCandidate candidate)
         {
+        LOG.debug("Visiting ICE STUN Candidate: "+candidate);
+        this.m_udpCandidates.add(candidate);
         return ObjectUtils.NULL;
         }
 
