@@ -144,7 +144,7 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
         {
         final int foundation = Integer.parseInt(scanner.next());
         final int componentId = Integer.parseInt(scanner.next());
-        final String transportString = scanner.next();
+        final String transportString = scanner.next();  
         final IceTransportProtocol transportProtocol = 
             IceTransportProtocol.toTransport(transportString);
         final int priority = Integer.parseInt(scanner.next());
