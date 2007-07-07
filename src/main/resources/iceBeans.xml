@@ -5,7 +5,7 @@
     <!--
         Creates ICE candidates from SDP data.
     -->
-    <bean id="iceCandidateFactory"
+    <bean id="iceSdpDecoder"
           class="org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl">
         <constructor-arg><ref local="stackSdpFactory"/></constructor-arg>
         </bean>
@@ -62,7 +62,7 @@
     -->
     <bean id="iceAnswerProcessor"
           class="org.lastbamboo.common.ice.answer.IceAnswerProcessor">
-        <constructor-arg><ref local="iceCandidateFactory"/></constructor-arg>
+        <constructor-arg><ref local="iceSdpDecoder"/></constructor-arg>
         </bean>
 
     <!--
