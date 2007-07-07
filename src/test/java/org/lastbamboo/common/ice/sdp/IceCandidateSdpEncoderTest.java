@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import junit.framework.TestCase;
 
@@ -35,7 +36,7 @@ public final class IceCandidateSdpEncoderTest extends TestCase
      */
     private static final Log LOG = 
         LogFactory.getLog(IceCandidateSdpEncoderTest.class);
-    
+
     /**
      * Tests the method for creating SDP for the local host.
      * @throws Exception If any unexpected error occurs.
@@ -59,23 +60,20 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         
         final InetAddress relatedAddress = InetAddress.getByName("42.12.32.1");
         final int relatedPort = 4728;
+        final InetAddress relayRelatedAddress = 
+            InetAddress.getByName("192.168.1.1");
+        final int relayRelatedPort = 8768;
         
         final IceUdpServerReflexiveCandidate udpServerReflexiveCandidate = 
             new IceUdpServerReflexiveCandidate(sa1, NetworkUtils.getLocalHost(), 
                 sa1.getAddress(), relatedAddress, relatedPort);
-        //final UdpIceCandidate udpCandidate = 
-          //  new UdpIceCandidate(1, UUID.randomUUID(), 3, sa1);
         
         final IceTcpRelayPassiveCandidate tcpRelayPassiveCandidate =
             new IceTcpRelayPassiveCandidate(sa2, NetworkUtils.getLocalHost(), 
-                stunServerAddress, relatedAddress, relatedPort);
-        //final TcpPassiveIceCandidate tcpPassiveCandidate = 
-          //  new TcpPassiveIceCandidate(1, UUID.randomUUID(), 5, sa2);
-        
+                stunServerAddress, relayRelatedAddress, relayRelatedPort);
+
         final IceTcpHostPassiveCandidate tcpHostPassiveCandidate =
             new IceTcpHostPassiveCandidate(sa3);
-        //final TcpPassiveIceCandidate localCandidate = 
-          //  new TcpPassiveIceCandidate(1, UUID.randomUUID(), 5, sa3);
         
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
@@ -93,13 +91,18 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         
         // There should be 3 media descriptions -- one for UDP, and two for
         // TCP (TURN and local).
-        assertEquals(3, mediaDescriptions.size());
+        assertEquals(1, mediaDescriptions.size());
         
         final Iterator iter = mediaDescriptions.iterator();
-        final MediaDescription udpMediaDesc = (MediaDescription) iter.next();
-        final MediaDescription tcpMediaDesc = (MediaDescription) iter.next();
-        final MediaDescription localTcpMediaDesc = 
-            (MediaDescription) iter.next();
+        final MediaDescription md = (MediaDescription) iter.next();
+        
+        final Vector attributes = md.getAttributes(false);
+        final Iterator attributesIter = attributes.iterator();
+        
+        // The order these are encoded in will likely change in the future!!
+        final Attribute udpAttribute = (Attribute) attributesIter.next();
+        final Attribute tcpRelayAttribute = (Attribute) attributesIter.next();
+        final Attribute tcpHostAttribute = (Attribute) attributesIter.next();
         
         // Just create a collection with one element for the UDP test.
         final Collection<InetSocketAddress> udpBindings = 
@@ -111,72 +114,69 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         final Collection<InetSocketAddress> localTcpBindings = 
             new HashSet<InetSocketAddress>();
         localTcpBindings.add(sa3);
-        verifyCandidates(udpMediaDesc, udpBindings, "udp");
-        verifyCandidates(tcpMediaDesc, tcpBindings, 
+
+        verifyCandidates(udpAttribute, udpBindings, 
+            IceTransportProtocol.UDP.getName());
+        verifyCandidates(tcpRelayAttribute, tcpBindings, 
             IceTransportProtocol.TCP_PASS.getName());
-        verifyCandidates(localTcpMediaDesc, localTcpBindings, 
+        verifyCandidates(tcpHostAttribute, localTcpBindings, 
             IceTransportProtocol.TCP_PASS.getName(), 8);
         }
 
-    private void verifyCandidates(MediaDescription mediaDesc, 
+    private void verifyCandidates(Attribute attribute, 
         final Collection<InetSocketAddress> bindings, 
         final String transport, final int numElements) throws Exception
         {
-        final Collection attributes = mediaDesc.getAttributes(true);
-        assertTrue(attributes.size() >= bindings.size());
         int numCandidates = 0;
-        for (final Iterator iter = attributes.iterator(); iter.hasNext();)
+        LOG.trace("Testing attribute: "+attribute);
+        if (!attribute.getName().startsWith("candidate"))
             {
-            final Attribute attribute = (Attribute) iter.next();
-            LOG.trace("Testing attribute: "+attribute);
-            if (!attribute.getName().startsWith("candidate"))
-                {
-                continue;
-                }
-            numCandidates++;
-            final StringTokenizer st = 
-                new StringTokenizer(attribute.getValue(), " ");
+            fail("Bad candidate: "+attribute);
+            return;
+            }
+        numCandidates++;
+        final StringTokenizer st = 
+            new StringTokenizer(attribute.getValue(), " ");
+        
+        assertEquals(numElements, st.countTokens());
+        
+        // Parse the foundation.
+        assertTrue(NumberUtils.isNumber(st.nextToken()));
+        //assertEquals("1", st.nextToken());
+        
+        // Just parse the component ID.
+        assertTrue(NumberUtils.isNumber(st.nextToken()));
+        
+        assertEquals(transport, st.nextToken());
+        assertTrue(NumberUtils.isNumber(st.nextToken()));
+        
+        final InetAddress address = InetAddress.getByName(st.nextToken());
+        final int port = Integer.parseInt(st.nextToken());
+        final InetSocketAddress socketAddress = 
+            new InetSocketAddress(address, port);
+        
+        assertTrue("Address "+socketAddress+" not in: "+bindings, 
+            bindings.contains(socketAddress));
+        
+        final String typeToken = st.nextToken();
+        assertEquals("typ", typeToken);
+        
+        final String typeString = st.nextToken();
+        
+        // Just make sure it's there.
+        final IceCandidateType type = IceCandidateType.toType(typeString);
+        assertNotNull(type);
+        
+        if (st.hasMoreElements())
+            {
+            final String raddr = st.nextToken();
+            assertEquals("raddr", raddr);
+            // Just make sure this doesn't throw an exception.
+            InetAddress.getByName(st.nextToken());
             
-            assertEquals(numElements, st.countTokens());
-            
-            // Parse the foundation.
+            final String rport = st.nextToken();
+            assertEquals("rport", rport);
             assertTrue(NumberUtils.isNumber(st.nextToken()));
-            //assertEquals("1", st.nextToken());
-            
-            // Just parse the component ID.
-            assertTrue(NumberUtils.isNumber(st.nextToken()));
-            
-            assertEquals(transport, st.nextToken());
-            assertTrue(NumberUtils.isNumber(st.nextToken()));
-            
-            final InetAddress address = InetAddress.getByName(st.nextToken());
-            final int port = Integer.parseInt(st.nextToken());
-            final InetSocketAddress socketAddress = 
-                new InetSocketAddress(address, port);
-            
-            assertTrue("Address "+socketAddress+" not in: "+bindings, 
-                bindings.contains(socketAddress));
-            
-            final String typeToken = st.nextToken();
-            assertEquals("typ", typeToken);
-            
-            final String typeString = st.nextToken();
-            
-            // Just make sure it's there.
-            final IceCandidateType type = IceCandidateType.toType(typeString);
-            assertNotNull(type);
-            
-            if (st.hasMoreElements())
-                {
-                final String raddr = st.nextToken();
-                assertEquals("raddr", raddr);
-                // Just make sure this doesn't throw an exception.
-                InetAddress.getByName(st.nextToken());
-                
-                final String rport = st.nextToken();
-                assertEquals("rport", rport);
-                assertTrue(NumberUtils.isNumber(st.nextToken()));
-                }
             }
         
         assertEquals(bindings.size(), numCandidates);
@@ -185,14 +185,14 @@ public final class IceCandidateSdpEncoderTest extends TestCase
     /**
      * Verifies that the candidates listed in the given media description
      * match the expected candidate addresses.
-     * @param mediaDesc The media description to check.
+     * @param attribute The media description to check.
      * @param bindings The expected candidate bindings.
      * @param transport The transport for the candidate, such as TCP or UDP. 
      */
-    private void verifyCandidates(final MediaDescription mediaDesc, 
+    private void verifyCandidates(final Attribute attribute, 
         final Collection<InetSocketAddress> bindings, final String transport) 
         throws Exception
         {
-        verifyCandidates(mediaDesc, bindings, transport, 12);
+        verifyCandidates(attribute, bindings, transport, 12);
         }
     }

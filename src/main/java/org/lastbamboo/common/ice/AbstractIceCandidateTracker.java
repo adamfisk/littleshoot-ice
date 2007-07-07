@@ -119,40 +119,5 @@ public abstract class AbstractIceCandidateTracker
         {
         return ObjectUtils.NULL;
         }
-    
-    /*
-    public void visitTcpPassiveIceCandidate(
-        final TcpPassiveIceCandidate candidate)
-        {
-        LOG.trace("Visiting ICE passive TCP Candidate...");
-        this.m_tcpPassiveRemoteCandidates.add(candidate);
-        }
-    
-    public void visitTcpActiveIceCandidate(
-        final TcpActiveIceCandidate candidate)
-        {
-        LOG.trace("Visiting ICE active TCP Candidate...");
-        this.m_tcpActiveRemoteCandidates.add(candidate);
-        }
-
-    public void visitTcpSoIceCandidate(final TcpSoIceCandidate candidate)
-        {
-        LOG.trace("Visiting TCP Simultaneous Open Candidate...");
-        this.m_tcpSoCandidates.add(candidate);
-        }
-
-    public void visitUdpIceCandidate(final UdpIceCandidate candidate)
-        {
-        LOG.trace("Visiting ICE STUN Candidate: "+candidate);
-        
-        this.m_udpCandidates.add(candidate);
-        }
-
-    public void visitUnknownIceCandidate(final IceCandidate candidate)
-        {
-        LOG.warn("Visiting unknown ICE candidate...");
-        // Ignore unknown candidates.
-        }
-        */
 
     }

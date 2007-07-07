@@ -6,7 +6,9 @@
         Creates ICE candidates from SDP data.
     -->
     <bean id="iceCandidateFactory"
-          class="org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl"/>
+          class="org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl">
+        <constructor-arg><ref local="stackSdpFactory"/></constructor-arg>
+        </bean>
           
     <!--
         The object that keeps track of all available bindings for accessing
@@ -60,7 +62,6 @@
     -->
     <bean id="iceAnswerProcessor"
           class="org.lastbamboo.common.ice.answer.IceAnswerProcessor">
-        <constructor-arg><ref local="stackSdpFactory"/></constructor-arg>
         <constructor-arg><ref local="iceCandidateFactory"/></constructor-arg>
         </bean>
 

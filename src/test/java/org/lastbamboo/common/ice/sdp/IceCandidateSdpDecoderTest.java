@@ -1,4 +1,4 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.sdp;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -7,17 +7,18 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
+import org.lastbamboo.common.ice.AbstractIceCandidateTracker;
+import org.lastbamboo.common.ice.IceException;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
-import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
-import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
-import org.lastbamboo.common.sdp.api.SessionDescription;
+import org.lastbamboo.common.sdp.api.SdpFactory;
+import org.lastbamboo.common.util.mina.MinaUtils;
 
 /**
  * Test for the class for creating ICE candidates.
  */
-public class IceCandidateFactoryImplTest extends TestCase 
+public class IceCandidateSdpDecoderTest extends TestCase 
     {
 
     /**
@@ -26,7 +27,8 @@ public class IceCandidateFactoryImplTest extends TestCase
      */
     public void testCreateCandidates() throws Exception
         {
-        final IceCandidateSdpDecoder decoder = new IceCandidateSdpDecoderImpl();
+        final IceCandidateSdpDecoder decoder = 
+            new IceCandidateSdpDecoderImpl(new SdpFactory());
         
         final String tcpLocalHostString = "192.168.1.6";
         final String tcpHostString = "72.3.139.235";
@@ -42,13 +44,11 @@ public class IceCandidateFactoryImplTest extends TestCase
             "m=message 8107 udp http\r\n" +
             "c=IN IP4 " + udpHostString + "\r\n" +
             "a=candidate:1 1 UDP 2130706431 "+udpHostString+" "+ udpPort+" typ host\r\n" + 
-            //"a=candidate:1 657a41b3-f487-46a6-aaca-88693b357a49 udp 1 " + udpHostString + " " + udpPort+"\r\n" +
             
             // TURN address
             "m=message 54684 tcp http\r\n" +
             "c=IN IP4 " + tcpHostString + "\r\n" +
             "a=candidate:1 1 tcp-pass 2130706431 "+tcpHostString+" "+ tcpPort+" typ relay raddr 10.0.1.1 rport 8998\r\n" + 
-            //"a=candidate:1 3a2035f4-0d39-4633-8c11-452a0117682a tcp-pass 2 " + tcpHostString + " " + tcpPort+"\r\n" +
             "a=setup:passive\r\n" +
             "a=connection:new\r\n" +
             
@@ -56,23 +56,18 @@ public class IceCandidateFactoryImplTest extends TestCase
             "m=message 8107 tcp http\r\n"+
             "c=IN IP4 "+ tcpLocalHostString + "\r\n"+
             "a=candidate:1 1 tcp-pass 2130706431 "+tcpLocalHostString+" "+ tcpLocalPort+" typ host\r\n" + 
-            //"a=candidate:1 96013295-480f-4e9e-8706-d2316b6881da tcp-pass 1 "+tcpLocalHostString+" " + tcpLocalPort + "\r\n"+
             "a=setup:passive\r\n"+
             "a=connection:new";
         
-        final org.lastbamboo.common.sdp.api.SdpFactory sdpFactory = 
-            org.lastbamboo.common.sdp.api.SdpFactory.getInstance();
-        final SessionDescription sdp = 
-            sdpFactory.createSessionDescription(candidateString);
-
         final TestIceCandidateVisitor visitor = new TestIceCandidateVisitor();
-        final Collection candidates = decoder.decode(sdp);
+        final Collection<IceCandidate> candidates = 
+            decoder.decode(MinaUtils.toBuf(candidateString));
         assertEquals("Unexpected number of candidates", 3, candidates.size());
         
         visitor.visitCandidates(candidates);
         
-        final Collection tcpCandidates = visitor.m_tcpPassiveRemoteCandidates;
-        final Collection udpCandidates = visitor.m_udpCandidates;
+        final Collection tcpCandidates = visitor.getTcpCandidates();
+        final Collection udpCandidates = visitor.getUdpCandidates();
         
         assertNotNull(tcpCandidates);
         assertNotNull(udpCandidates);
@@ -92,10 +87,6 @@ public class IceCandidateFactoryImplTest extends TestCase
         final Iterator udpIter = udpCandidates.iterator();
         final IceCandidate udpCandidate = (IceCandidate) udpIter.next();
         
-        assertTrue("Got "+tcpLocalCandidate.getClass(), 
-            (tcpLocalCandidate instanceof IceTcpHostPassiveCandidate));
-        assertTrue("Got "+tcpCandidate.getClass(), 
-            (tcpCandidate instanceof IceTcpRelayPassiveCandidate));
         assertEquals("tcp-pass", tcpLocalCandidate.getTransport().getName());
         assertEquals("tcp-pass", tcpCandidate.getTransport().getName());
         assertEquals("udp", udpCandidate.getTransport().getName());
@@ -115,16 +106,21 @@ public class IceCandidateFactoryImplTest extends TestCase
     private final class TestIceCandidateVisitor 
         extends AbstractIceCandidateTracker
         {
-
-        public void visitUnknownIceCandidate(final IceCandidate candidate)
-            {
-            throw new IllegalArgumentException("Unknown candidate: "+candidate);
-            }
-
+        
         public Socket getBestSocket() throws IceException
             {
             // TODO Auto-generated method stub
             return null;
+            }
+
+        private Collection getUdpCandidates()
+            {
+            return m_udpCandidates;
+            }
+
+        private Collection getTcpCandidates()
+            {
+            return m_tcpPassiveRemoteCandidates;
             }
     
         }

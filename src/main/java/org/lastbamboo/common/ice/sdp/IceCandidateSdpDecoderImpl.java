@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
@@ -21,8 +22,10 @@ import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.MediaDescription;
 import org.lastbamboo.common.sdp.api.SdpException;
+import org.lastbamboo.common.sdp.api.SdpFactory;
 import org.lastbamboo.common.sdp.api.SdpParseException;
 import org.lastbamboo.common.sdp.api.SessionDescription;
+import org.lastbamboo.common.util.mina.MinaUtils;
 
 /**
  * Factory class for creating ICE candidates from offer/answer data.
@@ -37,10 +40,27 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
         LogFactory.getLog(IceCandidateSdpDecoderImpl.class);
     
     private static final String CANDIDATE_KEY = "candidate";
-    
-    public Collection<IceCandidate> decode(
-        final SessionDescription sdp) throws SdpException
+
+    private final SdpFactory m_sdpFactory;
+
+    /**
+     * Creates a new decoder.
+     * 
+     * @param sdpFactory The factory fro creating SDP from raw bytes.
+     */
+    public IceCandidateSdpDecoderImpl(final SdpFactory sdpFactory)
         {
+        m_sdpFactory = sdpFactory;
+        }
+    
+    public Collection<IceCandidate> decode(final ByteBuffer buf) 
+        throws SdpException
+        {
+        final String responseBodyString = MinaUtils.toAsciiString(buf);
+        
+        final SessionDescription sdp = 
+            this.m_sdpFactory.createSessionDescription(responseBodyString);
+        
         final Collection mediaDescriptions = sdp.getMediaDescriptions(true);
         LOG.trace("Creating candidates from media descs: "+mediaDescriptions);
         return createCandidatesFromMediaDescriptions(mediaDescriptions);

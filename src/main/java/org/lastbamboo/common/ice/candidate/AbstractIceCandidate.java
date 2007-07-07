@@ -81,10 +81,10 @@ public abstract class AbstractIceCandidate implements IceCandidate
     private static int calculatePriority(final IceCandidateType type)
         {
         // See draft-ietf-mmusic-ice-16.txt section 4.1.2.1.
-        return 
-            (2 ^ 24) * type.getTypePreference() +
-            (2 ^ 8)  * LOCAL_PREFERENCE  +
-            (2 ^ 0)  * (256 - s_componentId);
+        return
+            (int) (Math.pow(2, 24) * type.getTypePreference()) +
+            (int) (Math.pow(2, 8) * LOCAL_PREFERENCE) +
+            (int) (Math.pow(2, 0) * (256 - s_componentId));
         }
 
     public IceTransportProtocol getTransport()

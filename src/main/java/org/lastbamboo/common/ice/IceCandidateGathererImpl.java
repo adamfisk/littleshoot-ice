@@ -153,6 +153,8 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
 
     private Collection<IceCandidate> createTcpCandidates()
         {
+        final Collection<IceCandidate> candidates = 
+            new LinkedList<IceCandidate>();
         final InetSocketAddress relayAddress = 
             this.m_turnClient.getRelayAddress();
         final InetAddress stunServerAddress = 
@@ -163,10 +165,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final InetAddress baseRelayAddress = baseSocketAddress.getAddress();
         final int baseRelayPort = baseSocketAddress.getPort();
         
-        // Add the relay candidate.
-        final Collection<IceCandidate> candidates = 
-            new LinkedList<IceCandidate>();
-        
+        // Add the relay candidate.        
         final IceTcpRelayPassiveCandidate candidate = 
             new IceTcpRelayPassiveCandidate(relayAddress, baseRelayAddress, 
                 stunServerAddress, baseRelayAddress, baseRelayPort);
