@@ -4,7 +4,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.PriorityQueue;
+import java.util.TreeSet;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
@@ -19,22 +19,8 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         final Collection<IceCandidate> localCandidates,
         final Collection<IceCandidate> remoteCandidates)
         {
-        final Comparator<IceCandidatePair> comparator = 
-            new Comparator<IceCandidatePair>()
-            {
-            public int compare(final IceCandidatePair pair1, 
-                final IceCandidatePair pair2)
-                {
-                final long pair1Priority = pair1.getPriority();
-                final long pair2Priority = pair2.getPriority();
-                
-                if (pair1Priority > pair2Priority) return -1;
-                if (pair1Priority < pair2Priority) return 1;
-                return 0;
-                }
-            };
-        final Collection<IceCandidatePair> pairs =
-            new PriorityQueue<IceCandidatePair>(16, comparator);
+        final Collection<IceCandidatePair> pairs = createPairsQueue();
+            
         for (final IceCandidate localCandidate : localCandidates)
             {
             for (final IceCandidate remoteCandidate : remoteCandidates)
@@ -50,8 +36,58 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
                 }
             }
         
-        return pairs;
+        return prunePairs(pairs);
         }
+
+    private Collection<IceCandidatePair> createPairsQueue()
+        {
+        final Comparator<IceCandidatePair> comparator = 
+            new Comparator<IceCandidatePair>()
+            {
+            public int compare(final IceCandidatePair pair1, 
+                final IceCandidatePair pair2)
+                {
+                final long pair1Priority = pair1.getPriority();
+                final long pair2Priority = pair2.getPriority();
+                
+                if (pair1Priority > pair2Priority) return -1;
+                if (pair1Priority < pair2Priority) return 1;
+                return 0;
+                }
+            };
+        
+        // Just use a sorted set.
+        return new TreeSet<IceCandidatePair>(comparator);
+        }
+
+    /**
+     * Prunes pairs by converting any non-host local candidates to host 
+     * candidates and removing any duplicates created.
+     * 
+     * @param pairs The pairs to prune.
+     */
+    private Collection<IceCandidatePair> prunePairs(
+        final Collection<IceCandidatePair> pairs)
+        {
+        final Collection<IceCandidatePair> prunedPairs = createPairsQueue();
+        
+        for (final IceCandidatePair pair : pairs)
+            {
+            final IceCandidate local = pair.getLocalCandidate();
+            // NOTE: This deviates from the spec slightly.  We just eliminate
+            // any pairs with a local server reflexive candidate because 
+            // we always will have a corresponding pair with a local host
+            // candidate that matches the base of the server reflexive
+            // candidate.
+            if (local.getType() != IceCandidateType.SERVER_REFLEXIVE)
+                {
+                prunedPairs.add(pair);
+                }
+            }
+        
+        return prunedPairs;
+        }
+
 
     private boolean shouldPair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)

@@ -27,6 +27,8 @@ public abstract class AbstractStunServerIceCandidate
      * @param transport The transport used, such as UDP or passive TCP.
      * @param stunServerAddress The address of the STUN server used to 
      * determine the candidate address.
+     * @param relatedAddress The related address. 
+     * @param relatedPort The related port.
      * @param controlling Whether or not this candidate is the controlling
      * candidate.
      */
@@ -42,6 +44,20 @@ public abstract class AbstractStunServerIceCandidate
            relatedPort, controlling);
         }
 
+    /**
+     * Creates a new ICE candidate where the candidate address was determined
+     * with the assistance of a STUN server.
+     * 
+     * @param socketAddress The candidate address.
+     * @param foundation The foundation for this candidate.
+     * @param type The type of candidate, such as server reflexive.
+     * @param transport The transport used, such as UDP or passive TCP.
+     * determine the candidate address.
+     * @param relatedAddress The related address. 
+     * @param relatedPort The related port.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
+     */
     public AbstractStunServerIceCandidate(
         final InetSocketAddress socketAddress, final int foundation, 
         final IceCandidateType type, final IceTransportProtocol transport, 

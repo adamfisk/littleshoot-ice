@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.turn.client.TurnClient;
 import org.lastbamboo.common.util.ShootConstants;
@@ -69,6 +70,12 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         
         final InetSocketAddress baseSocketAddress = iceClient.getBaseAddress();
         
+        // Add the host candidate.
+        final IceUdpHostCandidate hostCandidate = 
+            new IceUdpHostCandidate(baseSocketAddress, this.m_controlling);
+        candidates.add(hostCandidate);
+        
+        // Add the server reflexive candidate.
         final IceUdpServerReflexiveCandidate serverReflexiveCandidate =
             new IceUdpServerReflexiveCandidate(serverReflexiveAddress, 
                 baseSocketAddress.getAddress(), 

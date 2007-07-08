@@ -253,9 +253,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
      * reason.
      */
     private MediaDescription createMessageMediaDesc(
-        final IceCandidate candidate)
-        //final InetSocketAddress socketAddress, final String protocol) 
-        throws SdpException
+        final IceCandidate candidate) throws SdpException
         {        
         final InetSocketAddress socketAddress = candidate.getSocketAddress();
         final String protocol = candidate.getTransport().getName();
