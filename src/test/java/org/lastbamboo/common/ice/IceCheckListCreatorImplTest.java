@@ -27,12 +27,14 @@ public class IceCheckListCreatorImplTest extends TestCase
         
         for (final IceCandidatePair pair : checkList)
             {
-            System.out.println(pair);
+            System.out.println(pair+"\n");
             }
         
         final Iterator<IceCandidatePair> iter = checkList.iterator();
         final IceCandidatePair pair1 = iter.next();
         final IceCandidatePair pair2 = iter.next();
+        final IceCandidatePair pair3 = iter.next();
+        final IceCandidatePair pair4 = iter.next();
         
         final IceCandidate local1 = pair1.getLocalCandidate();
         final IceCandidate remote1 = pair1.getRemoteCandidate();
@@ -41,8 +43,18 @@ public class IceCheckListCreatorImplTest extends TestCase
         
         final IceCandidate local2 = pair2.getLocalCandidate();
         final IceCandidate remote2 = pair2.getRemoteCandidate();
-        assertTrue(local2.getType() == IceCandidateType.RELAYED);
+        assertTrue(local2.getType() == IceCandidateType.HOST);
         assertTrue(remote2.getType() == IceCandidateType.RELAYED);
+        
+        final IceCandidate local3 = pair3.getLocalCandidate();
+        final IceCandidate remote3 = pair3.getRemoteCandidate();
+        assertTrue(local3.getType() == IceCandidateType.RELAYED);
+        assertTrue(remote3.getType() == IceCandidateType.HOST);
+        
+        final IceCandidate local4 = pair4.getLocalCandidate();
+        final IceCandidate remote4 = pair4.getRemoteCandidate();
+        assertTrue(local4.getType() == IceCandidateType.RELAYED);
+        assertTrue(remote4.getType() == IceCandidateType.RELAYED);
         
         }
 
