@@ -53,8 +53,8 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
         m_sdpFactory = sdpFactory;
         }
     
-    public Collection<IceCandidate> decode(final ByteBuffer buf) 
-        throws SdpException
+    public Collection<IceCandidate> decode(final ByteBuffer buf,
+        final boolean controlling) throws SdpException
         {
         final String responseBodyString = MinaUtils.toAsciiString(buf);
         
@@ -62,8 +62,8 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
             this.m_sdpFactory.createSessionDescription(responseBodyString);
         
         final Collection mediaDescriptions = sdp.getMediaDescriptions(true);
-        LOG.trace("Creating candidates from media descs: "+mediaDescriptions);
-        return createCandidatesFromMediaDescriptions(mediaDescriptions);
+        LOG.debug("Creating candidates from media descs: "+mediaDescriptions);
+        return createCandidates(mediaDescriptions, controlling);
         }
     
     /**
@@ -73,9 +73,10 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
      * @param remoteMediaDescriptions The <code>Collection</code> of media
      * description's from the peer's SDP.  Each media description will contain
      * some number of candidates for exchanging media.
+     * @param controlling Whether or not to create controlling candidates.
      */
-    private Collection<IceCandidate> createCandidatesFromMediaDescriptions(
-        final Collection remoteMediaDescriptions)
+    private Collection<IceCandidate> createCandidates(
+        final Collection remoteMediaDescriptions, final boolean controlling)
         {
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
@@ -92,8 +93,10 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                     {
                     if (attribute.getName().equals(CANDIDATE_KEY))
                         {
-                        final String attributeValue = attribute.getValue();                  
-                        candidates.addAll(createCandidates(attributeValue));
+                        final String attributeValue = attribute.getValue(); 
+                        final Collection<IceCandidate> newCandidates = 
+                            createCandidates(attributeValue, controlling);
+                        candidates.addAll(newCandidates);
                         }
                     }
                 catch (final UnknownHostException e)
@@ -124,8 +127,8 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
      * TURN send request to the server in the candidate.
      * @throws UnknownHostException If we could not parse the host 
      */
-    private Collection<IceCandidate> createCandidates(final String attribute) 
-        throws UnknownHostException
+    private Collection<IceCandidate> createCandidates(final String attribute,
+        final boolean controlling) throws UnknownHostException
         {
         LOG.trace("Parsing attribute: "+attribute);
         final List<IceCandidate> candidates = new LinkedList<IceCandidate>();
@@ -133,14 +136,15 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
         scanner.useDelimiter(" ");
         while (scanner.hasNext())
             {
-            final IceCandidate candidate = createIceCandidate(scanner);
+            final IceCandidate candidate = 
+                createIceCandidate(scanner, controlling);
             candidates.add(candidate);
             }
         return candidates;
         }
     
-    private IceCandidate createIceCandidate(final Scanner scanner) 
-        throws UnknownHostException 
+    private IceCandidate createIceCandidate(final Scanner scanner, 
+        final boolean controlling) throws UnknownHostException 
         {
         final int foundation = Integer.parseInt(scanner.next());
         final int componentId = Integer.parseInt(scanner.next());
@@ -167,7 +171,8 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                 switch (type)
                     {
                     case HOST:
-                        return new IceUdpHostCandidate(socketAddress);
+                        return new IceUdpHostCandidate(socketAddress, 
+                            controlling);
                     case RELAYED:
                         break;
                     case PEER_REFLEXIVE:
@@ -175,19 +180,22 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                     case SERVER_REFLEXIVE:
                         final InetSocketAddress related = parseRelated(scanner);
                         return new IceUdpServerReflexiveCandidate(socketAddress, 
-                            foundation, related.getAddress(), related.getPort());
+                            foundation, related.getAddress(), related.getPort(),
+                            controlling);
                     }
                 break;
             case TCP_PASS:
                 switch (type)
                     {
                     case HOST:
-                        return new IceTcpHostPassiveCandidate(socketAddress);
+                        return new IceTcpHostPassiveCandidate(socketAddress,
+                            controlling);
                     case RELAYED:
                         LOG.debug("Received a TCP relay passive candidate");
                         final InetSocketAddress related = parseRelated(scanner);
                         return new IceTcpRelayPassiveCandidate(socketAddress, 
-                            foundation, related.getAddress(), related.getPort());
+                            foundation, related.getAddress(), related.getPort(),
+                            controlling);
                     case PEER_REFLEXIVE:
                         break;
                     case SERVER_REFLEXIVE:

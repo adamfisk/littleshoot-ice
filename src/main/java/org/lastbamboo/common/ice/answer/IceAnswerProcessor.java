@@ -44,7 +44,7 @@ public class IceAnswerProcessor implements AnswerProcessor
         final Collection<IceCandidate> iceCandidates;
         try
             {
-            iceCandidates = m_iceCandidateDecoder.decode(answer);
+            iceCandidates = m_iceCandidateDecoder.decode(answer, true);
             }
         catch (final SdpException e)
             {

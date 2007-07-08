@@ -24,14 +24,17 @@ public class IceUdpRelayCandidate extends AbstractStunServerIceCandidate
      * case, the mapped address received in the Allocate Response.
      * @param relatedPort The port related to this candidate.  In this
      * case, the port in the mapped address received in the Allocate Response.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
      */
     public IceUdpRelayCandidate(final InetSocketAddress relayAddress, 
         final InetAddress baseAddress, final InetAddress stunServerAddress,
-        final InetAddress relatedAddress, final int relatedPort)
+        final InetAddress relatedAddress, final int relatedPort,
+        final boolean controlling)
         {
         super(relayAddress, baseAddress, IceCandidateType.RELAYED, 
             IceTransportProtocol.UDP, stunServerAddress, relatedAddress,
-            relatedPort);
+            relatedPort, controlling);
         }
 
     public void accept(final IceCandidateVisitor visitor)

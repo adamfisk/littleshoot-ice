@@ -16,11 +16,14 @@ public class IceTcpHostPassiveCandidate extends AbstractIceCandidate
      * Creates a new TCP passive ICE candidate for the local host.
      * 
      * @param socketAddress The address of the local host.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
      */
-    public IceTcpHostPassiveCandidate(final InetSocketAddress socketAddress)
+    public IceTcpHostPassiveCandidate(final InetSocketAddress socketAddress,
+        final boolean controlling)
         {
         super(socketAddress, socketAddress.getAddress(), IceCandidateType.HOST, 
-            IceTransportProtocol.TCP_PASS);
+            IceTransportProtocol.TCP_PASS, controlling);
         }
 
     public void accept(final IceCandidateVisitor visitor)

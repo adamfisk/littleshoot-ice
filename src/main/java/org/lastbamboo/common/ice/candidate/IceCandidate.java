@@ -28,7 +28,7 @@ public interface IceCandidate
      * 
      * @return The priority of the candidate.
      */
-    int getPriority();
+    long getPriority();
 
     /**
      * Accessor for the type of transport of this candidate, such as TCP or
@@ -82,5 +82,13 @@ public interface IceCandidate
      * @return The candidate's foundation.
      */
     int getFoundation();
+
+    /**
+     * Returns whether or not this peer is the controlling peer.
+     * 
+     * @return <code>true</code> if this peer is the controlling peer,
+     * otherwise <code>false</code>.
+     */
+    boolean isControlling();
 
     }

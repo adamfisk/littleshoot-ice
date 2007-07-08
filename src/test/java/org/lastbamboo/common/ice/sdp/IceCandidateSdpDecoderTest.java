@@ -61,7 +61,7 @@ public class IceCandidateSdpDecoderTest extends TestCase
         
         final TestIceCandidateVisitor visitor = new TestIceCandidateVisitor();
         final Collection<IceCandidate> candidates = 
-            decoder.decode(MinaUtils.toBuf(candidateString));
+            decoder.decode(MinaUtils.toBuf(candidateString), false);
         assertEquals("Unexpected number of candidates", 3, candidates.size());
         
         visitor.visitCandidates(candidates);

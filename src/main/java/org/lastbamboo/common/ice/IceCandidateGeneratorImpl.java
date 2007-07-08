@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.lastbamboo.common.turn.client.TurnClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,17 +28,15 @@ public class IceCandidateGeneratorImpl implements IceCandidateGenerator
         m_turnClient = turnClient;
         }
 
-    public byte[] generateCandidates() throws IOException
+    public Collection<IceCandidate> generateCandidates(
+        final boolean controlling) throws IOException
         {
         // First, gather all the candidates.
         final IceCandidateGatherer gatherer = 
-            new IceCandidateGathererImpl(this.m_turnClient);
+            new IceCandidateGathererImpl(this.m_turnClient, controlling);
         final Collection<IceCandidate> candidates = gatherer.gatherCandidates();
         
-        // Then encode the gathered candidates in SDP.
-        final IceCandidateSdpEncoder encoder = new IceCandidateSdpEncoder();
-        encoder.visitCandidates(candidates);
-        return encoder.getSdp();
+        return candidates;
         }
     
         

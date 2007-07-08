@@ -26,15 +26,18 @@ public class IceUdpServerReflexiveCandidate
      * case, the base address.
      * @param relatedPort The port related to this candidate.  In this
      * case, the base port.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
      */
     public IceUdpServerReflexiveCandidate(
         final InetSocketAddress serverReflexiveAddress, 
         final InetAddress baseAddress, final InetAddress stunServerAddress,
-        final InetAddress relatedAddress, final int relatedPort)
+        final InetAddress relatedAddress, final int relatedPort, 
+        final boolean controlling)
         {
         super(serverReflexiveAddress, baseAddress, 
             IceCandidateType.SERVER_REFLEXIVE, IceTransportProtocol.UDP,
-            stunServerAddress, relatedAddress, relatedPort);
+            stunServerAddress, relatedAddress, relatedPort, controlling);
         }
 
     /**
@@ -48,14 +51,17 @@ public class IceUdpServerReflexiveCandidate
      * case, the base address.
      * @param relatedPort The port related to this candidate.  In this
      * case, the base port.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
      */
     public IceUdpServerReflexiveCandidate(
         final InetSocketAddress serverReflexiveAddress, final int foundation, 
-        final InetAddress relatedAddress, final int relatedPort)
+        final InetAddress relatedAddress, final int relatedPort,
+        final boolean controlling)
         {
         super(serverReflexiveAddress, foundation, 
             IceCandidateType.SERVER_REFLEXIVE, IceTransportProtocol.UDP, 
-            relatedAddress, relatedPort);
+            relatedAddress, relatedPort, controlling);
         }
 
     public void accept(final IceCandidateVisitor visitor)

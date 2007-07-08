@@ -43,15 +43,15 @@ public class IceFoundationCalculatorTest extends TestCase
         
         // Create the TCP host candidates.
         final Collection<IceCandidate> tcpHost = new LinkedList<IceCandidate>();
-        tcpHost.add(new IceTcpHostPassiveCandidate(hostAddress1));
-        tcpHost.add(new IceTcpHostPassiveCandidate(hostAddress2));
-        tcpHost.add(new IceTcpHostPassiveCandidate(hostAddress3));
+        tcpHost.add(new IceTcpHostPassiveCandidate(hostAddress1, false));
+        tcpHost.add(new IceTcpHostPassiveCandidate(hostAddress2, false));
+        tcpHost.add(new IceTcpHostPassiveCandidate(hostAddress3, false));
         runHostTests(tcpHost);
         
         final Collection<IceCandidate> udpHost = new LinkedList<IceCandidate>();
-        udpHost.add(new IceUdpHostCandidate(hostAddress1));
-        udpHost.add(new IceUdpHostCandidate(hostAddress2));
-        udpHost.add(new IceUdpHostCandidate(hostAddress3));
+        udpHost.add(new IceUdpHostCandidate(hostAddress1, false));
+        udpHost.add(new IceUdpHostCandidate(hostAddress2, false));
+        udpHost.add(new IceUdpHostCandidate(hostAddress3, false));
         runHostTests(udpHost);
         
         final int relatedPort = 4729;
@@ -61,67 +61,77 @@ public class IceFoundationCalculatorTest extends TestCase
         
         // Create the TCP server reflexive candidates.
         final Collection<IceCandidate> tcpSr = new LinkedList<IceCandidate>();
-        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, baseAddress1, stun1, baseAddress1, relatedPort));
+        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, 
+            baseAddress1, stun1, baseAddress1, relatedPort, false));
         // Base address with different port.
-        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, baseAddress2, stun1, baseAddress2, relatedPort));
+        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, 
+            baseAddress2, stun1, baseAddress2, relatedPort, false));
         // Base address with different IP.
-        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, baseAddress3, stun1, baseAddress3, relatedPort));
+        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, 
+            baseAddress3, stun1, baseAddress3, relatedPort, false));
         // Different STUN server address.
-        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, baseAddress1, stun2, baseAddress1, relatedPort));
+        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, 
+            baseAddress1, stun2, baseAddress1, relatedPort, false));
         // Different public address -- should have no effect on the foundation.
-        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress2, baseAddress1, stun1, baseAddress1, relatedPort));
+        tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress2, 
+            baseAddress1, stun1, baseAddress1, relatedPort, false));
         runStunCandidateTests(tcpSr);
         
         // Create the UDP server reflexive candidates.
         final Collection<IceCandidate> udpSr = new LinkedList<IceCandidate>();
-        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, baseAddress1, stun1, baseAddress1, relatedPort));
+        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, 
+            baseAddress1, stun1, baseAddress1, relatedPort, false));
         // Base address with different port.
-        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, baseAddress2, stun1, baseAddress2, relatedPort));
+        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, 
+            baseAddress2, stun1, baseAddress2, relatedPort, false));
         // Base address with different IP.
-        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, baseAddress3, stun1, baseAddress3, relatedPort));
+        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, 
+            baseAddress3, stun1, baseAddress3, relatedPort, false));
         // Different STUN server address.
-        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, baseAddress1, stun2, baseAddress1, relatedPort));
+        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, 
+            baseAddress1, stun2, baseAddress1, relatedPort, false));
         // Different public address -- should have no effect on the foundation.
-        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress2, baseAddress1, stun1, baseAddress1, relatedPort));
+        udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress2, 
+            baseAddress1, stun1, baseAddress1, relatedPort, false));
         runStunCandidateTests(udpSr);
         
         // Create the TCP relay candidates.
         final Collection<IceCandidate> tcpRelay = new LinkedList<IceCandidate>();
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress1, stun1, mappedAddress, relatedPort));
+        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress1, stun1, mappedAddress, relatedPort, false));
         // Base address with different port.
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress2, stun1, mappedAddress, relatedPort));
+        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress2, stun1, mappedAddress, relatedPort, false));
         // Base address with different IP.
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress3, stun1, mappedAddress, relatedPort));
+        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress3, stun1, mappedAddress, relatedPort, false));
         // Different STUN server address.
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress1, stun2, mappedAddress, relatedPort));
+        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress1, stun2, mappedAddress, relatedPort, false));
         // Different public address -- should have no effect on the foundation.
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress2, baseAddress1, stun1, mappedAddress, relatedPort));
+        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress2, baseAddress1, stun1, mappedAddress, relatedPort, false));
         runStunCandidateTests(tcpRelay);
         
         // Create the UDP relay candidates.
         final Collection<IceCandidate> udpRelay = new LinkedList<IceCandidate>();
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress1, stun1, mappedAddress, relatedPort));
+        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress1, stun1, mappedAddress, relatedPort, false));
         // Base address with different port.
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress2, stun1, mappedAddress, relatedPort));
+        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress2, stun1, mappedAddress, relatedPort, false));
         // Base address with different IP.
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress3, stun1, mappedAddress, relatedPort));
+        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress3, stun1, mappedAddress, relatedPort, false));
         // Different STUN server address.
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress1, stun2, mappedAddress, relatedPort));
+        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress1, stun2, mappedAddress, relatedPort, false));
         // Different public address -- should have no effect on the foundation.
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress2, baseAddress1, stun1, mappedAddress, relatedPort));
+        udpRelay.add(new IceUdpRelayCandidate(publicAddress2, baseAddress1, stun1, mappedAddress, relatedPort, false));
         runStunCandidateTests(udpRelay);
         
         // Create the UDP peer reflexive candidates.
         final Collection<IceCandidate> udpPeer = new LinkedList<IceCandidate>();
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress1, stun1, baseAddress1, relatedPort));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress1, stun1, baseAddress1, relatedPort, false));
         // Base address with different port.
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress2, stun1, baseAddress1, relatedPort));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress2, stun1, baseAddress1, relatedPort, false));
         // Base address with different IP.
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress3, stun1, baseAddress1, relatedPort));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress3, stun1, baseAddress1, relatedPort, false));
         // Different STUN server address.
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress1, stun2, baseAddress1, relatedPort));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress1, stun2, baseAddress1, relatedPort, false));
         // Different public address -- should have no effect on the foundation.
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress2, baseAddress1, stun1, baseAddress1, relatedPort));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress2, baseAddress1, stun1, baseAddress1, relatedPort, false));
         runStunCandidateTests(udpPeer);
         
         // Now test different candidate types to make sure they don't match.

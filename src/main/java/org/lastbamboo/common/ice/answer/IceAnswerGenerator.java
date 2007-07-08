@@ -1,9 +1,12 @@
 package org.lastbamboo.common.ice.answer;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import org.lastbamboo.common.answer.AnswerGenerator;
 import org.lastbamboo.common.ice.IceCandidateGenerator;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +32,16 @@ public class IceAnswerGenerator implements AnswerGenerator
 
     public byte[] generateAnswer() throws IOException 
         {
-        return this.m_candidateGenerator.generateCandidates();
+        final Collection<IceCandidate> candidates = 
+            this.m_candidateGenerator.generateCandidates(false);
+        
+        // Then encode the gathered candidates in SDP.
+        final IceCandidateSdpEncoder encoder = new IceCandidateSdpEncoder();
+        encoder.visitCandidates(candidates);
+        
+        final byte[] sdp = encoder.getSdp();
+        
+        return sdp;
         }
 
     }

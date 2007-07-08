@@ -26,15 +26,17 @@ public class IceTcpServerReflexiveSoCandidate
      * case, the base address.
      * @param relatedPort The port related to this candidate.  In this
      * case, the base port.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
      */
     public IceTcpServerReflexiveSoCandidate(
         final InetSocketAddress socketAddress, final InetAddress baseAddress, 
         final InetAddress stunServerAddress, final InetAddress relatedAddress,
-        final int relatedPort)
+        final int relatedPort, final boolean controlling)
         {
         super(socketAddress, baseAddress, IceCandidateType.SERVER_REFLEXIVE, 
             IceTransportProtocol.TCP_SO, stunServerAddress, relatedAddress,
-            relatedPort);
+            relatedPort, controlling);
         }
 
     public void accept(final IceCandidateVisitor visitor)

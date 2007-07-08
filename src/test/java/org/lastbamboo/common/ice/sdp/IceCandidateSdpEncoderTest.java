@@ -66,14 +66,14 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         
         final IceUdpServerReflexiveCandidate udpServerReflexiveCandidate = 
             new IceUdpServerReflexiveCandidate(sa1, NetworkUtils.getLocalHost(), 
-                sa1.getAddress(), relatedAddress, relatedPort);
+                sa1.getAddress(), relatedAddress, relatedPort, false);
         
         final IceTcpRelayPassiveCandidate tcpRelayPassiveCandidate =
             new IceTcpRelayPassiveCandidate(sa2, NetworkUtils.getLocalHost(), 
-                stunServerAddress, relayRelatedAddress, relayRelatedPort);
+                stunServerAddress, relayRelatedAddress, relayRelatedPort, false);
 
         final IceTcpHostPassiveCandidate tcpHostPassiveCandidate =
-            new IceTcpHostPassiveCandidate(sa3);
+            new IceTcpHostPassiveCandidate(sa3, false);
         
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();

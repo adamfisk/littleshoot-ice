@@ -26,9 +26,11 @@ public abstract class AbstractIceCandidate implements IceCandidate
      */
     private final static int s_componentId = 1;
 
-    private final int m_priority;
+    private final long m_priority;
 
     private final int m_foundation;
+    
+    private final boolean m_controlling;
     
     /**
      * The is the local interface preference for calculating ICE priorities.
@@ -37,27 +39,49 @@ public abstract class AbstractIceCandidate implements IceCandidate
      */
     private static final int LOCAL_PREFERENCE = 65535;
 
+    /**
+     * Creates a new ICE candidate.
+     * 
+     * @param socketAddress The candidate address and port.
+     * @param baseAddress The base address.
+     * @param type The type of candidate.
+     * @param transport The transport protocol.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
+     */
     public AbstractIceCandidate(final InetSocketAddress socketAddress, 
-        final InetAddress baseAddress, 
-        final IceCandidateType type, final IceTransportProtocol transport)
+        final InetAddress baseAddress, final IceCandidateType type, 
+        final IceTransportProtocol transport, final boolean controlling)
         {
         this(socketAddress, 
-            IceFoundationCalculator.calculateFoundation(type, baseAddress, transport), 
+            IceFoundationCalculator.calculateFoundation(type, baseAddress, 
+                transport), 
             type, transport, 
-            calculatePriority(type));
+            calculatePriority(type), controlling);
         }
-    
+ 
+    /**
+     * Creates a new ICE candidate.
+     * 
+     * @param socketAddress The candidate address and port.
+     * @param foundation The foundation.
+     * @param type The type of candidate.
+     * @param transport The transport protocol.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
+     */
     public AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final int foundation, final IceCandidateType type, 
-        final IceTransportProtocol transport)
+        final IceTransportProtocol transport, final boolean controlling)
         {
         this(socketAddress, foundation, type, transport, 
-            calculatePriority(type));
+            calculatePriority(type), controlling);
         }
 
     private AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final int foundation, final IceCandidateType type, 
-        final IceTransportProtocol transport, final int priority)
+        final IceTransportProtocol transport, final long priority,
+        final boolean controlling)
         {
         if (socketAddress == null)
             {
@@ -76,14 +100,15 @@ public abstract class AbstractIceCandidate implements IceCandidate
         this.m_transport = transport;
         this.m_priority = priority;
         this.m_foundation = foundation;
+        this.m_controlling = controlling;
         }
 
-    private static int calculatePriority(final IceCandidateType type)
+    private static long calculatePriority(final IceCandidateType type)
         {
         // See draft-ietf-mmusic-ice-16.txt section 4.1.2.1.
         return
-            (int) (Math.pow(2, 24) * type.getTypePreference()) +
-            (int) (Math.pow(2, 8) * LOCAL_PREFERENCE) +
+            (long) (Math.pow(2, 24) * type.getTypePreference()) +
+            (long) (Math.pow(2, 8) * LOCAL_PREFERENCE) +
             (int) (Math.pow(2, 0) * (256 - s_componentId));
         }
 
@@ -102,7 +127,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
         return m_address;
         }
 
-    public final int getPriority()
+    public final long getPriority()
         {
         return m_priority;
         }
@@ -126,5 +151,9 @@ public abstract class AbstractIceCandidate implements IceCandidate
         {
         return m_foundation;
         }
-
+    
+    public boolean isControlling()
+        {
+        return m_controlling;
+        }
     }
