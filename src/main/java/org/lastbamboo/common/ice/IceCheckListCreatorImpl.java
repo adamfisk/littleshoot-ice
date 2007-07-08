@@ -69,10 +69,16 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
     private Collection<IceCandidatePair> prunePairs(
         final Collection<IceCandidatePair> pairs)
         {
-        final Collection<IceCandidatePair> prunedPairs = createPairsCollection();
+        final Collection<IceCandidatePair> prunedPairs = 
+            createPairsCollection();
         
+        int count = 0;
         for (final IceCandidatePair pair : pairs)
             {
+            // Limit attacks based on the number of pairs.  See:
+            // draft-ietf-mmusic-ice-16.txt section 5.7.4.
+            if (count > 100) break;
+            
             final IceCandidate local = pair.getLocalCandidate();
             // NOTE: This deviates from the spec slightly.  We just eliminate
             // any pairs with a local server reflexive candidate because 
@@ -83,6 +89,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
                 {
                 prunedPairs.add(pair);
                 }
+            ++count;
             }
         
         return prunedPairs;
