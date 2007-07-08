@@ -19,7 +19,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         final Collection<IceCandidate> localCandidates,
         final Collection<IceCandidate> remoteCandidates)
         {
-        final Collection<IceCandidatePair> pairs = createPairsQueue();
+        final Collection<IceCandidatePair> pairs = createPairsCollection();
             
         for (final IceCandidate localCandidate : localCandidates)
             {
@@ -39,7 +39,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         return prunePairs(pairs);
         }
 
-    private Collection<IceCandidatePair> createPairsQueue()
+    private Collection<IceCandidatePair> createPairsCollection()
         {
         final Comparator<IceCandidatePair> comparator = 
             new Comparator<IceCandidatePair>()
@@ -69,7 +69,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
     private Collection<IceCandidatePair> prunePairs(
         final Collection<IceCandidatePair> pairs)
         {
-        final Collection<IceCandidatePair> prunedPairs = createPairsQueue();
+        final Collection<IceCandidatePair> prunedPairs = createPairsCollection();
         
         for (final IceCandidatePair pair : pairs)
             {
