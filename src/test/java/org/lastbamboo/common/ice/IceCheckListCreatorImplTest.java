@@ -10,6 +10,7 @@ import junit.framework.TestCase;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
@@ -34,7 +35,7 @@ public class IceCheckListCreatorImplTest extends TestCase
             assertTrue("Bad pair sorting:\n" +
                 "pair:   "+lastPair+"\n" +
                 "before: "+pair, 
-                lastPairPriority > pair.getPriority());
+                lastPairPriority >= pair.getPriority());
             lastPairPriority = pair.getPriority();
             lastPair = pair;
             }
@@ -43,40 +44,28 @@ public class IceCheckListCreatorImplTest extends TestCase
         final IceCandidatePair pair1 = iter.next();
         final IceCandidatePair pair2 = iter.next();
         final IceCandidatePair pair3 = iter.next();
-        final IceCandidatePair pair4 = iter.next();
-        final IceCandidatePair pair5 = iter.next();
-        final IceCandidatePair pair6 = iter.next();
         
         final IceCandidate local1 = pair1.getLocalCandidate();
         final IceCandidate remote1 = pair1.getRemoteCandidate();
-        assertTrue(local1.getType() == IceCandidateType.HOST);
-        assertTrue(remote1.getType() == IceCandidateType.HOST);
+        assertEquals(IceCandidateType.HOST, local1.getType());
+        assertEquals(IceTransportProtocol.TCP_ACT, local1.getTransport());
+        assertEquals(IceCandidateType.HOST, remote1.getType());
+        assertEquals(IceTransportProtocol.TCP_PASS, remote1.getTransport());
         
         final IceCandidate local2 = pair2.getLocalCandidate();
         final IceCandidate remote2 = pair2.getRemoteCandidate();
-        assertTrue(local2.getType() == IceCandidateType.HOST);
-        assertTrue(remote2.getType() == IceCandidateType.SERVER_REFLEXIVE);
+        assertEquals(IceCandidateType.SERVER_REFLEXIVE, local2.getType());
+        assertEquals(IceTransportProtocol.TCP_SO, local2.getTransport());
+        assertEquals(IceCandidateType.SERVER_REFLEXIVE, remote2.getType());
+        assertEquals(IceTransportProtocol.TCP_SO, remote2.getTransport());
+        
         
         final IceCandidate local3 = pair3.getLocalCandidate();
         final IceCandidate remote3 = pair3.getRemoteCandidate();
-        assertTrue(local3.getType() == IceCandidateType.HOST);
-        assertTrue(remote3.getType() == IceCandidateType.RELAYED);
-        
-        final IceCandidate local4 = pair4.getLocalCandidate();
-        final IceCandidate remote4 = pair4.getRemoteCandidate();
-        assertTrue(local4.getType() == IceCandidateType.RELAYED);
-        assertTrue(remote4.getType() == IceCandidateType.HOST);
-        
-        final IceCandidate local5 = pair5.getLocalCandidate();
-        final IceCandidate remote5 = pair5.getRemoteCandidate();
-        assertTrue(local5.getType() == IceCandidateType.RELAYED);
-        assertTrue(remote5.getType() == IceCandidateType.SERVER_REFLEXIVE);
-        
-        final IceCandidate local6 = pair6.getLocalCandidate();
-        final IceCandidate remote6 = pair6.getRemoteCandidate();
-        assertTrue(local6.getType() == IceCandidateType.RELAYED);
-        assertTrue(remote6.getType() == IceCandidateType.RELAYED);
-        
+        assertEquals(IceCandidateType.HOST, local3.getType());
+        assertEquals(IceTransportProtocol.TCP_ACT, local3.getTransport());
+        assertEquals(IceCandidateType.RELAYED, remote3.getType());
+        assertEquals(IceTransportProtocol.TCP_PASS, remote3.getTransport());
         }
 
     private Collection<IceCandidate> createCandidates(final boolean controlling)
@@ -99,9 +88,15 @@ public class IceCheckListCreatorImplTest extends TestCase
         final IceCandidate c3 =
             new IceTcpServerReflexiveSoCandidate(socketAddress, baseAddress, 
                 stunServerAddress, relatedAddress, relatedPort, controlling);
+        
+        // Add the active candidate.
+        final IceCandidate active = 
+            new IceTcpActiveCandidate(socketAddress, controlling);
+        
         candidates.add(c1);
         candidates.add(c2);
         candidates.add(c3);
+        candidates.add(active);
         return candidates;
         }
     }

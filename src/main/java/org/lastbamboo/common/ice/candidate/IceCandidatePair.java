@@ -26,4 +26,11 @@ public interface IceCandidatePair
      * @return The priority for the pair.
      */
     long getPriority();
+    
+    /**
+     * Accesses the state of the pair.
+     * 
+     * @return The state of the pair.
+     */
+    IceCandidatePairState getState();
     }

@@ -11,6 +11,7 @@ import org.apache.commons.lang.ObjectUtils.Null;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
@@ -92,6 +93,12 @@ public abstract class AbstractIceCandidateTracker
     public Null visitTcpServerReflexiveSoCandidate(
         final IceTcpServerReflexiveSoCandidate candidate)
         {
+        return ObjectUtils.NULL;
+        }
+    
+    public Null visitTcpActiveCandidate(final IceTcpActiveCandidate candidate)
+        {
+        this.m_tcpActiveRemoteCandidates.add(candidate);
         return ObjectUtils.NULL;
         }
 

@@ -156,4 +156,43 @@ public abstract class AbstractIceCandidate implements IceCandidate
         {
         return m_controlling;
         }
+
+    @Override
+    public int hashCode()
+        {
+        final int PRIME = 31;
+        int result = 1;
+        result = PRIME * result +  m_address.hashCode();
+        result = PRIME * result + (m_candidateType.hashCode());
+        result = PRIME * result + (m_controlling ? 1231 : 1237);
+        result = PRIME * result + m_foundation;
+        result = PRIME * result + (int) (m_priority ^ (m_priority >>> 32));
+        result = PRIME * result + (m_transport.hashCode());
+        return result;
+        }
+
+    @Override
+    public boolean equals(Object obj)
+        {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        final AbstractIceCandidate other = (AbstractIceCandidate) obj;
+        if (!m_address.equals(other.m_address))
+            return false;
+        if (!m_candidateType.equals(other.m_candidateType))
+            return false;
+        if (m_controlling != other.m_controlling)
+            return false;
+        if (m_foundation != other.m_foundation)
+            return false;
+        if (m_priority != other.m_priority)
+            return false;
+        if (!m_transport.equals(other.m_transport))
+            return false;
+        return true;
+        }
     }

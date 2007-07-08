@@ -12,6 +12,7 @@ import org.apache.commons.lang.ObjectUtils.Null;
 import org.lastbamboo.common.ice.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.AbstractStunServerIceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
@@ -211,6 +212,12 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         return ObjectUtils.NULL;
         }
 
+
+    public Null visitTcpActiveCandidate(final IceTcpActiveCandidate candidate)
+        {
+        addAttribute(candidate);
+        return ObjectUtils.NULL;
+        }
 
     public Null visitUdpHostCandidate(final IceUdpHostCandidate candidate)
         {

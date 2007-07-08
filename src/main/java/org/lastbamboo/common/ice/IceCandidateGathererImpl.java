@@ -2,15 +2,18 @@ package org.lastbamboo.common.ice;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.LinkedList;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.turn.client.TurnClient;
+import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.ShootConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,6 +118,22 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final IceTcpHostPassiveCandidate hostCandidate = 
             new IceTcpHostPassiveCandidate(address, this.m_controlling);
         candidates.add(hostCandidate);
+        
+        
+        // Add the active candidate.
+        try
+            {
+            final InetSocketAddress activeAddress = 
+                new InetSocketAddress(NetworkUtils.getLocalHost(), 9);
+            final IceTcpActiveCandidate activeCandidate = 
+                new IceTcpActiveCandidate(activeAddress, this.m_controlling);
+            candidates.add(activeCandidate);
+            }
+        catch (final UnknownHostException e)
+            {
+            LOG.error("Could not resolve host!", e);
+            return candidates;
+            }
         
         return candidates;
         }

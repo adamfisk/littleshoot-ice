@@ -3,23 +3,30 @@ package org.lastbamboo.common.ice;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.TreeSet;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceCandidatePairImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for forming ICE check lists.
  */
 public class IceCheckListCreatorImpl implements IceCheckListCreator
     {
+    
+    private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     public Collection<IceCandidatePair> createCheckList(
         final Collection<IceCandidate> localCandidates,
         final Collection<IceCandidate> remoteCandidates)
         {
-        final Collection<IceCandidatePair> pairs = createPairsCollection();
+        final Collection<IceCandidatePair> pairs = createPairsDataStructure();
             
         for (final IceCandidate localCandidate : localCandidates)
             {
@@ -30,16 +37,18 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
                     final IceCandidatePair pair = 
                         new IceCandidatePairImpl(localCandidate, 
                             remoteCandidate);
-
                     pairs.add(pair);
                     }
                 }
             }
         
-        return prunePairs(pairs);
+        final List<IceCandidatePair> pruned = prunePairs(pairs);
+        final Collection<IceCandidatePair> sorted = sortPairs(pruned);
+        return sorted;
         }
 
-    private Collection<IceCandidatePair> createPairsCollection()
+    private Collection<IceCandidatePair> sortPairs(
+        final List<IceCandidatePair> pairs)
         {
         final Comparator<IceCandidatePair> comparator = 
             new Comparator<IceCandidatePair>()
@@ -56,8 +65,18 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
                 }
             };
         
-        // Just use a sorted set.
-        return new TreeSet<IceCandidatePair>(comparator);
+        Collections.sort(pairs, comparator);
+        return pairs;
+        }
+
+    /**
+     * Allows easy modification of the underlying data structure.
+     * 
+     * @return The data structure to use.
+     */
+    private List<IceCandidatePair> createPairsDataStructure()
+        {
+        return new LinkedList<IceCandidatePair>();
         }
 
     /**
@@ -66,11 +85,11 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
      * 
      * @param pairs The pairs to prune.
      */
-    private Collection<IceCandidatePair> prunePairs(
+    private List<IceCandidatePair> prunePairs(
         final Collection<IceCandidatePair> pairs)
         {
-        final Collection<IceCandidatePair> prunedPairs = 
-            createPairsCollection();
+        final List<IceCandidatePair> prunedPairs = 
+            createPairsDataStructure();
         
         int count = 0;
         for (final IceCandidatePair pair : pairs)
@@ -80,12 +99,13 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
             if (count > 100) break;
             
             final IceCandidate local = pair.getLocalCandidate();
+            
             // NOTE: This deviates from the spec slightly.  We just eliminate
             // any pairs with a local server reflexive candidate because 
             // we always will have a corresponding pair with a local host
             // candidate that matches the base of the server reflexive
             // candidate.
-            if (local.getType() != IceCandidateType.SERVER_REFLEXIVE)
+            if (!prune(local))
                 {
                 prunedPairs.add(pair);
                 }
@@ -96,13 +116,30 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         }
 
 
+    private boolean prune(final IceCandidate local)
+        {
+        if (local.getTransport() == IceTransportProtocol.UDP &&
+            local.getType() == IceCandidateType.SERVER_REFLEXIVE)
+            {
+            // Prune it if it's server reflexive and UDP.
+            return true;
+            }
+        // Prune all passive TCP in local candidates.
+        if (local.getTransport() == IceTransportProtocol.TCP_PASS)
+            {
+            return true;
+            }
+        return false;
+        }
+
     private boolean shouldPair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
         return (
             (localCandidate.getComponentId() == 
             remoteCandidate.getComponentId()) &&
-            addressTypesMatch(localCandidate, remoteCandidate));
+            addressTypesMatch(localCandidate, remoteCandidate) &&
+            transportTypesMatch(localCandidate, remoteCandidate));
         }
 
     private boolean addressTypesMatch(final IceCandidate localCandidate, 
@@ -126,73 +163,28 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
             }
         }
     
-    private static final class IceCandidatePairImpl implements IceCandidatePair
+    private boolean transportTypesMatch(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate)
         {
-    
-        private final IceCandidate m_localCandidate;
-        private final IceCandidate m_remoteCandidate;
-        private final long m_priority;
-
-        private IceCandidatePairImpl(final IceCandidate localCandidate, 
-            final IceCandidate remoteCandidate)
+        final IceTransportProtocol localTransport = 
+            localCandidate.getTransport();
+        final IceTransportProtocol remoteTransport =
+            remoteCandidate.getTransport();
+        switch (localTransport)
             {
-            m_localCandidate = localCandidate;
-            m_remoteCandidate = remoteCandidate;
-            m_priority = calculatePriority(localCandidate, remoteCandidate);
-            }
-
-        private long calculatePriority(final IceCandidate localCandidate, 
-            final IceCandidate remoteCandidate)
-            {
-            // Here's the formula for calculating pair priorities:
-            // G = the priority of the controlling candidate.
-            // D = the priority of the controlled candidate.
-            // pair priority = 2^32*MIN(G,D) + 2*MAX(G,D) + (G>D?1:0)
-            // 
-            // Below we use:
-            // pair priority = A + B + C
-            final long G;
-            final long D;
-            if (localCandidate.isControlling())
-                {
-                G = localCandidate.getPriority();
-                D = remoteCandidate.getPriority();
-                }
-            else
-                {
-                G = remoteCandidate.getPriority();
-                D = localCandidate.getPriority();
-                }
-            final long A = (long) (Math.pow(2, 32) * Math.min(G, D));
-            final long B = 2 * Math.max(G, D);
-            final int C = G > D ? 1 : 0;
-            
-            final long pairPriority = A + B + C;
-            return pairPriority;
-            }
-
-        public IceCandidate getLocalCandidate()
-            {
-            return m_localCandidate;
-            }
-
-        public IceCandidate getRemoteCandidate()
-            {
-            return m_remoteCandidate;
-            }
-
-        public long getPriority()
-            {
-            return this.m_priority;
-            }
-        
-        public String toString()
-            {
-            return 
-                "priority: "+this.m_priority+"\n"+
-                "local:    "+this.m_localCandidate.getPriority()+"\n"+
-                "remote:   "+this.m_remoteCandidate.getPriority();
+            case UDP:
+                return remoteTransport == IceTransportProtocol.UDP;
+            case TCP_SO:
+                return remoteTransport == IceTransportProtocol.TCP_SO;
+            case TCP_ACT:
+                return remoteTransport == IceTransportProtocol.TCP_PASS;
+            case TCP_PASS:
+                return remoteTransport == IceTransportProtocol.TCP_ACT;
+            case UNKNOWN:
+                LOG.warn("Found unknown local transport!!");
+                return false;
+            default:
+                return false;
             }
         }
-
     }

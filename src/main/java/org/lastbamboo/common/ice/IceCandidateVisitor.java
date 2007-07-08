@@ -3,6 +3,7 @@ package org.lastbamboo.common.ice;
 import java.util.Collection;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
@@ -40,5 +41,7 @@ public interface IceCandidateVisitor<T>
     T visitTcpRelayPassiveCandidate(IceTcpRelayPassiveCandidate candidate);
 
     T visitTcpServerReflexiveSoCandidate(IceTcpServerReflexiveSoCandidate candidate);
+
+    T visitTcpActiveCandidate(IceTcpActiveCandidate candidate);
 
     }
