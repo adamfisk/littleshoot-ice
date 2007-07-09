@@ -16,6 +16,9 @@ import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
 import org.lastbamboo.common.util.NetworkUtils;
 
+/**
+ * Test for the class for creating ICE check lists. 
+ */
 public class IceCheckListCreatorImplTest extends TestCase
     {
 
@@ -24,13 +27,15 @@ public class IceCheckListCreatorImplTest extends TestCase
         final IceCheckListCreatorImpl creator = new IceCheckListCreatorImpl();
         Collection<IceCandidate> localCandidates = createCandidates(true);
         Collection<IceCandidate> remoteCandidates = createCandidates(false);
-        final Collection<IceCandidatePair> checkList = 
+        final IceCheckList checkList = 
             creator.createCheckList(localCandidates, remoteCandidates);
+        
+        final Collection<IceCandidatePair> pairs = checkList.getPairs();
         
         long lastPairPriority = Long.MAX_VALUE;
         IceCandidatePair lastPair = null;
         
-        for (final IceCandidatePair pair : checkList)
+        for (final IceCandidatePair pair : pairs)
             {
             assertTrue("Bad pair sorting:\n" +
                 "pair:   "+lastPair+"\n" +
@@ -40,7 +45,7 @@ public class IceCheckListCreatorImplTest extends TestCase
             lastPair = pair;
             }
         
-        final Iterator<IceCandidatePair> iter = checkList.iterator();
+        final Iterator<IceCandidatePair> iter = pairs.iterator();
         final IceCandidatePair pair1 = iter.next();
         final IceCandidatePair pair2 = iter.next();
         final IceCandidatePair pair3 = iter.next();

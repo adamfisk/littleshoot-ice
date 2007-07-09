@@ -19,7 +19,6 @@ public interface IceCheckListCreator
      * @param remoteCandidates The candidates from the remote agent.
      * @return The {@link Collection} of paired candidates.
      */
-    Collection<IceCandidatePair> createCheckList(
-        Collection<IceCandidate> localCandidates, 
+    IceCheckList createCheckList(Collection<IceCandidate> localCandidates, 
         Collection<IceCandidate> remoteCandidates);
     }

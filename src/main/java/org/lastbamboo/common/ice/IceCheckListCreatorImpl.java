@@ -22,7 +22,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
     
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    public Collection<IceCandidatePair> createCheckList(
+    public IceCheckList createCheckList(
         final Collection<IceCandidate> localCandidates,
         final Collection<IceCandidate> remoteCandidates)
         {
@@ -44,7 +44,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         
         final List<IceCandidatePair> pruned = prunePairs(pairs);
         final Collection<IceCandidatePair> sorted = sortPairs(pruned);
-        return sorted;
+        return new IceCheckListImpl(sorted);
         }
 
     private Collection<IceCandidatePair> sortPairs(
