@@ -33,4 +33,11 @@ public interface IceCandidatePair
      * @return The state of the pair.
      */
     IceCandidatePairState getState();
+    
+    /**
+     * Accessor for the foundation for the pair.
+     * 
+     * @return The foundation for the candidate pair.
+     */
+    int getFoundation();
     }

@@ -10,6 +10,7 @@ public class IceCandidatePairImpl implements IceCandidatePair
     private final IceCandidate m_remoteCandidate;
     private final long m_priority;
     private final IceCandidatePairState m_state;
+    private final int m_foundation;
 
     /**
      * Creates a new pair.
@@ -24,6 +25,8 @@ public class IceCandidatePairImpl implements IceCandidatePair
         m_remoteCandidate = remoteCandidate;
         m_priority = calculatePriority(localCandidate, remoteCandidate);
         m_state = IceCandidatePairState.FROZEN;
+        m_foundation = localCandidate.getFoundation() + 
+            remoteCandidate.getFoundation();
         }
 
     private long calculatePriority(final IceCandidate localCandidate, 
@@ -76,6 +79,11 @@ public class IceCandidatePairImpl implements IceCandidatePair
         return this.m_state;
         }
     
+    public int getFoundation()
+        {
+        return this.m_foundation;
+        }
+    
     public String toString()
         {
         return 
@@ -113,5 +121,4 @@ public class IceCandidatePairImpl implements IceCandidatePair
             return false;
         return true;
         }
-
     }
