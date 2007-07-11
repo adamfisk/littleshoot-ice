@@ -1,5 +1,7 @@
 package org.lastbamboo.common.ice.candidate;
 
+import java.net.Socket;
+
 /**
  * Class for a pair of ICE candidates. 
  */
@@ -9,8 +11,10 @@ public class IceCandidatePairImpl implements IceCandidatePair
     private final IceCandidate m_localCandidate;
     private final IceCandidate m_remoteCandidate;
     private final long m_priority;
-    private final IceCandidatePairState m_state;
+    private IceCandidatePairState m_state;
     private final int m_foundation;
+    private final int m_componentId;
+    private Socket m_socket;
 
     /**
      * Creates a new pair.
@@ -23,6 +27,10 @@ public class IceCandidatePairImpl implements IceCandidatePair
         {
         m_localCandidate = localCandidate;
         m_remoteCandidate = remoteCandidate;
+        
+        // Note both candidates always have the same component ID, so we just
+        // choose one for the pair.
+        m_componentId = localCandidate.getComponentId();
         m_priority = calculatePriority(localCandidate, remoteCandidate);
         m_state = IceCandidatePairState.FROZEN;
         m_foundation = localCandidate.getFoundation() + 
@@ -84,12 +92,34 @@ public class IceCandidatePairImpl implements IceCandidatePair
         return this.m_foundation;
         }
     
+    public void setState(final IceCandidatePairState state)
+        {
+        this.m_state = state;
+        }
+    
+    public int getComponentId()
+        {
+        return m_componentId;
+        }
+    
+
+    public Socket getSocket()
+        {
+        return this.m_socket;
+        }
+    
+    public void setSocket(final Socket sock)
+        {
+        this.m_socket = sock;
+        }
+    
     public String toString()
         {
         return 
-            "priority: "+this.m_priority+"\n"+
-            "local:    "+this.m_localCandidate.getPriority()+"\n"+
-            "remote:   "+this.m_remoteCandidate.getPriority();
+            "priority:   "+this.m_priority+"\n"+
+            "local:      "+this.m_localCandidate.getPriority()+"\n"+
+            "remote:     "+this.m_remoteCandidate.getPriority()+"\n"+
+            "foundation: "+this.m_foundation;
         }
 
     @Override

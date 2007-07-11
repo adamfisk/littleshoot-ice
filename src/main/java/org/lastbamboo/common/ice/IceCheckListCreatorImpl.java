@@ -51,19 +51,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         final List<IceCandidatePair> pairs)
         {
         final Comparator<IceCandidatePair> comparator = 
-            new Comparator<IceCandidatePair>()
-            {
-            public int compare(final IceCandidatePair pair1, 
-                final IceCandidatePair pair2)
-                {
-                final long pair1Priority = pair1.getPriority();
-                final long pair2Priority = pair2.getPriority();
-                
-                if (pair1Priority > pair2Priority) return -1;
-                if (pair1Priority < pair2Priority) return 1;
-                return 0;
-                }
-            };
+            new IceCandidatePairComparator();
         
         Collections.sort(pairs, comparator);
         return pairs;

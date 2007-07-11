@@ -32,6 +32,7 @@ public class IceAnswerGenerator implements AnswerGenerator
 
     public byte[] generateAnswer() throws IOException 
         {
+        // We send false here because the UAS side is controlled.
         final Collection<IceCandidate> candidates = 
             this.m_candidateGenerator.generateCandidates(false);
         

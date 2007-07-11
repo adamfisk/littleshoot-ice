@@ -31,6 +31,8 @@ public abstract class AbstractIceCandidate implements IceCandidate
     private final int m_foundation;
     
     private final boolean m_controlling;
+
+    private int m_componentId;
     
     /**
      * The is the local interface preference for calculating ICE priorities.
@@ -57,7 +59,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
             IceFoundationCalculator.calculateFoundation(type, baseAddress, 
                 transport), 
             type, transport, 
-            calculatePriority(type), controlling);
+            calculatePriority(type), controlling, s_componentId);
         }
  
     /**
@@ -75,13 +77,35 @@ public abstract class AbstractIceCandidate implements IceCandidate
         final IceTransportProtocol transport, final boolean controlling)
         {
         this(socketAddress, foundation, type, transport, 
-            calculatePriority(type), controlling);
+            calculatePriority(type), controlling, s_componentId);
+        }
+    
+    /**
+     * Creates a new ICE candidate.  This is typically called using decoded 
+     * data from another agent.
+     * 
+     * @param socketAddress The candidate address and port.
+     * @param foundation The foundation.
+     * @param type The type of candidate.
+     * @param transport The transport protocol.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
+     * @param priority The priority of the candidate.
+     * @param componentId The component ID.
+     */
+    public AbstractIceCandidate(final InetSocketAddress socketAddress, 
+        final int foundation, final IceCandidateType type, 
+        final IceTransportProtocol transport, final boolean controlling,
+        final long priority, final int componentId)
+        {
+        this(socketAddress, foundation, type, transport, priority, controlling, 
+            componentId);
         }
 
-    private AbstractIceCandidate(final InetSocketAddress socketAddress, 
+    protected AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final int foundation, final IceCandidateType type, 
         final IceTransportProtocol transport, final long priority,
-        final boolean controlling)
+        final boolean controlling, final int componentId)
         {
         if (socketAddress == null)
             {
@@ -101,6 +125,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
         this.m_priority = priority;
         this.m_foundation = foundation;
         this.m_controlling = controlling;
+        this.m_componentId = componentId;
         }
 
     private static long calculatePriority(final IceCandidateType type)
@@ -144,7 +169,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
 
     public int getComponentId()
         {
-        return s_componentId;
+        return m_componentId;
         }
 
     public int getFoundation()

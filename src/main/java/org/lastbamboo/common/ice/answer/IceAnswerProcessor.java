@@ -6,14 +6,17 @@ import java.util.Collection;
 
 import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.answer.AnswerProcessor;
-import org.lastbamboo.common.ice.IceCandidateTracker;
-import org.lastbamboo.common.ice.IceException;
-import org.lastbamboo.common.ice.UacIceCandidateTracker;
+import org.lastbamboo.common.ice.IceCheckList;
+import org.lastbamboo.common.ice.IceCheckListCreator;
+import org.lastbamboo.common.ice.IceCheckListCreatorImpl;
+import org.lastbamboo.common.ice.IceCheckListListener;
+import org.lastbamboo.common.ice.IceCheckListProcessor;
+import org.lastbamboo.common.ice.IceCheckListProcessorImpl;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.sdp.api.SdpException;
 import org.lastbamboo.common.util.IoExceptionWithCause;
-import org.lastbamboo.common.util.mina.MinaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +30,8 @@ public class IceAnswerProcessor implements AnswerProcessor
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
     private final IceCandidateSdpDecoder m_iceCandidateDecoder;
+
+    protected Socket m_socket;
     
     /**
      * Creates a new offer processor.
@@ -39,31 +44,50 @@ public class IceAnswerProcessor implements AnswerProcessor
         m_iceCandidateDecoder = iceCandidateDecoder;
         }
 
-    public Socket processAnswer(final ByteBuffer answer) throws IOException
+    public Socket processAnswer(final ByteBuffer offer, 
+        final ByteBuffer answer) throws IOException
         {
-        final Collection<IceCandidate> iceCandidates;
-        try
+        // TODO: This code relies on there only being one media stream in the
+        // SDP.  This is an incorrect assumption even if it works for our
+        // purposes.
+        final Collection<IceCandidate> localCandidates = 
+            decodeCandidates(offer);
+        final Collection<IceCandidate> remoteCandidates = 
+            decodeCandidates(answer);
+        
+        final IceCheckListCreator checkListCreator = 
+            new IceCheckListCreatorImpl();
+        
+        final IceCheckList checkList = 
+            checkListCreator.createCheckList(localCandidates, remoteCandidates);
+        
+        final IceCheckListProcessor processor = 
+            new IceCheckListProcessorImpl();
+        
+        final IceCheckListListener listener = 
+            new IceCheckListListener()
             {
-            iceCandidates = m_iceCandidateDecoder.decode(answer, true);
-            }
-        catch (final SdpException e)
-            {
-            throw new IoExceptionWithCause("Could not handle SDP", e);
-            }
+            public void onNominated(final IceCandidatePair pair)
+                {
+                m_socket = pair.getSocket();
+                }
 
-        if (iceCandidates.isEmpty())
+            };
+        processor.processCheckList(checkList, listener);
+        
+        if (m_socket == null)
             {
-            // Give up when there are no ICE candidates.
-            final String sdp = MinaUtils.toAsciiString(answer);
-            LOG.warn("No ICE candidates in SDP: "+sdp);
-            throw new IOException("No candidates in SDP: " + sdp);
+            LOG.debug("Could not create socket");
+            throw new IOException("Could not create socket");
             }
-
+        return m_socket;
+        
         // We only currently process ICE "answers" on the UAC side.  This
         // could theoretically use an IceCandidateTrackerFactory type class
         // here though.
+        /*
         final IceCandidateTracker tracker = new UacIceCandidateTracker();
-        tracker.visitCandidates(iceCandidates);
+        tracker.visitCandidates(remoteCandidates);
         
         try
             {
@@ -74,6 +98,20 @@ public class IceAnswerProcessor implements AnswerProcessor
             {
             LOG.debug("Could not create socket", e);
             throw new IoExceptionWithCause("Could not create socket", e);
+            }
+            */
+        }
+
+    private Collection<IceCandidate> decodeCandidates(final ByteBuffer buf) 
+        throws IoExceptionWithCause
+        {
+        try
+            {
+            return m_iceCandidateDecoder.decode(buf, true);
+            }
+        catch (final SdpException e)
+            {
+            throw new IoExceptionWithCause("Could not handle SDP", e);
             }
         }
 

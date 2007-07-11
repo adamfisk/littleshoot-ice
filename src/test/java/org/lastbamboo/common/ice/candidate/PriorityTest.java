@@ -22,7 +22,8 @@ public class PriorityTest extends TestCase
             new InetSocketAddress("192.168.1.1", 42342);
         final IceTcpRelayPassiveCandidate relay = 
             new IceTcpRelayPassiveCandidate(relayAddress, 4243, 
-                relatedAddress.getAddress(), relatedAddress.getPort(), false);
+                relatedAddress.getAddress(), relatedAddress.getPort(), false,
+                573L, 1);
         
         final IceTcpHostPassiveCandidate host = 
             new IceTcpHostPassiveCandidate(relatedAddress, false);

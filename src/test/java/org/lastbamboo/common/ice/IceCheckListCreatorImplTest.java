@@ -86,7 +86,7 @@ public class IceCheckListCreatorImplTest extends TestCase
         final InetAddress relatedAddress = NetworkUtils.getLocalHost();
         final IceCandidate c2 = 
             new IceTcpRelayPassiveCandidate(socketAddress, 2, relatedAddress, 
-                relatedPort, controlling);
+                relatedPort, controlling, 573L, 1);
         
         InetAddress baseAddress = relatedAddress;
         InetAddress stunServerAddress = InetAddress.getByName("32.8.5.4");

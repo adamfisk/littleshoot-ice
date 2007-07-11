@@ -15,6 +15,7 @@ import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
@@ -29,6 +30,10 @@ import org.lastbamboo.common.util.mina.MinaUtils;
 
 /**
  * Factory class for creating ICE candidates from offer/answer data.
+ * 
+ * TODO: This currently decodes candidates assuming there's only one media
+ * stream.  That's incorrect.  It should create collections of candidates for 
+ * eacy media stream.
  */
 public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
     {
@@ -172,7 +177,7 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                     {
                     case HOST:
                         return new IceUdpHostCandidate(socketAddress, 
-                            controlling);
+                            foundation, priority, controlling, componentId);
                     case RELAYED:
                         break;
                     case PEER_REFLEXIVE:
@@ -181,7 +186,7 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                         final InetSocketAddress related = parseRelated(scanner);
                         return new IceUdpServerReflexiveCandidate(socketAddress, 
                             foundation, related.getAddress(), related.getPort(),
-                            controlling);
+                            controlling, priority, componentId);
                     }
                 break;
             case TCP_PASS:
@@ -189,13 +194,13 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                     {
                     case HOST:
                         return new IceTcpHostPassiveCandidate(socketAddress,
-                            controlling);
+                            foundation, controlling, priority, componentId);
                     case RELAYED:
                         LOG.debug("Received a TCP relay passive candidate");
                         final InetSocketAddress related = parseRelated(scanner);
                         return new IceTcpRelayPassiveCandidate(socketAddress, 
                             foundation, related.getAddress(), related.getPort(),
-                            controlling);
+                            controlling, priority, componentId);
                     case PEER_REFLEXIVE:
                         break;
                     case SERVER_REFLEXIVE:
@@ -223,7 +228,8 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                 switch (type)
                     {
                     case HOST:
-                        break;
+                        return new IceTcpActiveCandidate(socketAddress, 
+                            controlling);
                     case RELAYED:
                         break;
                     case PEER_REFLEXIVE:
@@ -237,6 +243,8 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                 break;
             }
         
+        LOG.warn("Returning null candidate for type: "+type+
+            " and protocol "+transportProtocol);
         return null;
         }
 

@@ -53,15 +53,17 @@ public class IceUdpServerReflexiveCandidate
      * case, the base port.
      * @param controlling Whether or not this candidate is the controlling
      * candidate.
+     * @param priority The priority of the candidate.
+     * @param componentId The component ID. 
      */
     public IceUdpServerReflexiveCandidate(
         final InetSocketAddress serverReflexiveAddress, final int foundation, 
         final InetAddress relatedAddress, final int relatedPort,
-        final boolean controlling)
+        final boolean controlling, final long priority, final int componentId)
         {
         super(serverReflexiveAddress, foundation, 
             IceCandidateType.SERVER_REFLEXIVE, IceTransportProtocol.UDP, 
-            relatedAddress, relatedPort, controlling);
+            relatedAddress, relatedPort, controlling, priority, componentId);
         }
 
     public void accept(final IceCandidateVisitor visitor)

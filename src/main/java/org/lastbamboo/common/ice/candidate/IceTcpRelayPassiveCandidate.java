@@ -48,14 +48,17 @@ public class IceTcpRelayPassiveCandidate extends AbstractStunServerIceCandidate
      * case, the port in the mapped address received in the Allocate Response.
      * @param controlling Whether or not this candidate is the controlling
      * candidate.
+     * @param priority The priority of the candidate.
+     * @param componentId The component ID.
      */
     public IceTcpRelayPassiveCandidate(final InetSocketAddress socketAddress,
         final int foundation, final InetAddress relatedAddress, 
-        final int relatedPort, final boolean controlling)
+        final int relatedPort, final boolean controlling, final long priority,
+        final int componentId)
         {
         super(socketAddress, foundation, IceCandidateType.RELAYED, 
-            IceTransportProtocol.TCP_PASS, relatedAddress,relatedPort, 
-            controlling);
+            IceTransportProtocol.TCP_PASS, relatedAddress, relatedPort, 
+            controlling, priority, componentId);
         }
 
     public void accept(final IceCandidateVisitor visitor)

@@ -77,12 +77,11 @@ public class IceCandidateSdpDecoderTest extends TestCase
         
         final Iterator tcpIter = tcpCandidates.iterator();
 
-        // Make sure it ranks them appropriately -- the should be in the order
-        // we assume here.
-        final IceTcpHostPassiveCandidate tcpLocalCandidate = 
-            (IceTcpHostPassiveCandidate) tcpIter.next();
         final IceTcpRelayPassiveCandidate tcpCandidate = 
             (IceTcpRelayPassiveCandidate) tcpIter.next();
+        final IceTcpHostPassiveCandidate tcpLocalCandidate = 
+            (IceTcpHostPassiveCandidate) tcpIter.next();
+
         
         final Iterator udpIter = udpCandidates.iterator();
         final IceCandidate udpCandidate = (IceCandidate) udpIter.next();

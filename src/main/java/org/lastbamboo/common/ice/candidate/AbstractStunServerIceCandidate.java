@@ -38,10 +38,12 @@ public abstract class AbstractStunServerIceCandidate
         final InetAddress stunServerAddress, final InetAddress relatedAddress,
         final int relatedPort, final boolean controlling)
         {
-        this(socketAddress, 
+        super(socketAddress, 
            IceFoundationCalculator.calculateFoundation(type, baseAddress, 
-               transport, stunServerAddress), type, transport, relatedAddress,
-           relatedPort, controlling);
+               transport, stunServerAddress), type, transport, controlling);
+        
+        m_relatedAddress = relatedAddress;
+        m_relatedPort = relatedPort;
         }
 
     /**
@@ -57,14 +59,17 @@ public abstract class AbstractStunServerIceCandidate
      * @param relatedPort The related port.
      * @param controlling Whether or not this candidate is the controlling
      * candidate.
+     * @param priority The priority of the candidate.
+     * @param componentId The component ID.
      */
     public AbstractStunServerIceCandidate(
         final InetSocketAddress socketAddress, final int foundation, 
         final IceCandidateType type, final IceTransportProtocol transport, 
         final InetAddress relatedAddress, final int relatedPort, 
-        final boolean controlling)
+        final boolean controlling, final long priority, final int componentId)
         {
-        super(socketAddress, foundation, type, transport, controlling);
+        super(socketAddress, foundation, type, transport, controlling, 
+            priority, componentId);
         m_relatedAddress = relatedAddress;
         m_relatedPort = relatedPort;
         }
