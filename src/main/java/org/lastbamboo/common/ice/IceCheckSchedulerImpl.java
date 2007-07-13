@@ -1,6 +1,5 @@
 package org.lastbamboo.common.ice;
 
-import java.net.Socket;
 import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -19,16 +18,20 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final Collection<IceCandidatePair> m_pairs;
     private final IceCheckListListener m_listener;
+    private final IceCheckList m_checkList;
 
     /**
      * Creates a new scheduler for the specified pairs.
      * 
+     * @param checkList The check list.
      * @param pairs The candidate pairs to schedule checks for.
      * @param listener The listener for check list events. 
      */
-    public IceCheckSchedulerImpl(final Collection<IceCandidatePair> pairs, 
+    public IceCheckSchedulerImpl(final IceCheckList checkList,
+        final Collection<IceCandidatePair> pairs, 
         final IceCheckListListener listener)
         {
+        m_checkList = checkList;
         m_pairs = pairs;
         m_listener = listener;
         }
@@ -37,55 +40,81 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         {
         m_log.debug("Scheduling checks...");
         final Timer timer = new Timer(true);
+        final TimerTask task = createTimerTask(timer);
+        //final int Ta = 1;
+        timer.schedule(task, 0L);
         
-        final TimerTask task = new TimerTask()
+        }
+
+    protected TimerTask createTimerTask(final Timer timer)
+        {
+        return new TimerTask()
             {
+            private final Logger m_taskLog = 
+                LoggerFactory.getLogger(getClass());
             @Override
             public void run()
                 {
-                final IceCandidatePair activePair = getActivePair();
-                if (activePair == null)
+                try
                     {
-                    // No more pairs to try.
-                    timer.cancel();
+                    checkPair(timer);
                     }
-                else
+                catch (final Throwable t)
                     {
-                    if (performCheck(activePair))
-                        {
-                        timer.cancel();
-                        }
+                    m_taskLog.warn("Caught throwable in check", t);
                     }
                 }
             };
-
-        //final int Ta = 1;
-        timer.schedule(task, 0L, 1L);
         }
 
-    protected boolean performCheck(final IceCandidatePair pair)
+    protected void checkPair(final Timer timer)
+        {
+        final IceCandidatePair activePair = getActivePair();
+        if (activePair == null)
+            {
+            // No more pairs to try.
+            timer.cancel();
+            this.m_checkList.setState(IceCheckListState.FAILED);
+            }
+        else
+            {
+            if (performCheck(activePair))
+                {
+                this.m_checkList.setState(IceCheckListState.COMPLETED);
+                timer.cancel();
+                }
+            else
+                {
+                // TODO: The delay between checks should be calculated 
+                // here.
+                final TimerTask task = createTimerTask(timer);
+                timer.schedule(task, 0L);
+                }
+            }
+        }
+
+    private boolean performCheck(final IceCandidatePair pair)
         {
         final IceConnectivityChecker checker = 
             new IceConnectivityCheckerImpl(pair);
         pair.setState(IceCandidatePairState.IN_PROGRESS);
-        final Socket sock = checker.check();
-        if (sock != null)
+        if (checker.check())
             {
-            pair.setSocket(sock);
             this.m_listener.onNominated(pair);
             return true;
             }
+        
         return false;
         }
 
-    protected IceCandidatePair getActivePair()
+    private IceCandidatePair getActivePair()
         {
         final IceCandidatePair waitingPair = 
-            getPair(IceCandidatePairState.WAITING);
+            getPairInState(IceCandidatePairState.WAITING);
         if (waitingPair == null)
             {
             final IceCandidatePair frozen = 
-                getPair(IceCandidatePairState.FROZEN);
+                getPairInState(IceCandidatePairState.FROZEN);
             if (frozen != null) 
                 {
                 frozen.setState(IceCandidatePairState.WAITING);
@@ -99,7 +128,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             }
         }
 
-    protected IceCandidatePair getPair(final IceCandidatePairState state)
+    private IceCandidatePair getPairInState(final IceCandidatePairState state)
         {
         // The pairs are already ordered.
         for (final IceCandidatePair pair : this.m_pairs)

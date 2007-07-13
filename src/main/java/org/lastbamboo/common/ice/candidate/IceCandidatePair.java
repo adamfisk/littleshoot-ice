@@ -1,6 +1,6 @@
 package org.lastbamboo.common.ice.candidate;
 
-import java.net.Socket;
+
 
 /**
  * Interface for a pair of ICE candidates.
@@ -57,8 +57,13 @@ public interface IceCandidatePair
      * @return The component ID for the pair.
      */
     int getComponentId();
-
-    Socket getSocket();
-
-    void setSocket(Socket sock);
+    
+    /**
+     * Accepts the specified visitor to an ICE candidate pair.
+     * 
+     * @param <T> The class to return.
+     * @param visitor The visitor to accept.
+     * @return The class the visitor created. 
+     */
+    <T> T accept(IceCandidatePairVisitor<T> visitor);
     }

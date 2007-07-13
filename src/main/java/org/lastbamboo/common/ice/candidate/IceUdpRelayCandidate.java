@@ -37,9 +37,9 @@ public class IceUdpRelayCandidate extends AbstractStunServerIceCandidate
             relatedPort, controlling);
         }
 
-    public void accept(final IceCandidateVisitor visitor)
+    public <T> T accept(IceCandidateVisitor<T> visitor)
         {
-        visitor.visitUdpRelayCandidate(this);
+        return visitor.visitUdpRelayCandidate(this);
         }
 
     }

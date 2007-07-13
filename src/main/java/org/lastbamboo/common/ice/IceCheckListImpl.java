@@ -11,7 +11,7 @@ public class IceCheckListImpl implements IceCheckList
     {
 
     private final Collection<IceCandidatePair> m_pairs;
-    private final IceCheckListState m_state;
+    private IceCheckListState m_state;
 
     /**
      * Creates a new check list.
@@ -27,6 +27,16 @@ public class IceCheckListImpl implements IceCheckList
     public Collection<IceCandidatePair> getPairs()
         {
         return m_pairs;
+        }
+
+    public void setState(final IceCheckListState state)
+        {
+        this.m_state = state;
+        }
+
+    public IceCheckListState getState()
+        {
+        return this.m_state;
         }
 
     }

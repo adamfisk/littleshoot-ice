@@ -16,4 +16,18 @@ public interface IceCheckList
      * @return The check list.
      */
     Collection<IceCandidatePair> getPairs();
+
+    /**
+     * Sets the state of the check list.
+     * 
+     * @param state The state of the check list.
+     */
+    void setState(IceCheckListState state);
+
+    /**
+     * Accessor for the state of the check list.
+     * 
+     * @return The state of the check list.
+     */
+    IceCheckListState getState();
     }

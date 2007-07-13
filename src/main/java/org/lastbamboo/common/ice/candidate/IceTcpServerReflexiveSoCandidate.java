@@ -39,9 +39,8 @@ public class IceTcpServerReflexiveSoCandidate
             relatedPort, controlling);
         }
 
-    public void accept(final IceCandidateVisitor visitor)
+    public <T> T accept(IceCandidateVisitor<T> visitor)
         {
-        visitor.visitTcpServerReflexiveSoCandidate(this);
+        return visitor.visitTcpServerReflexiveSoCandidate(this);
         }
-
     }

@@ -40,9 +40,12 @@ public interface IceCandidate
 
     /**
      * Accepts the specified visitor to an ICE candidate.
+     * 
+     * @param <T> The class to return.
      * @param visitor The visitor to accept.
+     * @return The class the visitor created. 
      */
-    void accept(IceCandidateVisitor visitor);
+    <T> T accept(IceCandidateVisitor<T> visitor);
 
     /**
      * Sets the socket.

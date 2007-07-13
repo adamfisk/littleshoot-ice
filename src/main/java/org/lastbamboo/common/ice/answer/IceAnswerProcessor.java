@@ -14,6 +14,9 @@ import org.lastbamboo.common.ice.IceCheckListProcessor;
 import org.lastbamboo.common.ice.IceCheckListProcessorImpl;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceCandidatePairVisitor;
+import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
+import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.sdp.api.SdpException;
 import org.lastbamboo.common.util.IoExceptionWithCause;
@@ -24,7 +27,8 @@ import org.slf4j.LoggerFactory;
  * ICE implementation of answer processing for an offer/answer protocol such
  * as SIP.
  */
-public class IceAnswerProcessor implements AnswerProcessor
+public class IceAnswerProcessor implements AnswerProcessor, 
+    IceCandidatePairVisitor
     {
     
     private final Logger LOG = LoggerFactory.getLogger(getClass());
@@ -69,7 +73,7 @@ public class IceAnswerProcessor implements AnswerProcessor
             {
             public void onNominated(final IceCandidatePair pair)
                 {
-                m_socket = pair.getSocket();
+                pair.accept(IceAnswerProcessor.this);
                 }
 
             };
@@ -113,6 +117,17 @@ public class IceAnswerProcessor implements AnswerProcessor
             {
             throw new IoExceptionWithCause("Could not handle SDP", e);
             }
+        }
+
+    public Object visitTcpIceCandidatePair(final TcpIceCandidatePair pair)
+        {
+        this.m_socket = pair.getSocket();
+        return null;
+        }
+
+    public Object visitUdpIceCandidatePair(final UdpIceCandidatePair pair)
+        {
+        return null;
         }
 
     }

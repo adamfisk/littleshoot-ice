@@ -45,9 +45,9 @@ public class IceTcpHostPassiveCandidate extends AbstractIceCandidate
             priority, controlling, componentId);
         }
 
-    public void accept(final IceCandidateVisitor visitor)
+    public <T> T accept(final IceCandidateVisitor<T> visitor)
         {
-        visitor.visitTcpHostPassiveCandidate(this);
+        return visitor.visitTcpHostPassiveCandidate(this);
         }
 
     }

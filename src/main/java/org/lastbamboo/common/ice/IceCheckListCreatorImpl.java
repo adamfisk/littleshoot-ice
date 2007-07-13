@@ -10,7 +10,9 @@ import java.util.List;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.ice.candidate.IceCandidatePairImpl;
+import org.lastbamboo.common.ice.candidate.AbstractIceCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceCandidatePairFactory;
+import org.lastbamboo.common.ice.candidate.IceCandidatePairFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +29,9 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         final Collection<IceCandidate> remoteCandidates)
         {
         final Collection<IceCandidatePair> pairs = createPairsDataStructure();
-            
+           
+        final IceCandidatePairFactory factory = 
+            new IceCandidatePairFactoryImpl();
         for (final IceCandidate localCandidate : localCandidates)
             {
             for (final IceCandidate remoteCandidate : remoteCandidates)
@@ -35,8 +39,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
                 if (shouldPair(localCandidate, remoteCandidate))
                     {
                     final IceCandidatePair pair = 
-                        new IceCandidatePairImpl(localCandidate, 
-                            remoteCandidate);
+                        factory.createPair(localCandidate, remoteCandidate);
                     pairs.add(pair);
                     }
                 }

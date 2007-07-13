@@ -61,9 +61,9 @@ public class IceTcpRelayPassiveCandidate extends AbstractStunServerIceCandidate
             controlling, priority, componentId);
         }
 
-    public void accept(final IceCandidateVisitor visitor)
+    public <T> T accept(final IceCandidateVisitor<T> visitor)
         {
-        visitor.visitTcpRelayPassiveCandidate(this);
+        return visitor.visitTcpRelayPassiveCandidate(this);
         }
 
     }

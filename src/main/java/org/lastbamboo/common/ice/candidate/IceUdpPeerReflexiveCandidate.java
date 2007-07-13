@@ -39,9 +39,9 @@ public class IceUdpPeerReflexiveCandidate extends AbstractStunServerIceCandidate
             stunServerAddress, relatedAddress, relatedPort, controlling);
         }
 
-    public void accept(final IceCandidateVisitor visitor)
+    public <T> T accept(IceCandidateVisitor<T> visitor)
         {
-        visitor.visitUdpPeerReflexiveCandidate(this);
+        return visitor.visitUdpPeerReflexiveCandidate(this);
         }
 
     }

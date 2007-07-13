@@ -26,9 +26,9 @@ public class IceTcpActiveCandidate extends AbstractIceCandidate
             IceTransportProtocol.TCP_ACT, controlling);
         }
 
-    public void accept(final IceCandidateVisitor visitor)
+    public <T> T accept(IceCandidateVisitor<T> visitor)
         {
-        visitor.visitTcpActiveCandidate(this);
+        return visitor.visitTcpActiveCandidate(this);
         }
 
     }

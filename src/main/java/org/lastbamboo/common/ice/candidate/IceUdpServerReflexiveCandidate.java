@@ -66,9 +66,9 @@ public class IceUdpServerReflexiveCandidate
             relatedAddress, relatedPort, controlling, priority, componentId);
         }
 
-    public void accept(final IceCandidateVisitor visitor)
+    public <T> T accept(final IceCandidateVisitor<T> visitor)
         {
-        visitor.visitUdpServerReflexiveCandidate(this);
+        return visitor.visitUdpServerReflexiveCandidate(this);
         }
 
     }

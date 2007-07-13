@@ -34,8 +34,13 @@ public class IceCheckListProcessorImpl implements IceCheckListProcessor
             {
             LOG.debug("Looping through "+mediaPairs.size()+" pairs");
             final IceCheckScheduler scheduler = 
-                new IceCheckSchedulerImpl(mediaPairs, listener);
+                new IceCheckSchedulerImpl(checkList, mediaPairs, listener);
             scheduler.scheduleChecks();
+            }
+        
+        while (checkList.getState() == IceCheckListState.RUNNING)
+            {
+            
             }
         }
 

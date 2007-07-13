@@ -1,11 +1,10 @@
 package org.lastbamboo.common.ice.candidate;
 
-import java.net.Socket;
 
 /**
  * Class for a pair of ICE candidates. 
  */
-public class IceCandidatePairImpl implements IceCandidatePair
+public abstract class AbstractIceCandidatePair implements IceCandidatePair
     {
 
     private final IceCandidate m_localCandidate;
@@ -14,7 +13,6 @@ public class IceCandidatePairImpl implements IceCandidatePair
     private IceCandidatePairState m_state;
     private final int m_foundation;
     private final int m_componentId;
-    private Socket m_socket;
 
     /**
      * Creates a new pair.
@@ -22,7 +20,7 @@ public class IceCandidatePairImpl implements IceCandidatePair
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
      */
-    public IceCandidatePairImpl(final IceCandidate localCandidate, 
+    public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
         m_localCandidate = localCandidate;
@@ -102,17 +100,6 @@ public class IceCandidatePairImpl implements IceCandidatePair
         return m_componentId;
         }
     
-
-    public Socket getSocket()
-        {
-        return this.m_socket;
-        }
-    
-    public void setSocket(final Socket sock)
-        {
-        this.m_socket = sock;
-        }
-    
     public String toString()
         {
         return 
@@ -120,35 +107,5 @@ public class IceCandidatePairImpl implements IceCandidatePair
             "local:      "+this.m_localCandidate.getPriority()+"\n"+
             "remote:     "+this.m_remoteCandidate.getPriority()+"\n"+
             "foundation: "+this.m_foundation;
-        }
-
-    @Override
-    public int hashCode()
-        {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + (m_localCandidate.hashCode());
-        result = PRIME * result + (int) (m_priority ^ (m_priority >>> 32));
-        result = PRIME * result + (m_remoteCandidate.hashCode());
-        return result;
-        }
-
-    @Override
-    public boolean equals(final Object obj)
-        {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final IceCandidatePairImpl other = (IceCandidatePairImpl) obj;
-        if (!m_localCandidate.equals(other.m_localCandidate))
-            return false;
-        if (m_priority != other.m_priority)
-            return false;
-        if (!m_remoteCandidate.equals(other.m_remoteCandidate))
-            return false;
-        return true;
         }
     }

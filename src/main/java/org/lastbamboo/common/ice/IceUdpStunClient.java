@@ -45,10 +45,9 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
     private final DatagramConnector m_connector;
 
     /**
-     * This is the address of a public STUN server for obtaining the 
-     * "server reflexive" ICE candidate.
+     * This is the address of the STUN server to connect to.
      */
-    private final InetSocketAddress m_stunServer;
+    private final InetSocketAddress m_stunServerAddress;
 
     private final StunClientIoHandler m_ioHandler;
 
@@ -69,6 +68,16 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
      */
     public IceUdpStunClient()
         {
+        this(new InetSocketAddress("stun01.sipphone.com", STUN_PORT));
+        }
+    
+    /**
+     * Creates a new STUN client that connects to the specified STUN server.
+     * 
+     * @param stunServerAddress The address of the STUN server to connect to.
+     */
+    public IceUdpStunClient(final InetSocketAddress stunServerAddress)
+        {
         final StunTransactionTracker tracker = new StunTransactionTrackerImpl();
         m_transactionFactory = new StunTransactionFactoryImpl(tracker);
         
@@ -77,7 +86,7 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
         
         m_connector = new DatagramConnector();
         m_connector.getDefaultConfig().getSessionConfig().setReuseAddress(true);
-        m_stunServer = new InetSocketAddress("stun01.sipphone.com", STUN_PORT);
+        m_stunServerAddress = stunServerAddress;
         m_ioHandler = new StunClientIoHandler(messageVisitorFactory);
         final ProtocolCodecFactory codecFactory = 
             new StunProtocolCodecFactory();
@@ -86,12 +95,11 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
         
         m_connector.getFilterChain().addLast("stunFilter", stunFilter);
         final ConnectFuture connectFuture = 
-            m_connector.connect(m_stunServer, m_ioHandler);
+            m_connector.connect(m_stunServerAddress, m_ioHandler);
         connectFuture.join();
         m_ioSession = connectFuture.getSession();
         this.m_localAddress = getLocalAddress(m_ioSession);
         }
-    
 
     private InetSocketAddress getLocalAddress(final IoSession ioSession)
         {
@@ -135,7 +143,7 @@ public class IceUdpStunClient implements IceStunClient, StunTransactionListener
     
     public InetAddress getStunServerAddress()
         {
-        return this.m_stunServer.getAddress();
+        return this.m_stunServerAddress.getAddress();
         }
 
     public InetSocketAddress getBaseAddress()
