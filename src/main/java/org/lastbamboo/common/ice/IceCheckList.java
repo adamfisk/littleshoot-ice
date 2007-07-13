@@ -30,4 +30,6 @@ public interface IceCheckList
      * @return The state of the check list.
      */
     IceCheckListState getState();
+
+    void check();
     }
