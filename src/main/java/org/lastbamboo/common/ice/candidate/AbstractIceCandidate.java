@@ -6,6 +6,7 @@ import java.net.Socket;
 
 import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IceTransportProtocol;
+import org.lastbamboo.common.stun.client.StunClient;
 
 /**
  * Class that abstracts out general attributes of all ICE session candidates.
@@ -32,7 +33,10 @@ public abstract class AbstractIceCandidate implements IceCandidate
     
     private final boolean m_controlling;
 
-    private int m_componentId;
+    protected IceCandidate m_baseCandidate;
+    
+    private final int m_componentId;
+    protected StunClient m_stunClient;
     
     /**
      * The is the local interface preference for calculating ICE priorities.
@@ -41,6 +45,17 @@ public abstract class AbstractIceCandidate implements IceCandidate
      */
     private static final int LOCAL_PREFERENCE = 65535;
 
+
+    public AbstractIceCandidate(final StunClient stunClient, 
+        final IceCandidateType type, final IceTransportProtocol transport, 
+        final boolean controlling)
+        {
+        this (stunClient.getHostAddress(), 
+            stunClient.getHostAddress().getAddress(), type, transport, 
+            controlling);
+        this.m_stunClient = stunClient;
+        }
+    
     /**
      * Creates a new ICE candidate.
      * 
@@ -59,7 +74,8 @@ public abstract class AbstractIceCandidate implements IceCandidate
             IceFoundationCalculator.calculateFoundation(type, baseAddress, 
                 transport), 
             type, transport, 
-            calculatePriority(type), controlling, s_componentId);
+            calculatePriority(type), controlling, s_componentId, null);
+        m_baseCandidate = this;
         }
  
     /**
@@ -74,38 +90,18 @@ public abstract class AbstractIceCandidate implements IceCandidate
      */
     public AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final int foundation, final IceCandidateType type, 
-        final IceTransportProtocol transport, final boolean controlling)
+        final IceTransportProtocol transport, final boolean controlling,
+        final IceCandidate baseCandidate)
         {
         this(socketAddress, foundation, type, transport, 
-            calculatePriority(type), controlling, s_componentId);
-        }
-    
-    /**
-     * Creates a new ICE candidate.  This is typically called using decoded 
-     * data from another agent.
-     * 
-     * @param socketAddress The candidate address and port.
-     * @param foundation The foundation.
-     * @param type The type of candidate.
-     * @param transport The transport protocol.
-     * @param controlling Whether or not this candidate is the controlling
-     * candidate.
-     * @param priority The priority of the candidate.
-     * @param componentId The component ID.
-     */
-    public AbstractIceCandidate(final InetSocketAddress socketAddress, 
-        final int foundation, final IceCandidateType type, 
-        final IceTransportProtocol transport, final boolean controlling,
-        final long priority, final int componentId)
-        {
-        this(socketAddress, foundation, type, transport, priority, controlling, 
-            componentId);
+            calculatePriority(type), controlling, s_componentId, baseCandidate);
         }
 
     protected AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final int foundation, final IceCandidateType type, 
         final IceTransportProtocol transport, final long priority,
-        final boolean controlling, final int componentId)
+        final boolean controlling, final int componentId,
+        final IceCandidate baseCandidate)
         {
         if (socketAddress == null)
             {
@@ -126,6 +122,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
         this.m_foundation = foundation;
         this.m_controlling = controlling;
         this.m_componentId = componentId;
+        this.m_baseCandidate = baseCandidate;
         }
 
     private static long calculatePriority(final IceCandidateType type)
@@ -180,6 +177,16 @@ public abstract class AbstractIceCandidate implements IceCandidate
     public boolean isControlling()
         {
         return m_controlling;
+        }
+    
+    public IceCandidate getBaseCandidate()
+        {
+        return m_baseCandidate;
+        }
+
+    public StunClient getStunClient()
+        {
+        return m_stunClient;
         }
 
     @Override

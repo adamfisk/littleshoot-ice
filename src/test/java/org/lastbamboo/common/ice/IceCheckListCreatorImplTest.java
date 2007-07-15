@@ -14,6 +14,8 @@ import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
+import org.lastbamboo.common.ice.stubs.StunClientStub;
+import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.util.NetworkUtils;
 
 /**
@@ -88,11 +90,14 @@ public class IceCheckListCreatorImplTest extends TestCase
             new IceTcpRelayPassiveCandidate(socketAddress, 2, relatedAddress, 
                 relatedPort, controlling, 573L, 1);
         
-        InetAddress baseAddress = relatedAddress;
-        InetAddress stunServerAddress = InetAddress.getByName("32.8.5.4");
+        final InetSocketAddress baseCandidateAddress = 
+            new InetSocketAddress("192.168.1.100", 4242);
+        StunClient iceStunClient = new StunClientStub(socketAddress.getAddress());
+        IceCandidate baseCandidate = 
+            new IceTcpHostPassiveCandidate(baseCandidateAddress, true);
         final IceCandidate c3 =
-            new IceTcpServerReflexiveSoCandidate(socketAddress, baseAddress, 
-                stunServerAddress, relatedAddress, relatedPort, controlling);
+            new IceTcpServerReflexiveSoCandidate(socketAddress, baseCandidate, 
+                iceStunClient, controlling);
         
         // Add the active candidate.
         final IceCandidate active = 

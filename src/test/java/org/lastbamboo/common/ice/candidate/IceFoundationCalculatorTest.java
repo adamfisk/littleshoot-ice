@@ -8,6 +8,9 @@ import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
+import org.lastbamboo.common.ice.stubs.StunClientStub;
+import org.lastbamboo.common.stun.client.StunClient;
+
 /**
  * Tests calculating foundations for ICE candidates. 
  */
@@ -24,9 +27,17 @@ public class IceFoundationCalculatorTest extends TestCase
         final InetSocketAddress hostAddress3 = 
             new InetSocketAddress("192.168.1.100", 33454);
         
-        final InetAddress baseAddress1 = hostAddress1.getAddress();
-        final InetAddress baseAddress2 = hostAddress2.getAddress();
-        final InetAddress baseAddress3 = hostAddress3.getAddress();
+        //final StunClient udpStunClient1 = new UdpStunClient();
+        //final StunClient udpStunClient2 = new UdpStunClient();
+        //final StunClient udpStunClient3 = new UdpStunClient();
+        
+        final IceCandidate tcpBaseCandidate1 = 
+            new IceTcpHostPassiveCandidate(hostAddress1, false); 
+        final IceCandidate tcpBaseCandidate2 = 
+            new IceTcpHostPassiveCandidate(hostAddress2, false); 
+        final IceCandidate tcpBaseCandidate3 = 
+            new IceTcpHostPassiveCandidate(hostAddress3, false); 
+        
         
         // Create the public addresses.
         final InetSocketAddress publicAddress1 = 
@@ -40,6 +51,17 @@ public class IceFoundationCalculatorTest extends TestCase
         final InetAddress stun1 = InetAddress.getByName("47.54.23.2");
         final InetAddress stun2 = InetAddress.getByName("4.4.23.2");
         final InetAddress stun3 = InetAddress.getByName("7.5.23.2");
+        final StunClient stunClient1 = new StunClientStub(stun1, hostAddress1);
+        final StunClient stunClient2 = new StunClientStub(stun2, hostAddress2);
+        final StunClient stunClient3 = new StunClientStub(stun3, hostAddress3);
+        
+        final IceCandidate udpBaseCandidate1 =
+            new IceUdpHostCandidate(stunClient1, false);
+        final IceCandidate udpBaseCandidate2 =
+            new IceUdpHostCandidate(stunClient2, false);
+        final IceCandidate udpBaseCandidate3 =
+            new IceUdpHostCandidate(stunClient3, false);
+        
         
         // Create the TCP host candidates.
         final Collection<IceCandidate> tcpHost = new LinkedList<IceCandidate>();
@@ -49,9 +71,9 @@ public class IceFoundationCalculatorTest extends TestCase
         runHostTests(tcpHost);
         
         final Collection<IceCandidate> udpHost = new LinkedList<IceCandidate>();
-        udpHost.add(new IceUdpHostCandidate(hostAddress1, false));
-        udpHost.add(new IceUdpHostCandidate(hostAddress2, false));
-        udpHost.add(new IceUdpHostCandidate(hostAddress3, false));
+        udpHost.add(new IceUdpHostCandidate(stunClient1, false));
+        udpHost.add(new IceUdpHostCandidate(stunClient2, false));
+        udpHost.add(new IceUdpHostCandidate(stunClient3, false));
         runHostTests(udpHost);
         
         final int relatedPort = 4729;
@@ -62,76 +84,79 @@ public class IceFoundationCalculatorTest extends TestCase
         // Create the TCP server reflexive candidates.
         final Collection<IceCandidate> tcpSr = new LinkedList<IceCandidate>();
         tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, 
-            baseAddress1, stun1, baseAddress1, relatedPort, false));
+            tcpBaseCandidate1, stunClient1, false));
         // Base address with different port.
         tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, 
-            baseAddress2, stun1, baseAddress2, relatedPort, false));
+            tcpBaseCandidate2, stunClient1, false));
         // Base address with different IP.
         tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, 
-            baseAddress3, stun1, baseAddress3, relatedPort, false));
+            tcpBaseCandidate3, stunClient1, false));
         // Different STUN server address.
         tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress1, 
-            baseAddress1, stun2, baseAddress1, relatedPort, false));
+            tcpBaseCandidate1, stunClient2, false));
         // Different public address -- should have no effect on the foundation.
         tcpSr.add(new IceTcpServerReflexiveSoCandidate(publicAddress2, 
-            baseAddress1, stun1, baseAddress1, relatedPort, false));
+            tcpBaseCandidate1, stunClient1, false));
         runStunCandidateTests(tcpSr);
         
         // Create the UDP server reflexive candidates.
         final Collection<IceCandidate> udpSr = new LinkedList<IceCandidate>();
         udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, 
-            baseAddress1, stun1, baseAddress1, relatedPort, false));
+            udpBaseCandidate1, stunClient1, false));
         // Base address with different port.
         udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, 
-            baseAddress2, stun1, baseAddress2, relatedPort, false));
+            udpBaseCandidate2, stunClient1, false));
         // Base address with different IP.
         udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, 
-            baseAddress3, stun1, baseAddress3, relatedPort, false));
+            udpBaseCandidate3, stunClient1, false));
         // Different STUN server address.
         udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress1, 
-            baseAddress1, stun2, baseAddress1, relatedPort, false));
+            udpBaseCandidate1, stunClient2, false));
         // Different public address -- should have no effect on the foundation.
         udpSr.add(new IceUdpServerReflexiveCandidate(publicAddress2, 
-            baseAddress1, stun1, baseAddress1, relatedPort, false));
+            udpBaseCandidate1, stunClient1, false));
         runStunCandidateTests(udpSr);
         
         // Create the TCP relay candidates.
         final Collection<IceCandidate> tcpRelay = new LinkedList<IceCandidate>();
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress1, stun1, mappedAddress, relatedPort, false));
-        // Base address with different port.
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress2, stun1, mappedAddress, relatedPort, false));
-        // Base address with different IP.
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress3, stun1, mappedAddress, relatedPort, false));
+        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, 
+            stunClient1, mappedAddress, relatedPort, false));
         // Different STUN server address.
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, baseAddress1, stun2, mappedAddress, relatedPort, false));
-        // Different public address -- should have no effect on the foundation.
-        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress2, baseAddress1, stun1, mappedAddress, relatedPort, false));
-        runStunCandidateTests(tcpRelay);
+        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress1, 
+            stunClient2, mappedAddress, relatedPort, false));
+        // Different public address, but same port.  Should be the same.
+        tcpRelay.add(new IceTcpRelayPassiveCandidate(publicAddress2, 
+            stunClient1, mappedAddress, relatedPort, false));
+        runStunRelayCandidateTests(tcpRelay);
         
         // Create the UDP relay candidates.
         final Collection<IceCandidate> udpRelay = new LinkedList<IceCandidate>();
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress1, stun1, mappedAddress, relatedPort, false));
-        // Base address with different port.
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress2, stun1, mappedAddress, relatedPort, false));
-        // Base address with different IP.
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress3, stun1, mappedAddress, relatedPort, false));
+        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, 
+            stunClient1, mappedAddress, relatedPort, false));
         // Different STUN server address.
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, baseAddress1, stun2, mappedAddress, relatedPort, false));
+        udpRelay.add(new IceUdpRelayCandidate(publicAddress1, 
+            stunClient2, mappedAddress, relatedPort, false));
         // Different public address -- should have no effect on the foundation.
-        udpRelay.add(new IceUdpRelayCandidate(publicAddress2, baseAddress1, stun1, mappedAddress, relatedPort, false));
-        runStunCandidateTests(udpRelay);
+        udpRelay.add(new IceUdpRelayCandidate(publicAddress2, 
+            stunClient1, mappedAddress, relatedPort, false));
+        runStunRelayCandidateTests(tcpRelay);
         
         // Create the UDP peer reflexive candidates.
         final Collection<IceCandidate> udpPeer = new LinkedList<IceCandidate>();
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress1, stun1, baseAddress1, relatedPort, false));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, 
+            udpBaseCandidate1, stunClient1, false));
         // Base address with different port.
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress2, stun1, baseAddress1, relatedPort, false));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, 
+            udpBaseCandidate2, stunClient1, false));
         // Base address with different IP.
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress3, stun1, baseAddress1, relatedPort, false));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, 
+            udpBaseCandidate3, stunClient1, false));
         // Different STUN server address.
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, baseAddress1, stun2, baseAddress1, relatedPort, false));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, 
+            udpBaseCandidate1, stunClient2, false));
         // Different public address -- should have no effect on the foundation.
-        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress2, baseAddress1, stun1, baseAddress1, relatedPort, false));
+        udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress2, 
+            udpBaseCandidate1, stunClient1, false));
         runStunCandidateTests(udpPeer);
         
         // Now test different candidate types to make sure they don't match.
@@ -147,15 +172,12 @@ public class IceFoundationCalculatorTest extends TestCase
     private void assertNoneEqual(final Collection<IceCandidate> candidates1, 
         final Collection<IceCandidate> candidates2)
         {
-        //final IceFoundationCalculator calc = new IceFoundationCalculator();
         int outerIndex = 0;
         for (final IceCandidate c1 : candidates1)
             {
             int innerIndex = 0;
             for (final IceCandidate c2: candidates2)
                 {
-                //final int f1 = calc.calculateFoundation(c1);
-                //final int f2 = calc.calculateFoundation(c2);
                 final int f1 = c1.getFoundation();
                 final int f2 = c2.getFoundation();
                 assertFalse("Foundations equal: "+f1+" "+f2+"\n"+
@@ -177,7 +199,6 @@ public class IceFoundationCalculatorTest extends TestCase
     private void runStunCandidateTests(
         final Collection<IceCandidate> stunCandidates)
         {
-        //final IceFoundationCalculator calc = new IceFoundationCalculator();
         final Iterator<IceCandidate> iter = stunCandidates.iterator();
         final IceCandidate c1 = iter.next();
         final IceCandidate c2 = iter.next();
@@ -189,15 +210,22 @@ public class IceFoundationCalculatorTest extends TestCase
         assertFalse(c1.getFoundation() == c3.getFoundation());
         assertFalse(c1.getFoundation() == c4.getFoundation());
         assertEquals(c1.getFoundation(), c5.getFoundation());
+        }
+    
+    private void runStunRelayCandidateTests(
+        final Collection<IceCandidate> stunCandidates)
+        {
+        final Iterator<IceCandidate> iter = stunCandidates.iterator();
+        final IceCandidate c1 = iter.next();
+        final IceCandidate c2 = iter.next();
+        final IceCandidate c3 = iter.next();
+        //final IceCandidate c4 = iter.next();
+        //final IceCandidate c5 = iter.next();
         
-        /*
-        assertFalse(calc.calculateFoundation(c1) ==
-            calc.calculateFoundation(c3));
-        assertFalse(calc.calculateFoundation(c1) ==
-            calc.calculateFoundation(c4));
-        assertEquals(calc.calculateFoundation(c1), 
-            calc.calculateFoundation(c5));
-            */
+        assertEquals(c1.getFoundation(), c3.getFoundation());
+        assertFalse(c1.getFoundation() == c2.getFoundation());
+        //assertFalse(c1.getFoundation() == c3.getFoundation());
+        assertFalse(c2.getFoundation() == c3.getFoundation());
         }
 
     private void runHostTests(final Collection<IceCandidate> hosts)

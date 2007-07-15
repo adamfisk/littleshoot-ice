@@ -14,33 +14,56 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class for processing check lists. 
+ * Class containing an ICE media stream, including ICE check lists.
  */
-public class IceCheckListProcessorImpl implements IceCheckListProcessor
+public class IceMediaStreamImpl implements IceMediaStream
     {
 
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    private final IceCheckList m_checkList;
     
-    public void processCheckList(final IceCheckList checkList, 
-        final IceCheckListListener listener)
+    private final Collection<IceCandidatePair> m_validPairs;
+    
+
+    /**
+     * Creates a new media stream for ICE.
+     * 
+     * @param checkList The initial check list.
+     */
+    public IceMediaStreamImpl(final IceCheckList checkList)
         {
-        LOG.debug("Processing check list");
-        final Collection<IceCandidatePair> pairs = checkList.getPairs();
+        m_checkList = checkList;
+        m_validPairs = new LinkedList<IceCandidatePair>();
+        }
+
+    public void addValidPair(final IceCandidatePair pair)
+        {
+        m_log.debug("Adding valid pair!");
+        final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
+        if (pairs.contains(pair))
+            {
+            
+            }
+        this.m_validPairs.add(pair);
+        }
+
+    public void connect()
+        {
+        m_log.debug("Processing check list");
+        final Collection<IceCandidatePair> pairs = m_checkList.getPairs();
+        
+        // TODO: Still not clear what the heck these groups are for.
         final Collection<List<IceCandidatePair>> mediaGroups = 
             createGroups(pairs);
         
-        LOG.debug("Created "+mediaGroups.size()+" groups");
-        for (final List<IceCandidatePair> mediaPairs : mediaGroups)
-            {
-            LOG.debug("Looping through "+mediaPairs.size()+" pairs");
-            final IceCheckScheduler scheduler = 
-                new IceCheckSchedulerImpl(checkList, mediaPairs, listener);
-            
-            scheduler.scheduleChecks();
-            }
+        m_log.debug("Created "+mediaGroups.size()+" groups");
+        final IceCheckScheduler scheduler = 
+            new IceCheckSchedulerImpl(this, m_checkList);
+        scheduler.scheduleChecks();
 
-        checkList.check();
+        m_checkList.check();
         }
+    
 
     private Collection<List<IceCandidatePair>> createGroups(
         final Collection<IceCandidatePair> pairs)
@@ -68,13 +91,13 @@ public class IceCheckListProcessorImpl implements IceCheckListProcessor
         final Collection<List<IceCandidatePair>> groups = 
             groupsMap.values();
         
-        LOG.debug(groups.size()+ " before sorting...");
+        m_log.debug(groups.size()+ " before sorting...");
         for (final List<IceCandidatePair> group : groups)
             {
             sortPairs(group);
             setLowestComponentIdToWaiting(group);
             }
-        
+
         return groups;
         }
     
@@ -113,7 +136,7 @@ public class IceCheckListProcessorImpl implements IceCheckListProcessor
             }
         else
             {
-            LOG.warn("No pair to set!!!");
+            m_log.warn("No pair to set!!!");
             }
         }
 
@@ -127,4 +150,8 @@ public class IceCheckListProcessorImpl implements IceCheckListProcessor
         return pairs;
         }
 
+    public Collection<IceCandidatePair> getValidPairs()
+        {
+        return m_validPairs;
+        }
     }

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.turn.client.TurnClient;
+import org.lastbamboo.common.stun.client.StunClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,14 +16,14 @@ public class IceCandidateGeneratorImpl implements IceCandidateGenerator
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
-    private final TurnClient m_turnClient;
+    private final StunClient m_turnClient;
 
     /**
      * Creates a new factory instance.
      * 
      * @param turnClient The TURN client for generating TURN candidates.
      */
-    public IceCandidateGeneratorImpl(final TurnClient turnClient)
+    public IceCandidateGeneratorImpl(final StunClient turnClient)
         {
         m_turnClient = turnClient;
         }

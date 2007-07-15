@@ -16,24 +16,20 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
-    private final Collection<IceCandidatePair> m_pairs;
-    private final IceCheckListListener m_listener;
     private final IceCheckList m_checkList;
+    private final IceMediaStream m_mediaStream;
 
     /**
      * Creates a new scheduler for the specified pairs.
      * 
+     * @param stream The media stream.
      * @param checkList The check list.
-     * @param pairs The candidate pairs to schedule checks for.
-     * @param listener The listener for check list events. 
      */
-    public IceCheckSchedulerImpl(final IceCheckList checkList,
-        final Collection<IceCandidatePair> pairs, 
-        final IceCheckListListener listener)
+    public IceCheckSchedulerImpl(final IceMediaStream stream, 
+        final IceCheckList checkList)
         {
+        m_mediaStream = stream;
         m_checkList = checkList;
-        m_pairs = pairs;
-        m_listener = listener;
         }
 
     public void scheduleChecks()
@@ -43,7 +39,6 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         final TimerTask task = createTimerTask(timer);
         //final int Ta = 1;
         timer.schedule(task, 0L);
-        
         }
 
     protected TimerTask createTimerTask(final Timer timer)
@@ -55,6 +50,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             @Override
             public void run()
                 {
+                m_taskLog.debug("About to check pair...");
                 try
                     {
                     checkPair(timer);
@@ -74,10 +70,12 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             {
             // No more pairs to try.
             timer.cancel();
+            m_log.debug("No more active pairs...");
             this.m_checkList.setState(IceCheckListState.FAILED);
             }
         else
             {
+            m_log.debug("About to perform check...");
             if (performCheck(activePair))
                 {
                 this.m_checkList.setState(IceCheckListState.COMPLETED);
@@ -87,6 +85,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
                 {
                 // TODO: The delay between checks should be calculated 
                 // here.
+                m_log.debug("Scheduling new timer task...");
                 final TimerTask task = createTimerTask(timer);
                 timer.schedule(task, 0L);
                 }
@@ -96,11 +95,11 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     private boolean performCheck(final IceCandidatePair pair)
         {
         final IceConnectivityChecker checker = 
-            new IceConnectivityCheckerImpl(pair);
+            new IceConnectivityCheckerImpl(this.m_mediaStream, pair);
         pair.setState(IceCandidatePairState.IN_PROGRESS);
         if (checker.check())
             {
-            this.m_listener.onNominated(pair);
+            this.m_mediaStream.addValidPair(pair);
             return true;
             }
         
@@ -128,16 +127,25 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             }
         }
 
+    /**
+     * Accesses the top priority pair in the specified state.
+     * 
+     * @param state The state to look for.
+     * @return The top priority pair in that state, or <code>null</code> if 
+     * no pair in the desired state can be found.
+     */
     private IceCandidatePair getPairInState(final IceCandidatePairState state)
         {
         // The pairs are already ordered.
-        for (final IceCandidatePair pair : this.m_pairs)
+        final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
+        for (final IceCandidatePair pair : pairs)
             {
             if (pair.getState() == state)
                 {
                 return pair;
                 }
             }
+            
         return null;
         }
 

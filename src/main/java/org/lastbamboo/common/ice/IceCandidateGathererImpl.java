@@ -12,7 +12,8 @@ import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.turn.client.TurnClient;
+import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.ShootConstants;
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
     
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    private final TurnClient m_turnClient;
+    private final StunClient m_turnClient;
 
     private final boolean m_controlling;
 
@@ -38,7 +39,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
      * @param controlling Whether or not gathered candidates should be 
      *  controlling candidates.
      */
-    public IceCandidateGathererImpl(final TurnClient turnClient, 
+    public IceCandidateGathererImpl(final StunClient turnClient, 
         final boolean controlling)
         {
         m_turnClient = turnClient;
@@ -66,25 +67,21 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates =
             new LinkedList<IceCandidate>();
 
-        final IceStunClient iceClient = new IceUdpStunClient();
+        final StunClient stunClient = new UdpStunClient();
         
         final InetSocketAddress serverReflexiveAddress = 
-            iceClient.getServerReflexiveAddress();
+            stunClient.getServerReflexiveAddress();
         
-        final InetSocketAddress baseSocketAddress = iceClient.getBaseAddress();
-        
-        // Add the host candidate.
+        // Add the host candidate.  Note the host candidate is also used as
+        // the BASE candidate for the server reflexive candidate below.
         final IceUdpHostCandidate hostCandidate = 
-            new IceUdpHostCandidate(baseSocketAddress, this.m_controlling);
+            new IceUdpHostCandidate(stunClient, this.m_controlling);
         candidates.add(hostCandidate);
         
         // Add the server reflexive candidate.
         final IceUdpServerReflexiveCandidate serverReflexiveCandidate =
             new IceUdpServerReflexiveCandidate(serverReflexiveAddress, 
-                baseSocketAddress.getAddress(), 
-                iceClient.getStunServerAddress(),
-                baseSocketAddress.getAddress(), baseSocketAddress.getPort(),
-                this.m_controlling);
+                hostCandidate, stunClient, this.m_controlling);
         
         candidates.add(serverReflexiveCandidate);
         return candidates;
@@ -96,27 +93,29 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             new LinkedList<IceCandidate>();
         final InetSocketAddress relayAddress = 
             this.m_turnClient.getRelayAddress();
-        final InetAddress stunServerAddress = 
-            this.m_turnClient.getStunServerAddress();
         
         final InetSocketAddress baseSocketAddress = 
-            this.m_turnClient.getBaseAddress();
+            this.m_turnClient.getHostAddress();
         final InetAddress baseRelayAddress = baseSocketAddress.getAddress();
-        final int baseRelayPort = baseSocketAddress.getPort();
+
+        // For relayed candidates, the related address is the mapped address.
+        final InetSocketAddress relatedAddress = 
+            this.m_turnClient.getServerReflexiveAddress();
         
-        // Add the relay candidate.        
+        // Add the relay candidate.  Note that for relay candidates, the base
+        // candidate is the relay candidate itself. 
         final IceTcpRelayPassiveCandidate candidate = 
-            new IceTcpRelayPassiveCandidate(relayAddress, baseRelayAddress, 
-                stunServerAddress, baseRelayAddress, baseRelayPort,
-                this.m_controlling);
+            new IceTcpRelayPassiveCandidate(relayAddress, 
+                this.m_turnClient, relatedAddress.getAddress(), 
+                relatedAddress.getPort(), this.m_controlling);
         candidates.add(candidate);
         
-        // Add the host candidate.
         final int port = ShootConstants.HTTP_PORT;
         final InetSocketAddress address = 
             new InetSocketAddress(baseRelayAddress, port);
         final IceTcpHostPassiveCandidate hostCandidate = 
-            new IceTcpHostPassiveCandidate(address, this.m_controlling);
+            new IceTcpHostPassiveCandidate(address, 
+                this.m_controlling);
         candidates.add(hostCandidate);
         
         

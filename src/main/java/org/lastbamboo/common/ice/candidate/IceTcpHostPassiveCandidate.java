@@ -42,7 +42,7 @@ public class IceTcpHostPassiveCandidate extends AbstractIceCandidate
         {
         super(socketAddress, foundation,
             IceCandidateType.HOST, IceTransportProtocol.TCP_PASS,
-            priority, controlling, componentId);
+            priority, controlling, componentId, null);
         }
 
     public <T> T accept(final IceCandidateVisitor<T> visitor)

@@ -9,16 +9,6 @@
           class="org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl">
         <constructor-arg><ref local="stackSdpFactory"/></constructor-arg>
         </bean>
-          
-    <!--
-        The object that keeps track of all available bindings for accessing
-        this peer.
-    -->
-    <bean id="bindingTracker"
-          class="org.lastbamboo.common.ice.BindingTrackerImpl">
-        <constructor-arg><ref bean="turnClient"/></constructor-arg>
-        <constructor-arg><ref bean="stunClientFactory"/></constructor-arg>
-        </bean>
 
     <!--
         The object that creates the SIP stack SDP factory.  XXX: THIS CAN THROW

@@ -16,9 +16,13 @@ import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
+import org.lastbamboo.common.ice.stubs.StunClientStub;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.SdpFactory;
+import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.util.NetworkUtils;
 
 /**
@@ -52,19 +56,28 @@ public final class IceCandidateSdpEncodeDecodeTest extends TestCase
         final InetSocketAddress sa3 = 
             new InetSocketAddress("192.168.1.3", 7652);
         
-        final InetAddress relatedAddress = InetAddress.getByName("42.12.32.1");
-        final int relatedPort = 4728;
+        //final InetAddress relatedAddress = InetAddress.getByName("42.12.32.1");
+        //final int relatedPort = 4728;
         final InetAddress relayRelatedAddress = 
-            InetAddress.getByName("192.168.1.1");
+            InetAddress.getByName("2.12.32.32");
         final int relayRelatedPort = 8768;
         
+        //final StunClient stunClient = new StunClientStub(stunServerAddress);
+        
+        final StunClient stunClient = new UdpStunClient();
+        //final InetSocketAddress hostSocketAddress = 
+          //  new InetSocketAddress(NetworkUtils.getLocalHost(), 3124);
+        final IceCandidate baseCandidate = 
+            new IceUdpHostCandidate(stunClient, false);
+        
         final IceUdpServerReflexiveCandidate udpServerReflexiveCandidate = 
-            new IceUdpServerReflexiveCandidate(sa1, NetworkUtils.getLocalHost(), 
-                sa1.getAddress(), relatedAddress, relatedPort, false);
+            new IceUdpServerReflexiveCandidate(sa1, baseCandidate, 
+                stunClient, false);
+        
         
         final IceTcpRelayPassiveCandidate tcpRelayPassiveCandidate =
-            new IceTcpRelayPassiveCandidate(sa2, NetworkUtils.getLocalHost(), 
-                stunServerAddress, relayRelatedAddress, relayRelatedPort, false);
+            new IceTcpRelayPassiveCandidate(sa2,  
+                stunClient, relayRelatedAddress, relayRelatedPort, false);
 
         final IceTcpHostPassiveCandidate tcpHostPassiveCandidate =
             new IceTcpHostPassiveCandidate(sa3, false);

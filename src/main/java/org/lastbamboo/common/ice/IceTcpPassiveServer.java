@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 
 /**
@@ -16,11 +17,7 @@ public interface IceTcpPassiveServer
      */
     InetSocketAddress getLocalAddress();
 
-    /**
-     * Accesses the public address for the server.
-     * 
-     * @return The public address for the server.
-     */
-    InetSocketAddress getPublicAddress();
+
+    void start() throws IOException;
 
     }

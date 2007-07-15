@@ -9,9 +9,8 @@ import org.lastbamboo.common.answer.AnswerProcessor;
 import org.lastbamboo.common.ice.IceCheckList;
 import org.lastbamboo.common.ice.IceCheckListCreator;
 import org.lastbamboo.common.ice.IceCheckListCreatorImpl;
-import org.lastbamboo.common.ice.IceCheckListListener;
-import org.lastbamboo.common.ice.IceCheckListProcessor;
-import org.lastbamboo.common.ice.IceCheckListProcessorImpl;
+import org.lastbamboo.common.ice.IceMediaStream;
+import org.lastbamboo.common.ice.IceMediaStreamImpl;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairVisitor;
@@ -58,13 +57,28 @@ public class IceAnswerProcessor implements AnswerProcessor,
             decodeCandidates(offer);
         final Collection<IceCandidate> remoteCandidates = 
             decodeCandidates(answer);
-        
+        return processAnswer(localCandidates, remoteCandidates);
+        }
+
+    public Socket processAnswer(final Collection<IceCandidate> localCandidates, 
+        final ByteBuffer answer) throws IOException
+        {
+        final Collection<IceCandidate> remoteCandidates = 
+            decodeCandidates(answer);
+        return processAnswer(localCandidates, remoteCandidates);
+        }
+    
+    private Socket processAnswer(final Collection<IceCandidate> localCandidates, 
+        final Collection<IceCandidate> remoteCandidates) throws IOException
+        {
+
         final IceCheckListCreator checkListCreator = 
             new IceCheckListCreatorImpl();
         
         final IceCheckList checkList = 
             checkListCreator.createCheckList(localCandidates, remoteCandidates);
         
+        /*
         final IceCheckListProcessor processor = 
             new IceCheckListProcessorImpl();
         
@@ -77,7 +91,20 @@ public class IceAnswerProcessor implements AnswerProcessor,
                 }
 
             };
-        processor.processCheckList(checkList, listener);
+            */
+            
+        final IceMediaStream mediaStream = new IceMediaStreamImpl(checkList);
+        mediaStream.connect();
+        
+        final Collection<IceCandidatePair> validPairs = 
+            mediaStream.getValidPairs();
+        
+        for (final IceCandidatePair pair : validPairs)
+            {
+            pair.accept(this);
+            }
+        
+        //processor.processCheckList(mediaStream, checkList, listener);
         
         if (m_socket == null)
             {

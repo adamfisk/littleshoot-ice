@@ -36,5 +36,4 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
         {
         return visitor.visitTcpIceCandidatePair(this);
         }
-
     }

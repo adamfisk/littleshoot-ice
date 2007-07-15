@@ -1,6 +1,5 @@
 package org.lastbamboo.common.ice.answer;
 
-import org.lastbamboo.common.answer.AnswerProcessor;
 import org.lastbamboo.common.answer.AnswerProcessorFactory;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.slf4j.Logger;
@@ -28,7 +27,7 @@ public class IceAnswerProcessorFactory implements AnswerProcessorFactory
         m_iceCandidateDecoder = iceCandidateDecoder;
         }
 
-    public AnswerProcessor createProcessor()
+    public IceAnswerProcessor createProcessor()
         {
         return new IceAnswerProcessor(this.m_iceCandidateDecoder);
         }

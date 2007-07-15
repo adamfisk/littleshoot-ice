@@ -23,19 +23,26 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
+        this(localCandidate, remoteCandidate, 
+            calculatePriority(localCandidate, remoteCandidate));
+        }
+
+    public AbstractIceCandidatePair(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, final long priority)
+        {
         m_localCandidate = localCandidate;
         m_remoteCandidate = remoteCandidate;
         
         // Note both candidates always have the same component ID, so we just
         // choose one for the pair.
         m_componentId = localCandidate.getComponentId();
-        m_priority = calculatePriority(localCandidate, remoteCandidate);
+        m_priority = priority;
         m_state = IceCandidatePairState.FROZEN;
         m_foundation = localCandidate.getFoundation() + 
             remoteCandidate.getFoundation();
         }
 
-    private long calculatePriority(final IceCandidate localCandidate, 
+    private static long calculatePriority(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
         // Here's the formula for calculating pair priorities:
@@ -107,5 +114,42 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             "local:      "+this.m_localCandidate.getPriority()+"\n"+
             "remote:     "+this.m_remoteCandidate.getPriority()+"\n"+
             "foundation: "+this.m_foundation;
+        }
+
+    @Override
+    public int hashCode()
+        {
+        final int PRIME = 31;
+        int result = 1;
+        result = PRIME * result + ((m_localCandidate == null) ? 0 : m_localCandidate.hashCode());
+        result = PRIME * result + ((m_remoteCandidate == null) ? 0 : m_remoteCandidate.hashCode());
+        return result;
+        }
+
+    @Override
+    public boolean equals(Object obj)
+        {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        final AbstractIceCandidatePair other = (AbstractIceCandidatePair) obj;
+        if (m_localCandidate == null)
+            {
+            if (other.m_localCandidate != null)
+                return false;
+            }
+        else if (!m_localCandidate.equals(other.m_localCandidate))
+            return false;
+        if (m_remoteCandidate == null)
+            {
+            if (other.m_remoteCandidate != null)
+                return false;
+            }
+        else if (!m_remoteCandidate.equals(other.m_remoteCandidate))
+            return false;
+        return true;
         }
     }

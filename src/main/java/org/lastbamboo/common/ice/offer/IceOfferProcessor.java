@@ -44,7 +44,9 @@ public class IceOfferProcessor implements OfferProcessor
         // TODO: We currently do nothing on the UAS side to process offers,
         // instead letting the UAC do all the work.  We just send the 
         // answer for now.
-        return createAnswer();
+        final ByteBuffer answer = createAnswer();
+        
+        return answer;
         }
 
     private ByteBuffer createAnswer() throws IOException

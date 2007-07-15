@@ -5,14 +5,24 @@ import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.ice.candidate.AbstractIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairFactoryImpl;
+import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
+import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +55,10 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
                 }
             }
         
-        final List<IceCandidatePair> pruned = prunePairs(pairs);
+        final List<IceCandidatePair> convertedPairs = convertPairs(pairs);
+        System.out.println(convertedPairs.size()+" converted");
+        final List<IceCandidatePair> pruned = prunePairs(convertedPairs);
+        System.out.println(pruned.size()+" after pruned");
         final Collection<IceCandidatePair> sorted = sortPairs(pruned);
         return new IceCheckListImpl(sorted);
         }
@@ -70,6 +83,94 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         return new LinkedList<IceCandidatePair>();
         }
 
+    private List<IceCandidatePair> convertPairs(
+        final Collection<IceCandidatePair> pairs)
+        {
+        final List<IceCandidatePair> convertedPairs = 
+            createPairsDataStructure();
+        
+        for (final IceCandidatePair pair : pairs)
+            {
+            final IceCandidatePair converted = convertPair(pair);
+            if (converted != null)
+                {
+                convertedPairs.add(converted);
+                }
+            }
+        
+        return convertedPairs;
+        }
+        
+    private IceCandidatePair convertPair(final IceCandidatePair pair)
+        {
+        final IceCandidate remoteCandidate = pair.getRemoteCandidate();
+        final IceCandidate localCandidate = pair.getLocalCandidate();
+        
+        // We have to convert all local UDP server reflexice candidates to
+        // their base and we have to ignore all TCP passive candidates.
+        final IceCandidateVisitor<IceCandidatePair> visitor =
+            new IceCandidateVisitor<IceCandidatePair>()
+            {
+            public IceCandidatePair visitUdpServerReflexiveCandidate(
+                final IceUdpServerReflexiveCandidate candidate)
+                {
+                final IceCandidate base = candidate.getBaseCandidate();
+                return new UdpIceCandidatePair(base, remoteCandidate, 
+                    pair.getPriority());
+                }
+
+            public void visitCandidates(Collection<IceCandidate> candidates)
+                {
+                // TODO Auto-generated method stub
+                
+                }
+
+            public IceCandidatePair visitTcpActiveCandidate(
+                final IceTcpActiveCandidate candidate)
+                {
+                return pair;
+                }
+
+            public IceCandidatePair visitTcpHostPassiveCandidate(
+                final IceTcpHostPassiveCandidate candidate)
+                {
+                return null;
+                }
+
+            public IceCandidatePair visitTcpRelayPassiveCandidate(
+                final IceTcpRelayPassiveCandidate candidate)
+                {
+                return null;
+                }
+
+            public IceCandidatePair visitTcpServerReflexiveSoCandidate(
+                final IceTcpServerReflexiveSoCandidate candidate)
+                {
+                return pair;
+                }
+
+            public IceCandidatePair visitUdpHostCandidate(
+                final IceUdpHostCandidate candidate)
+                {
+                return pair;
+                }
+
+            public IceCandidatePair visitUdpPeerReflexiveCandidate(
+                final IceUdpPeerReflexiveCandidate candidate)
+                {
+                return pair;
+                }
+
+            public IceCandidatePair visitUdpRelayCandidate(
+                final IceUdpRelayCandidate candidate)
+                {
+                return pair;
+                }
+            };
+        
+        return localCandidate.accept(visitor);
+        }
+
     /**
      * Prunes pairs by converting any non-host local candidates to host 
      * candidates and removing any duplicates created.
@@ -79,48 +180,48 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
     private List<IceCandidatePair> prunePairs(
         final Collection<IceCandidatePair> pairs)
         {
-        final List<IceCandidatePair> prunedPairs = 
+        // Note the pairs override hashCode using the local and the remote
+        // candidates.  We just use the map here to identify pairs with the
+        // same address for the local and the remote candidates.  This is
+        // possible because we just converted local server reflexive 
+        // candidates to their associated bases, according to the algorithm.
+        //
+        // If we find a duplicate pair, we always take the one with the 
+        // higher priority.
+        final Map<IceCandidatePair, IceCandidatePair> pairsMap =
+            new HashMap<IceCandidatePair, IceCandidatePair>();
+        
+        for (final IceCandidatePair outerPair : pairs)
+            {
+            final IceCandidatePair curPair = pairsMap.get(outerPair);
+            if (curPair == null)
+                {
+                pairsMap.put(outerPair, outerPair);
+                }
+            else
+                {
+                // If there's already one there, take the one with the 
+                // higher priority.
+                if (outerPair.getPriority() > curPair.getPriority())
+                    {
+                    LOG.debug("Adding higher priority pair");
+                    pairsMap.put(outerPair, outerPair);
+                    }
+                }
+            }
+        
+        final Collection<IceCandidatePair> prunedPairs = pairsMap.values();
+        final List<IceCandidatePair> prunedPairsList = 
             createPairsDataStructure();
         
-        int count = 0;
-        for (final IceCandidatePair pair : pairs)
-            {
-            // Limit attacks based on the number of pairs.  See:
-            // draft-ietf-mmusic-ice-16.txt section 5.7.4.
-            if (count > 100) break;
-            
-            final IceCandidate local = pair.getLocalCandidate();
-            
-            // NOTE: This deviates from the spec slightly.  We just eliminate
-            // any pairs with a local server reflexive candidate because 
-            // we always will have a corresponding pair with a local host
-            // candidate that matches the base of the server reflexive
-            // candidate.
-            if (!prune(local))
-                {
-                prunedPairs.add(pair);
-                }
-            ++count;
-            }
+        prunedPairsList.addAll(prunedPairs);
         
-        return prunedPairs;
-        }
-
-
-    private boolean prune(final IceCandidate local)
-        {
-        if (local.getTransport() == IceTransportProtocol.UDP &&
-            local.getType() == IceCandidateType.SERVER_REFLEXIVE)
+        // Limit attacks based on the number of pairs.
+        if (prunedPairsList.size() > 100)
             {
-            // Prune it if it's server reflexive and UDP.
-            return true;
+            return prunedPairsList.subList(0, 100);
             }
-        // Prune all passive TCP in local candidates.
-        if (local.getTransport() == IceTransportProtocol.TCP_PASS)
-            {
-            return true;
-            }
-        return false;
+        return prunedPairsList;
         }
 
     private boolean shouldPair(final IceCandidate localCandidate, 

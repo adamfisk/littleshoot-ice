@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IceCandidateVisitor;
 import org.lastbamboo.common.ice.IceTransportProtocol;
+import org.lastbamboo.common.stun.client.StunClient;
 
 /**
  * ICE passive TCP candidate for relayed hosts.
@@ -17,9 +18,7 @@ public class IceTcpRelayPassiveCandidate extends AbstractStunServerIceCandidate
      * Creates a new TCP passive ICE candidate for relayed hosts.
      * 
      * @param socketAddress The address of the relayed candidate.
-     * @param baseAddress The address of the base interface for this candidate.
-     * @param stunServerAddress The address of the STUN server used to obtain
-     * the relay.
+     * @param iceStunClient The ICE STUN client class.
      * @param relatedAddress The address related to this candidate.  In this
      * case, the mapped address received in the Allocate Response.
      * @param relatedPort The port related to this candidate.  In this
@@ -28,12 +27,12 @@ public class IceTcpRelayPassiveCandidate extends AbstractStunServerIceCandidate
      * candidate.
      */
     public IceTcpRelayPassiveCandidate(final InetSocketAddress socketAddress,
-        final InetAddress baseAddress, final InetAddress stunServerAddress,
+        final StunClient iceStunClient,
         final InetAddress relatedAddress, final int relatedPort,
         final boolean controlling)
         {
-        super(socketAddress, baseAddress, IceCandidateType.RELAYED, 
-            IceTransportProtocol.TCP_PASS, stunServerAddress, relatedAddress,
+        super(socketAddress, IceCandidateType.RELAYED, 
+            IceTransportProtocol.TCP_PASS, iceStunClient, relatedAddress,
             relatedPort, controlling);
         }
     

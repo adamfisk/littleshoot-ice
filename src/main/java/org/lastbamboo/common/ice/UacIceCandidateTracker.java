@@ -16,6 +16,8 @@ import org.lastbamboo.common.util.NetworkUtils;
 /**
  * Determines the best ICE candidate socket to use for a TURN User-Agent
  * client, or "UAC".
+ * 
+ * TODO: I don't believe this is ever used any more.
  */
 public final class UacIceCandidateTracker extends AbstractIceCandidateTracker
     {

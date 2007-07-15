@@ -6,6 +6,7 @@ import java.net.Socket;
 import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IceCandidateVisitor;
 import org.lastbamboo.common.ice.IceTransportProtocol;
+import org.lastbamboo.common.stun.client.StunClient;
 
 /**
  * This is an interface for an ICE "candidate" as defined in 
@@ -85,6 +86,16 @@ public interface IceCandidate
      * @return The candidate's foundation.
      */
     int getFoundation();
+    
+    /**
+     * Accessor for the base candidate for this candidate.  For host and relay
+     * candidates, the base candidate is the same as the candidate itself.  For
+     * server reflexive candidates, the candidate is the host candidate used
+     * to determine the server reflexive address.  
+     * 
+     * @return The base candidate.
+     */
+    IceCandidate getBaseCandidate();
 
     /**
      * Returns whether or not this peer is the controlling peer.
@@ -93,5 +104,7 @@ public interface IceCandidate
      * otherwise <code>false</code>.
      */
     boolean isControlling();
+    
+    StunClient getStunClient();
 
     }
