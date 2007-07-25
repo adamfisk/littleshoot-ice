@@ -23,8 +23,9 @@ public class IceUdpHostCandidate extends AbstractIceCandidate
     public IceUdpHostCandidate(final StunClient stunClient, 
         final boolean controlling)
         {
-        super(stunClient, IceCandidateType.HOST, IceTransportProtocol.UDP, 
-            controlling);
+        super (stunClient.getHostAddress(), 
+             stunClient.getHostAddress().getAddress(), IceCandidateType.HOST, 
+             IceTransportProtocol.UDP, controlling, stunClient);
         }
 
 
@@ -44,7 +45,7 @@ public class IceUdpHostCandidate extends AbstractIceCandidate
         {
         super(socketAddress, foundation,
             IceCandidateType.HOST, IceTransportProtocol.UDP,
-            priority, controlling, componentId, null);
+            priority, controlling, componentId, null, null, -1, null);
         }
 
     public <T> T accept(IceCandidateVisitor<T> visitor)

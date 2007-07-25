@@ -10,7 +10,6 @@ import java.util.Vector;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.ObjectUtils.Null;
 import org.lastbamboo.common.ice.IceCandidateVisitor;
-import org.lastbamboo.common.ice.candidate.AbstractStunServerIceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
@@ -313,8 +312,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
      * 
      * @param candidate The candidate.
      */
-    private void addAttributeWithRelated(
-        final AbstractStunServerIceCandidate candidate)
+    private void addAttributeWithRelated(final IceCandidate candidate)
         {
         final StringBuilder sb = createBaseCandidateAttribute(candidate);
         final String space = " ";

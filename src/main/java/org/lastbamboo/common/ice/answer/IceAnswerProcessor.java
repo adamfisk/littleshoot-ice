@@ -77,23 +77,9 @@ public class IceAnswerProcessor implements AnswerProcessor,
         
         final IceCheckList checkList = 
             checkListCreator.createCheckList(localCandidates, remoteCandidates);
-        
-        /*
-        final IceCheckListProcessor processor = 
-            new IceCheckListProcessorImpl();
-        
-        final IceCheckListListener listener = 
-            new IceCheckListListener()
-            {
-            public void onNominated(final IceCandidatePair pair)
-                {
-                pair.accept(IceAnswerProcessor.this);
-                }
-
-            };
-            */
             
-        final IceMediaStream mediaStream = new IceMediaStreamImpl(checkList);
+        final IceMediaStream mediaStream = 
+            new IceMediaStreamImpl(checkList, true);
         mediaStream.connect();
         
         final Collection<IceCandidatePair> validPairs = 
@@ -104,33 +90,12 @@ public class IceAnswerProcessor implements AnswerProcessor,
             pair.accept(this);
             }
         
-        //processor.processCheckList(mediaStream, checkList, listener);
-        
         if (m_socket == null)
             {
             LOG.debug("Could not create socket");
             throw new IOException("Could not create socket");
             }
         return m_socket;
-        
-        // We only currently process ICE "answers" on the UAC side.  This
-        // could theoretically use an IceCandidateTrackerFactory type class
-        // here though.
-        /*
-        final IceCandidateTracker tracker = new UacIceCandidateTracker();
-        tracker.visitCandidates(remoteCandidates);
-        
-        try
-            {
-            final Socket socket = tracker.getBestSocket();
-            return socket;
-            }
-        catch (final IceException e)
-            {
-            LOG.debug("Could not create socket", e);
-            throw new IoExceptionWithCause("Could not create socket", e);
-            }
-            */
         }
 
     private Collection<IceCandidate> decodeCandidates(final ByteBuffer buf) 

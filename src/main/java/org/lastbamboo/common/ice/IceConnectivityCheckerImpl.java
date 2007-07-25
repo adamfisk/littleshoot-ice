@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Collection;
+import java.util.LinkedList;
 
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
@@ -19,8 +21,16 @@ import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.client.UdpStunClient;
+import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.SuccessfulBindingResponse;
+import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
+import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
+import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
+import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
+import org.lastbamboo.common.stun.stack.message.attributes.ice.IceUseCandidateAttribute;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +76,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
         return false;
         }
     
-    private final static class ConnectPairVisitor 
+    private final class ConnectPairVisitor 
         implements IceCandidatePairVisitor<Object>
         {
 
@@ -83,17 +93,20 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
 
         public Object visitUdpIceCandidatePair(final UdpIceCandidatePair pair)
             {
+            /*
             final IceCandidate local = pair.getLocalCandidate();
             final UdpConnectCandidateVisitor visitor = 
                 new UdpConnectCandidateVisitor(pair);
             final IoSession session = local.accept(visitor);
             pair.setIoSession(session);
             return session;
+            */
+            return null;
             }
     
         }
     
-    private final static class UdpConnectCandidateVisitor 
+    private final class UdpConnectCandidateVisitor 
         extends IceCandidateVisitorAdapter<IoSession>
         {
         
@@ -114,44 +127,98 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                 this.m_pair.getRemoteCandidate();
             final InetSocketAddress remoteAddress = 
                 remoteCandidate.getSocketAddress();
+            
+            // We can't close the STUN "client" here because we're also a 
+            // server and have to always be ready to receive incoming
+            // server-side messages.
             final StunClient client = candidate.getStunClient();
             
             final InetSocketAddress localAddress = client.getHostAddress();
             
-            final StunClient newClient = 
-                new UdpStunClient(localAddress, remoteAddress);
+            // Now send a BindingRequest with PRIORITY, USE-CANDIDATE, 
+            // ICE-CONTROLLING etc.
             
-            /*
-            final SuccessfulBindingResponse response = 
-                newClient.getBindingResponse();
+            final Collection<StunAttribute> attributes = 
+                new LinkedList<StunAttribute>();
             
-            if (response == null)
+            final long priority = 
+                IcePriorityCalculator.calculatePriority(
+                    IceCandidateType.PEER_REFLEXIVE);
+
+            final IcePriorityAttribute priorityAttribute = 
+                new IcePriorityAttribute(priority);
+            
+            final StunAttribute controlling;
+            if (m_mediaStream.isControlling())
                 {
-                this.m_pair.setState(IceCandidatePairState.FAILED);
-                return null;
+                controlling = new IceControllingAttribute();
+                // We use aggressive nomination.
+                attributes.add(new IceUseCandidateAttribute());
                 }
             else
                 {
-                // Construct a new valid pair based on the response data.  The
-                // new pair's local address is the mapped address, and the
-                // new pair's remote address is the address the STUN 
-                // requests were sent to.
-                // See draft-ietf-mmusic-ice-17.txt.
-                final InetSocketAddress mappedAddress = 
-                    response.getMappedAddress();
-                
-                final IceCandidate localCandidate =
-                    new IceUdpHostCandidate(newClient, candidate.isControlling());
-                //final IceCandidatePair newPair = new UdpIceCandidatePair()
-                
-                //this.m_pair.setState(IceCandidatePairState.SUCCEEDED);
-                return newClient.getIoSession();
+                controlling = new IceControlledAttribute();
                 }
-                */
+            
+            attributes.add(priorityAttribute);
+            attributes.add(controlling);
+            
+            // TODO: Add CREDENTIALS attribute.
+            final BindingRequest request = new BindingRequest(attributes);
+            
+            final StunMessage response = client.write(request, remoteAddress);
+            
+            final StunMessageVisitor<IceCandidate> visitor = 
+                new StunMessageVisitorAdapter<IceCandidate>()
+                {
+                
+                public IceCandidate visitSuccessfulBindingResponse(
+                    final SuccessfulBindingResponse sbr)
+                    {
+                    // TODO: We're supposed to verify the source IP and port as  
+                    // well as the destination IP address and port with the 
+                    // actual values the Binding Request was sent to and from,
+                    // respectively.
+                    
+                    // **** We can do this by just adding the check to the 
+                    // STUN transaction handling code, I think.  With normal
+                    // STUN client/server interections, the above should
+                    // always be the case, so adding the check should have no
+                    // effect.
+                    
+                    // Now check the mapped address and see if it matches
+                    // any of the local candidates we know about.  If it 
+                    // does not, it's a new peer reflexive candidate.  If it 
+                    // does, it's an existing candidate that will be added to
+                    // the valid list.
+                    final InetSocketAddress mappedAddress = 
+                        sbr.getMappedAddress();
+                    final IceCandidate matchingCandidate = 
+                        m_mediaStream.getLocalCandidate(mappedAddress);
+                    if (matchingCandidate == null)
+                        {
+                        // Note the base candidate here is the local candidate
+                        // from the pair, i.e. the candidate we're visiting.
+                        final IceCandidate prc = 
+                            new IceUdpPeerReflexiveCandidate(mappedAddress, 
+                            candidate, client, m_mediaStream.isControlling(), 
+                            priority);
+                        m_mediaStream.addLocalCandidate(prc);
+                        return prc;
+                        }
+                    else
+                        {
+                        return matchingCandidate;
+                        }
+                    }
+                };
+                
+            final IceCandidate newCandidate = response.accept(visitor);
             return null;
             }
     
-        public IoSession visitUdpPeerReflexiveCandidate(IceUdpPeerReflexiveCandidate candidate)
+        public IoSession visitUdpPeerReflexiveCandidate(
+            final IceUdpPeerReflexiveCandidate candidate)
             {
             // TODO Auto-generated method stub
             return null;

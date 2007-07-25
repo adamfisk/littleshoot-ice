@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.lastbamboo.common.ice.IceCandidateType;
+import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.stun.client.StunClient;
 
@@ -22,11 +23,6 @@ public abstract class AbstractIceCandidate implements IceCandidate
 
     private final IceCandidateType m_candidateType;
     
-    /**
-     * We only have one component for our media streams for now.
-     */
-    private final static int s_componentId = 1;
-
     private final long m_priority;
 
     private final int m_foundation;
@@ -36,24 +32,43 @@ public abstract class AbstractIceCandidate implements IceCandidate
     protected IceCandidate m_baseCandidate;
     
     private final int m_componentId;
-    protected StunClient m_stunClient;
+    private final StunClient m_stunClient;
+    
+    private final InetAddress m_relatedAddress;
+    private final int m_relatedPort;
     
     /**
-     * The is the local interface preference for calculating ICE priorities.
-     * This is set to the highest possible value because we currently
-     * only use one interface.
+     * The component ID is 1 unless otherwise specified.
      */
-    private static final int LOCAL_PREFERENCE = 65535;
-
-
-    public AbstractIceCandidate(final StunClient stunClient, 
+    protected final static int DEFAULT_COMPONENT_ID = 1;
+    
+    /**
+     * Creates a new candidate where the candidate itself is also the base
+     * candidate.
+     * 
+     * @param socketAddress The candidate address.
+     * @param type The type of candidate, such as server reflexive.
+     * @param transport The transport used, such as UDP or passive TCP.
+     * @param stunClient The address of the STUN server used to 
+     * determine the candidate address.
+     * @param relatedAddress The related address. 
+     * @param relatedPort The related port.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
+     */
+    public AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final IceCandidateType type, final IceTransportProtocol transport, 
-        final boolean controlling)
+        final StunClient stunClient, final InetAddress relatedAddress, 
+        final int relatedPort, final boolean controlling)
         {
-        this (stunClient.getHostAddress(), 
-            stunClient.getHostAddress().getAddress(), type, transport, 
-            controlling);
-        this.m_stunClient = stunClient;
+        this(socketAddress, 
+            IceFoundationCalculator.calculateFoundation(type, 
+                socketAddress.getAddress(), 
+                transport, stunClient.getStunServerAddress()), 
+            type, transport, 
+            IcePriorityCalculator.calculatePriority(type), controlling, 
+            DEFAULT_COMPONENT_ID, 
+            null, relatedAddress, relatedPort, stunClient);
         }
     
     /**
@@ -68,13 +83,15 @@ public abstract class AbstractIceCandidate implements IceCandidate
      */
     public AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final InetAddress baseAddress, final IceCandidateType type, 
-        final IceTransportProtocol transport, final boolean controlling)
+        final IceTransportProtocol transport, final boolean controlling,
+        final StunClient stunClient)
         {
         this(socketAddress, 
             IceFoundationCalculator.calculateFoundation(type, baseAddress, 
                 transport), 
             type, transport, 
-            calculatePriority(type), controlling, s_componentId, null);
+            IcePriorityCalculator.calculatePriority(type), controlling, 
+            DEFAULT_COMPONENT_ID, null, null, -1, stunClient);
         m_baseCandidate = this;
         }
  
@@ -87,21 +104,26 @@ public abstract class AbstractIceCandidate implements IceCandidate
      * @param transport The transport protocol.
      * @param controlling Whether or not this candidate is the controlling
      * candidate.
+     * @param baseCandidate The base candidate this candidate was formed from.
      */
     public AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final int foundation, final IceCandidateType type, 
         final IceTransportProtocol transport, final boolean controlling,
-        final IceCandidate baseCandidate)
+        final IceCandidate baseCandidate, final InetAddress relatedAddress,
+        final int relatedPort, final StunClient stunClient)
         {
         this(socketAddress, foundation, type, transport, 
-            calculatePriority(type), controlling, s_componentId, baseCandidate);
+            IcePriorityCalculator.calculatePriority(type), controlling, 
+            DEFAULT_COMPONENT_ID, baseCandidate, relatedAddress, relatedPort,
+            stunClient);
         }
 
     protected AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final int foundation, final IceCandidateType type, 
         final IceTransportProtocol transport, final long priority,
         final boolean controlling, final int componentId,
-        final IceCandidate baseCandidate)
+        final IceCandidate baseCandidate, final InetAddress relatedAddress, 
+        final int relatedPort, final StunClient stunClient)
         {
         if (socketAddress == null)
             {
@@ -122,16 +144,18 @@ public abstract class AbstractIceCandidate implements IceCandidate
         this.m_foundation = foundation;
         this.m_controlling = controlling;
         this.m_componentId = componentId;
-        this.m_baseCandidate = baseCandidate;
-        }
-
-    private static long calculatePriority(final IceCandidateType type)
-        {
-        // See draft-ietf-mmusic-ice-16.txt section 4.1.2.1.
-        return
-            (long) (Math.pow(2, 24) * type.getTypePreference()) +
-            (long) (Math.pow(2, 8) * LOCAL_PREFERENCE) +
-            (int) (Math.pow(2, 0) * (256 - s_componentId));
+        if (baseCandidate == null)
+            {
+            this.m_baseCandidate = this;
+            }
+        else
+            {
+            this.m_baseCandidate = baseCandidate;
+            }
+        
+        m_relatedAddress = relatedAddress;
+        m_relatedPort = relatedPort;
+        this.m_stunClient = stunClient;
         }
 
     public IceTransportProtocol getTransport()
@@ -182,6 +206,16 @@ public abstract class AbstractIceCandidate implements IceCandidate
     public IceCandidate getBaseCandidate()
         {
         return m_baseCandidate;
+        }
+    
+    public InetAddress getRelatedAddress()
+        {
+        return m_relatedAddress;
+        }
+
+    public int getRelatedPort()
+        {
+        return m_relatedPort;
         }
 
     public StunClient getStunClient()

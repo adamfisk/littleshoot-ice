@@ -11,7 +11,7 @@ import org.lastbamboo.common.stun.client.StunClient;
 /**
  * ICE passive TCP candidate for relayed hosts.
  */
-public class IceTcpRelayPassiveCandidate extends AbstractStunServerIceCandidate
+public class IceTcpRelayPassiveCandidate extends AbstractIceCandidate
     {
 
     /**
@@ -56,8 +56,8 @@ public class IceTcpRelayPassiveCandidate extends AbstractStunServerIceCandidate
         final int componentId)
         {
         super(socketAddress, foundation, IceCandidateType.RELAYED, 
-            IceTransportProtocol.TCP_PASS, relatedAddress, relatedPort, 
-            controlling, priority, componentId);
+            IceTransportProtocol.TCP_PASS, priority, controlling, 
+            componentId, null, relatedAddress, relatedPort, null);
         }
 
     public <T> T accept(final IceCandidateVisitor<T> visitor)

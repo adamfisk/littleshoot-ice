@@ -11,7 +11,7 @@ import org.lastbamboo.common.stun.client.StunClient;
 /**
  * Relay ICE UDP candidate.
  */
-public class IceUdpRelayCandidate extends AbstractStunServerIceCandidate
+public class IceUdpRelayCandidate extends AbstractIceCandidate
     {
 
     /**
@@ -19,7 +19,7 @@ public class IceUdpRelayCandidate extends AbstractStunServerIceCandidate
      * candidate for relays is the candidate itself.
      * 
      * @param relayAddress The address of the relay candidate.
-     * @param iceStunClient The ICE STUN client class.
+     * @param stunClient The ICE STUN client class.
      * @param relatedAddress The address related to this candidate.  In this
      * case, the mapped address received in the Allocate Response.
      * @param relatedPort The port related to this candidate.  In this
@@ -28,13 +28,16 @@ public class IceUdpRelayCandidate extends AbstractStunServerIceCandidate
      * candidate.
      */
     public IceUdpRelayCandidate(final InetSocketAddress relayAddress, 
-        final StunClient iceStunClient,
+        final StunClient stunClient,
         final InetAddress relatedAddress, final int relatedPort,
         final boolean controlling)
         {
-        super(relayAddress, IceCandidateType.RELAYED, 
-            IceTransportProtocol.UDP, iceStunClient,
-            relatedAddress, relatedPort, controlling);
+        super(relayAddress, 
+            IceFoundationCalculator.calculateFoundation(IceCandidateType.RELAYED, 
+               relayAddress.getAddress(), 
+               IceTransportProtocol.UDP, stunClient.getStunServerAddress()), 
+            IceCandidateType.RELAYED, IceTransportProtocol.UDP, controlling, 
+            null, relatedAddress, relatedPort, stunClient);
         }
 
     public <T> T accept(IceCandidateVisitor<T> visitor)

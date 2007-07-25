@@ -23,7 +23,7 @@ public class IceTcpActiveCandidate extends AbstractIceCandidate
         final boolean controlling)
         {
         super(socketAddress, socketAddress.getAddress(), IceCandidateType.HOST, 
-            IceTransportProtocol.TCP_ACT, controlling);
+            IceTransportProtocol.TCP_ACT, controlling, null);
         }
 
     public <T> T accept(IceCandidateVisitor<T> visitor)

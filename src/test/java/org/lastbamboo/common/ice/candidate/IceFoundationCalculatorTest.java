@@ -144,19 +144,19 @@ public class IceFoundationCalculatorTest extends TestCase
         // Create the UDP peer reflexive candidates.
         final Collection<IceCandidate> udpPeer = new LinkedList<IceCandidate>();
         udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, 
-            udpBaseCandidate1, stunClient1, false));
+            udpBaseCandidate1, stunClient1, false, 4232L));
         // Base address with different port.
         udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, 
-            udpBaseCandidate2, stunClient1, false));
+            udpBaseCandidate2, stunClient1, false, 4232L));
         // Base address with different IP.
         udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, 
-            udpBaseCandidate3, stunClient1, false));
+            udpBaseCandidate3, stunClient1, false, 4232L));
         // Different STUN server address.
         udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress1, 
-            udpBaseCandidate1, stunClient2, false));
+            udpBaseCandidate1, stunClient2, false, 4232L));
         // Different public address -- should have no effect on the foundation.
         udpPeer.add(new IceUdpPeerReflexiveCandidate(publicAddress2, 
-            udpBaseCandidate1, stunClient1, false));
+            udpBaseCandidate1, stunClient1, false, 4232L));
         runStunCandidateTests(udpPeer);
         
         // Now test different candidate types to make sure they don't match.

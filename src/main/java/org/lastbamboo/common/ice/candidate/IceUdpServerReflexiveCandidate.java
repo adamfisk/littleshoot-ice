@@ -11,8 +11,7 @@ import org.lastbamboo.common.stun.client.StunClient;
 /**
  * Server reflexive ICE UDP candidate.
  */
-public class IceUdpServerReflexiveCandidate 
-    extends AbstractStunServerIceCandidate
+public class IceUdpServerReflexiveCandidate extends AbstractIceCandidate
     {
 
     /**
@@ -21,22 +20,25 @@ public class IceUdpServerReflexiveCandidate
      * @param serverReflexiveAddress The address of the server reflexive 
      * candidate.
      * @param baseCandidate The base candidate.
-     * @param iceStunClient The ICE STUN client class.
+     * @param stunClient The ICE STUN client class.
      * @param controlling Whether or not this candidate is the controlling
      * candidate.
      */
     public IceUdpServerReflexiveCandidate(
         final InetSocketAddress serverReflexiveAddress, 
         final IceCandidate baseCandidate, 
-        final StunClient iceStunClient,
+        final StunClient stunClient,
         final boolean controlling)
         {
-        super(serverReflexiveAddress, baseCandidate, 
-            IceCandidateType.SERVER_REFLEXIVE, IceTransportProtocol.UDP,
-            iceStunClient, 
+        super(serverReflexiveAddress, 
+            IceFoundationCalculator.calculateFoundation(
+                IceCandidateType.SERVER_REFLEXIVE, 
+                baseCandidate.getSocketAddress().getAddress(), 
+                IceTransportProtocol.UDP, stunClient.getStunServerAddress()), 
+            IceCandidateType.SERVER_REFLEXIVE, 
+            IceTransportProtocol.UDP, controlling, baseCandidate, 
             baseCandidate.getSocketAddress().getAddress(), 
-            baseCandidate.getSocketAddress().getPort(), 
-            controlling);
+            baseCandidate.getSocketAddress().getPort(), stunClient);
         }
 
     /**
@@ -62,7 +64,8 @@ public class IceUdpServerReflexiveCandidate
         {
         super(serverReflexiveAddress, foundation, 
             IceCandidateType.SERVER_REFLEXIVE, IceTransportProtocol.UDP, 
-            relatedAddress, relatedPort, controlling, priority, componentId);
+            priority, controlling, 
+            componentId, null, relatedAddress, relatedPort, null);
         }
 
     public <T> T accept(final IceCandidateVisitor<T> visitor)

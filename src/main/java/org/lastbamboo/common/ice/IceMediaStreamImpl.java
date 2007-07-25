@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.slf4j.Logger;
@@ -23,16 +25,20 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final IceCheckList m_checkList;
     
     private final Collection<IceCandidatePair> m_validPairs;
+    private final boolean m_controlling;
     
 
     /**
      * Creates a new media stream for ICE.
      * 
      * @param checkList The initial check list.
+     * @param controlling Whether or not we're on the controlling side. 
      */
-    public IceMediaStreamImpl(final IceCheckList checkList)
+    public IceMediaStreamImpl(final IceCheckList checkList, 
+        final boolean controlling)
         {
         m_checkList = checkList;
+        m_controlling = controlling;
         m_validPairs = new LinkedList<IceCandidatePair>();
         }
 
@@ -153,5 +159,22 @@ public class IceMediaStreamImpl implements IceMediaStream
     public Collection<IceCandidatePair> getValidPairs()
         {
         return m_validPairs;
+        }
+
+    public boolean isControlling()
+        {
+        return m_controlling;
+        }
+
+    public void addLocalCandidate(final IceCandidate localCandidate)
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public IceCandidate getLocalCandidate(final InetSocketAddress localAddress)
+        {
+        // TODO Auto-generated method stub
+        return null;
         }
     }
