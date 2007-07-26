@@ -133,8 +133,6 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             // server-side messages.
             final StunClient client = candidate.getStunClient();
             
-            final InetSocketAddress localAddress = client.getHostAddress();
-            
             // Now send a BindingRequest with PRIORITY, USE-CANDIDATE, 
             // ICE-CONTROLLING etc.
             

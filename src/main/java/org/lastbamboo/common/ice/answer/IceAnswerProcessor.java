@@ -71,15 +71,8 @@ public class IceAnswerProcessor implements AnswerProcessor,
     private Socket processAnswer(final Collection<IceCandidate> localCandidates, 
         final Collection<IceCandidate> remoteCandidates) throws IOException
         {
-
-        final IceCheckListCreator checkListCreator = 
-            new IceCheckListCreatorImpl();
-        
-        final IceCheckList checkList = 
-            checkListCreator.createCheckList(localCandidates, remoteCandidates);
-            
         final IceMediaStream mediaStream = 
-            new IceMediaStreamImpl(checkList, true);
+            new IceMediaStreamImpl(localCandidates, remoteCandidates, true);
         mediaStream.connect();
         
         final Collection<IceCandidatePair> validPairs = 

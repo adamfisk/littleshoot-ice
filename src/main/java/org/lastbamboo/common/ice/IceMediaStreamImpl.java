@@ -24,22 +24,30 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final IceCheckList m_checkList;
     
-    private final Collection<IceCandidatePair> m_validPairs;
+    private final Collection<IceCandidatePair> m_validPairs =
+        new LinkedList<IceCandidatePair>();
     private final boolean m_controlling;
+    private final Collection<IceCandidate> m_localCandidates;
     
-
     /**
      * Creates a new media stream for ICE.
      * 
-     * @param checkList The initial check list.
+     * @param localCandidates The candidates from the local agent.
+     * @param remoteCandidates The candidates from the remote agent.
      * @param controlling Whether or not we're on the controlling side. 
      */
-    public IceMediaStreamImpl(final IceCheckList checkList, 
+    public IceMediaStreamImpl(final Collection<IceCandidate> localCandidates, 
+        final Collection<IceCandidate> remoteCandidates, 
         final boolean controlling)
         {
-        m_checkList = checkList;
+        final IceCheckListCreator checkListCreator = 
+            new IceCheckListCreatorImpl();
+        
+        m_checkList = 
+            checkListCreator.createCheckList(localCandidates, remoteCandidates);
         m_controlling = controlling;
-        m_validPairs = new LinkedList<IceCandidatePair>();
+        m_localCandidates = localCandidates;
+        
         }
 
     public void addValidPair(final IceCandidatePair pair)
@@ -168,13 +176,20 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void addLocalCandidate(final IceCandidate localCandidate)
         {
-        // TODO Auto-generated method stub
-        
+        this.m_localCandidates.add(localCandidate);
         }
 
     public IceCandidate getLocalCandidate(final InetSocketAddress localAddress)
         {
-        // TODO Auto-generated method stub
+        // A little inefficient here, but we're not talking about a lot of
+        // candidates.
+        for (final IceCandidate candidate : this.m_localCandidates)
+            {
+            if (candidate.getSocketAddress().equals(localAddress))
+                {
+                return candidate;
+                }
+            }
         return null;
         }
     }
