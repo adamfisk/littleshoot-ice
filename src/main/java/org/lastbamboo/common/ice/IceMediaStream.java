@@ -28,4 +28,8 @@ public interface IceMediaStream
     IceCandidate getLocalCandidate(InetSocketAddress localAddress);
 
     void addLocalCandidate(IceCandidate localCandidate);
+    
+    IceCandidatePair getPair(InetSocketAddress localAddress, 
+        InetSocketAddress remoteAddress);
+
     }

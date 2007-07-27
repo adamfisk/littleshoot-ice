@@ -29,7 +29,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
     
     private final boolean m_controlling;
 
-    protected IceCandidate m_baseCandidate;
+    private final IceCandidate m_baseCandidate;
     
     private final int m_componentId;
     private final StunClient m_stunClient;
@@ -92,7 +92,6 @@ public abstract class AbstractIceCandidate implements IceCandidate
             type, transport, 
             IcePriorityCalculator.calculatePriority(type), controlling, 
             DEFAULT_COMPONENT_ID, null, null, -1, stunClient);
-        m_baseCandidate = this;
         }
  
     /**

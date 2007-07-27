@@ -56,9 +56,9 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
             }
         
         final List<IceCandidatePair> convertedPairs = convertPairs(pairs);
-        System.out.println(convertedPairs.size()+" converted");
+        LOG.debug(convertedPairs.size()+" converted");
         final List<IceCandidatePair> pruned = prunePairs(convertedPairs);
-        System.out.println(pruned.size()+" after pruned");
+        LOG.debug(pruned.size()+" after pruned");
         final Collection<IceCandidatePair> sorted = sortPairs(pruned);
         return new IceCheckListImpl(sorted);
         }
@@ -275,8 +275,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
             case UNKNOWN:
                 LOG.warn("Found unknown local transport!!");
                 return false;
-            default:
-                return false;
             }
+        return false;
         }
     }

@@ -192,4 +192,28 @@ public class IceMediaStreamImpl implements IceMediaStream
             }
         return null;
         }
+    
+
+    /**
+     * Checks if the new pair matches any pair the media stream already 
+     * knows about.
+     * 
+     * @param localAddress The local address of the new pair.
+     * @param remoteAddress The remote address of the new pair.
+     * @return The matching pair if it exists, otherwise <code>null</code>.
+     */
+    public IceCandidatePair getPair(final InetSocketAddress localAddress, 
+        final InetSocketAddress remoteAddress)
+        {
+        final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
+        for (final IceCandidatePair pair : pairs)
+            {
+            if (pair.getLocalCandidate().getSocketAddress().equals(localAddress) &&
+                pair.getRemoteCandidate().getSocketAddress().equals(remoteAddress))
+                {
+                return pair;
+                }
+            }
+        return null;
+        }
     }
