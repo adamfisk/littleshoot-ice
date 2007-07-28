@@ -53,11 +53,6 @@ public class IceMediaStreamImpl implements IceMediaStream
     public void addValidPair(final IceCandidatePair pair)
         {
         m_log.debug("Adding valid pair!");
-        final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
-        if (pairs.contains(pair))
-            {
-            
-            }
         this.m_validPairs.add(pair);
         }
 
@@ -70,7 +65,6 @@ public class IceMediaStreamImpl implements IceMediaStream
         final Collection<List<IceCandidatePair>> mediaGroups = 
             createGroups(pairs);
         
-        m_log.debug("Created "+mediaGroups.size()+" groups");
         final IceCheckScheduler scheduler = 
             new IceCheckSchedulerImpl(this, m_checkList);
         scheduler.scheduleChecks();

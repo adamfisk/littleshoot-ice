@@ -97,13 +97,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         final IceConnectivityChecker checker = 
             new IceConnectivityCheckerImpl(this.m_mediaStream, pair);
         pair.setState(IceCandidatePairState.IN_PROGRESS);
-        if (checker.check())
-            {
-            this.m_mediaStream.addValidPair(pair);
-            return true;
-            }
-        
-        return false;
+        return checker.check();
         }
 
     private IceCandidatePair getActivePair()

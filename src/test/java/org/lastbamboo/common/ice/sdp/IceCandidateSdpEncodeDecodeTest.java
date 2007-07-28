@@ -4,26 +4,20 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.StringTokenizer;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
-import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.ice.stubs.StunClientStub;
-import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.SdpFactory;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.client.UdpStunClient;
-import org.lastbamboo.common.util.NetworkUtils;
 
 /**
  * Test for the class for generating SDP data.

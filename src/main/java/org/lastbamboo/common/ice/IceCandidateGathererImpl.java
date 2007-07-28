@@ -13,7 +13,6 @@ import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.ShootConstants;
 import org.slf4j.Logger;
@@ -67,7 +66,8 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates =
             new LinkedList<IceCandidate>();
 
-        final StunClient stunClient = new UdpStunClient();
+        // Not this class also processes server-side messages.
+        final StunClient stunClient = new IceStunUdpPeer();
         
         final InetSocketAddress serverReflexiveAddress = 
             stunClient.getServerReflexiveAddress();

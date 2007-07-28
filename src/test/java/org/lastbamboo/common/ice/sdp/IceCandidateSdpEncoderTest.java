@@ -21,13 +21,11 @@ import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.ice.stubs.StunClientStub;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.MediaDescription;
 import org.lastbamboo.common.sdp.api.SessionDescription;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.client.UdpStunClient;
-import org.lastbamboo.common.util.NetworkUtils;
 
 /**
  * Test for the class for generating SDP data.
