@@ -58,7 +58,7 @@ public class IceUdpServerReflexiveCandidate extends AbstractIceCandidate
      * @param componentId The component ID. 
      */
     public IceUdpServerReflexiveCandidate(
-        final InetSocketAddress serverReflexiveAddress, final int foundation, 
+        final InetSocketAddress serverReflexiveAddress, final String foundation, 
         final InetAddress relatedAddress, final int relatedPort,
         final boolean controlling, final long priority, final int componentId)
         {

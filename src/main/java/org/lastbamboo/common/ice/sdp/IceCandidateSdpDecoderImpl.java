@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice.sdp;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -26,6 +27,7 @@ import org.lastbamboo.common.sdp.api.SdpException;
 import org.lastbamboo.common.sdp.api.SdpFactory;
 import org.lastbamboo.common.sdp.api.SdpParseException;
 import org.lastbamboo.common.sdp.api.SessionDescription;
+import org.lastbamboo.common.util.IoExceptionWithCause;
 import org.lastbamboo.common.util.mina.MinaUtils;
 
 /**
@@ -50,25 +52,33 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
 
     /**
      * Creates a new decoder.
-     * 
-     * @param sdpFactory The factory fro creating SDP from raw bytes.
      */
-    public IceCandidateSdpDecoderImpl(final SdpFactory sdpFactory)
+    public IceCandidateSdpDecoderImpl()
         {
-        m_sdpFactory = sdpFactory;
+        m_sdpFactory = new SdpFactory();
         }
     
     public Collection<IceCandidate> decode(final ByteBuffer buf,
-        final boolean controlling) throws SdpException
+        final boolean controlling) throws IOException
         {
         final String responseBodyString = MinaUtils.toAsciiString(buf);
         
-        final SessionDescription sdp = 
-            this.m_sdpFactory.createSessionDescription(responseBodyString);
+        try
+            {
+            final SessionDescription sdp = 
+                this.m_sdpFactory.createSessionDescription(responseBodyString);
+            final Collection mediaDescriptions = sdp.getMediaDescriptions(true);
+            LOG.debug("Creating candidates from media descs: " + 
+                mediaDescriptions);
+            return createCandidates(mediaDescriptions, controlling);
+            }
+        catch (final SdpException e)
+            {
+            LOG.warn("Could not parse SDP: "+MinaUtils.toAsciiString(buf));
+            throw new IoExceptionWithCause("Could not parse SDP", e);
+            }
         
-        final Collection mediaDescriptions = sdp.getMediaDescriptions(true);
-        LOG.debug("Creating candidates from media descs: "+mediaDescriptions);
-        return createCandidates(mediaDescriptions, controlling);
+
         }
     
     /**
@@ -151,11 +161,18 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
     private IceCandidate createIceCandidate(final Scanner scanner, 
         final boolean controlling) throws UnknownHostException 
         {
-        final int foundation = Integer.parseInt(scanner.next());
+        final String foundation = scanner.next();
         final int componentId = Integer.parseInt(scanner.next());
         final String transportString = scanner.next();  
         final IceTransportProtocol transportProtocol = 
             IceTransportProtocol.toTransport(transportString);
+        if (transportProtocol == null)
+            {
+            LOG.warn("Unrecognized transport: "+transportProtocol);
+            throw new IllegalArgumentException(
+                "Unrecognized transport: "+transportProtocol);
+            }
+        
         final int priority = Integer.parseInt(scanner.next());
         final InetAddress address = InetAddress.getByName(scanner.next());
         final int port = Integer.parseInt(scanner.next());
@@ -166,9 +183,18 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
         if (!typeToken.equals("typ"))
             {
             LOG.error("Unexpected type token: "+typeToken);
+            throw new IllegalArgumentException(
+                "Unexpected type token: "+typeToken);
             }
         
-        final IceCandidateType type = IceCandidateType.toType(scanner.next());
+        final String typeString = scanner.next();
+        final IceCandidateType type = IceCandidateType.toType(typeString);
+        if (type == null)
+            {
+            LOG.warn("Unrecognized type: "+typeString);
+            throw new IllegalArgumentException(
+                "Unrecognized type: "+typeString);
+            }
         
         switch (transportProtocol)
             {
@@ -237,9 +263,6 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
                     case SERVER_REFLEXIVE:
                         break;
                     }
-                break;
-            case UNKNOWN:
-                LOG.warn("Received unknown transport: "+transportString);
                 break;
             }
         

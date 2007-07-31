@@ -39,9 +39,11 @@ public interface IceCandidatePair
     /**
      * Accessor for the foundation for the pair.
      * 
-     * @return The foundation for the candidate pair.
+     * @return The foundation for the candidate pair.  Note that this is a 
+     * string because the foundation for the pair is the *concatenation* of
+     * the foundations of the candidates.
      */
-    int getFoundation();
+    String getFoundation();
 
     /**
      * Sets the state of the pair.
@@ -66,4 +68,14 @@ public interface IceCandidatePair
      * @return The class the visitor created. 
      */
     <T> T accept(IceCandidatePairVisitor<T> visitor);
+
+    /**
+     * Sets whether or not this pair is "nominated" as the final pair for
+     * exchanging media.  The nominated pair with the highest priority is the
+     * pair that is ultimately used.
+     * 
+     * @param nominated Whether or not this pair is nominated as the final 
+     * pair for exchanging media.
+     */
+    void setNominated(boolean nominated);
     }

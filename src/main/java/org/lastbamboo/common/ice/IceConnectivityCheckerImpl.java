@@ -21,11 +21,12 @@ import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
-import org.lastbamboo.common.stun.stack.message.SuccessfulBindingResponse;
+import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
@@ -48,16 +49,20 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
 
     private final IceMediaStream m_mediaStream;
 
+    private final IceAgent m_iceAgent;
+
     /**
      * Creates a new checker.
      * 
+     * @param iceAgent The ICE agent controller for this session.
      * @param mediaStream The high level media stream. 
      * @param pair The pair to check
      */
-    public IceConnectivityCheckerImpl(final IceMediaStream mediaStream, 
+    public IceConnectivityCheckerImpl(final IceAgent iceAgent,
+        final IceMediaStream mediaStream, 
         final IceCandidatePair pair)
         {
-        m_log.debug("Created connectivity checker...");
+        this.m_iceAgent = iceAgent;
         this.m_pair = pair;
         this.m_mediaStream = mediaStream;
         }
@@ -141,21 +146,32 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             
             final long priority = 
                 IcePriorityCalculator.calculatePriority(
-                    IceCandidateType.PEER_REFLEXIVE);
+                    IceCandidateType.PEER_REFLEXIVE, IceTransportProtocol.UDP);
 
             final IcePriorityAttribute priorityAttribute = 
                 new IcePriorityAttribute(priority);
             
+            final boolean hasUseCandidate;
             final StunAttribute controlling;
-            if (m_mediaStream.isControlling())
+            
+            // The agent uses the same tie-breaker throughout the session.
+            final byte[] tieBreaker = m_iceAgent.getTieBreaker();
+            
+            // We use a separate variable here because we need to know what
+            // we sent in the case of error responses, and the data in the
+            // ICE agent can change.
+            final boolean isControlling = m_iceAgent.isControlling();
+            if (isControlling)
                 {
-                controlling = new IceControllingAttribute();
+                controlling = new IceControllingAttribute(tieBreaker);
                 // We use aggressive nomination.
                 attributes.add(new IceUseCandidateAttribute());
+                hasUseCandidate = true;
                 }
             else
                 {
-                controlling = new IceControlledAttribute();
+                controlling = new IceControlledAttribute(tieBreaker);
+                hasUseCandidate = false;
                 }
             
             attributes.add(priorityAttribute);
@@ -170,8 +186,8 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                 new StunMessageVisitorAdapter<IceCandidate>()
                 {
                 
-                public IceCandidate visitSuccessfulBindingResponse(
-                    final SuccessfulBindingResponse sbr)
+                public IceCandidate visitBindingSuccessResponse(
+                    final BindingSuccessResponse sbr)
                     {
                     // TODO: We're supposed to verify the source IP and port as  
                     // well as the destination IP address and port with the 
@@ -193,6 +209,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                         sbr.getMappedAddress();
                     final IceCandidate matchingCandidate = 
                         m_mediaStream.getLocalCandidate(mappedAddress);
+                    
                     if (matchingCandidate == null)
                         {
                         // Note the base candidate here is the local candidate
@@ -202,7 +219,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                         // specified in section 7.1.2.2.2.
                         final IceCandidate prc = 
                             new IceUdpPeerReflexiveCandidate(mappedAddress, 
-                                candidate, client, m_mediaStream.isControlling(), 
+                                candidate, client, m_iceAgent.isControlling(), 
                                 priority);
                         m_mediaStream.addLocalCandidate(prc);
                         return prc;
@@ -212,72 +229,59 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                         return matchingCandidate;
                         }
                     }
-                };
-                
-            final IceCandidate newLocalCandidate = response.accept(visitor);
-            final InetSocketAddress newLocalAddress = 
-                newLocalCandidate.getSocketAddress();
-            
-            final IceCandidatePair pairToAdd;
-            if (equalsOriginalPair(this.m_pair, newLocalAddress, remoteAddress))
-                {
-                // Just add the original pair;
-                pairToAdd = this.m_pair;
-                }
-            else
-                {
-                final IceCandidatePair existingPair = 
-                    m_mediaStream.getPair(newLocalAddress, remoteAddress);
-                if (existingPair != null)
+
+                public IceCandidate visitBindingErrorResponse(
+                    final BindingErrorResponse bindingErrorResponse)
                     {
-                    pairToAdd = existingPair;
-                    }
-                else
-                    {
-                    // The pair is a completely new pair.  
-                    // We've already calculated the priority of the local candidate,
-                    // but we still need the priority of the remote candidate.
+                    // This is likely a role-conflict error.  We need to 
+                    // handle it as specified in section 7.1.2.1.
+                    final int errorCode = bindingErrorResponse.getErrorCode();
                     
-                    // Here's the description of calculating the remote priority:
-                    //
-                    // The priority of the remote candidate is taken from the 
-                    // SDP of the peer.  If the candidate does not appear there, 
-                    // then the check must have been a triggered check to a new 
-                    // remote candidate.  In that case, the priority is taken as the
-                    // value of the PRIORITY attribute in the Binding Request which
-                    // triggered the check that just completed.
-                    //final long remotePriority;
-                    final IceCandidate newRemoteCandidate;
-                    if (isTriggeredCheck(remoteAddress))
+                    if (errorCode != 487)
                         {
-                        // It's a triggered check, so we use the priority
-                        // from the Binding Request we just sent.
-                        
-                        // TODO: We don't currently support triggered checks.
-                        // We need to construct a new remote candidate in 
-                        // this case!!
-                        // remotePriority = priority;
-                        
-                        newRemoteCandidate = null;
-                        throw new NullPointerException(
-                            "We don't yet support triggered checks!!!");
+                        m_log.warn("Unexpected error response: " + 
+                            bindingErrorResponse.getAttributes());
+                        return null;
+                        }
+                    if (!isControlling)
+                        {
+                        m_iceAgent.setControlling(true);
                         }
                     else
                         {
-                        // It's not a triggered check, so use the original 
-                        // candidate's priority.
-                        //remotePriority = remoteCandidate.getPriority();
-                        newRemoteCandidate = remoteCandidate;
+                        m_iceAgent.setControlling(false);
                         }
                     
-                    pairToAdd = 
-                        new UdpIceCandidatePair(newLocalCandidate, newRemoteCandidate);
+                    // As stated in ICE 17:
+                    // "the agent MUST enqueue the candidate pair whose check
+                    // generated the 487 into the triggered check queue.  The 
+                    // state of that pair is set to Waiting."
+                    
+                    // This has the effect of sending a new Binding Request to
+                    // the remote host reflecting the new role.
+                    
+                    // Note that we queue up a triggered check always here,
+                    // assuming that the role change was actually correct.
+                    m_pair.setState(IceCandidatePairState.WAITING);
+                    m_mediaStream.addTriggeredCheck(m_pair);
+                    
+                    return null;
                     }
+                };
+                
+            final IceCandidate newLocalCandidate = response.accept(visitor);
+
+            if (newLocalCandidate == null)
+                {
+                this.m_pair.setState(IceCandidatePairState.FAILED);
+                return null;
+                }
+            else
+                {
+                return processSuccess(newLocalCandidate, remoteCandidate, 
+                    hasUseCandidate);
                 }
             
-            m_mediaStream.addValidPair(pairToAdd);
-            
-            return null;
             }
     
         public IoSession visitUdpPeerReflexiveCandidate(
@@ -306,6 +310,82 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
         return false;
         }
     
+    private IoSession processSuccess(IceCandidate newLocalCandidate, 
+        final IceCandidate remoteCandidate, final boolean useCandidate)
+        {
+        final InetSocketAddress remoteAddress = 
+            remoteCandidate.getSocketAddress();
+        
+        final InetSocketAddress newLocalAddress = 
+            newLocalCandidate.getSocketAddress();
+        
+        final IceCandidatePair pairToAdd;
+        if (equalsOriginalPair(this.m_pair, newLocalAddress, remoteAddress))
+            {
+            // Just add the original pair;
+            pairToAdd = this.m_pair;
+            }
+        else
+            {
+            final IceCandidatePair existingPair = 
+                m_mediaStream.getPair(newLocalAddress, remoteAddress);
+            if (existingPair != null)
+                {
+                pairToAdd = existingPair;
+                }
+            else
+                {
+                // The pair is a completely new pair.  
+                // We've already calculated the priority of the local candidate,
+                // but we still need the priority of the remote candidate.
+                
+                // Here's the description of calculating the remote priority:
+                //
+                // The priority of the remote candidate is taken from the 
+                // SDP of the peer.  If the candidate does not appear there, 
+                // then the check must have been a triggered check to a new 
+                // remote candidate.  In that case, the priority is taken as the
+                // value of the PRIORITY attribute in the Binding Request which
+                // triggered the check that just completed.
+                //final long remotePriority;
+                final IceCandidate newRemoteCandidate;
+                if (isTriggeredCheck(remoteAddress))
+                    {
+                    // It's a triggered check, so we use the priority
+                    // from the Binding Request we just sent.
+                    
+                    // TODO: We don't currently support triggered checks.
+                    // We need to construct a new remote candidate in 
+                    // this case!!
+                    // remotePriority = priority;
+                    
+                    newRemoteCandidate = null;
+                    throw new NullPointerException(
+                        "We don't yet support triggered checks!!!");
+                    }
+                else
+                    {
+                    // It's not a triggered check, so use the original 
+                    // candidate's priority.
+                    //remotePriority = remoteCandidate.getPriority();
+                    newRemoteCandidate = remoteCandidate;
+                    }
+                
+                pairToAdd = 
+                    new UdpIceCandidatePair(newLocalCandidate, newRemoteCandidate);
+                }
+            }
+        
+        // We now set the state of the pair that *generated* the check
+        // to succeeded, as specified in ICE section:
+        // 7.1.2.2.3.  Updating Pair States
+        this.m_pair.setState(IceCandidatePairState.SUCCEEDED);
+        
+        m_mediaStream.onValidPair(pairToAdd, this.m_pair, useCandidate);
+        
+        return null;
+        }
+
     /**
      * Checks if the new pair equals the original pair that generated
      * the check.

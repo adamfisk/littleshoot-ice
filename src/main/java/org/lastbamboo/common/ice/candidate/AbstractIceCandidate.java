@@ -12,7 +12,7 @@ import org.lastbamboo.common.stun.client.StunClient;
 /**
  * Class that abstracts out general attributes of all ICE session candidates.
  */
-public abstract class AbstractIceCandidate implements IceCandidate
+public abstract class AbstractIceCandidate implements IceCandidate, Comparable
     {
 
     private final InetSocketAddress m_address;
@@ -25,7 +25,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
     
     private final long m_priority;
 
-    private final int m_foundation;
+    private final String m_foundation;
     
     private final boolean m_controlling;
 
@@ -66,8 +66,8 @@ public abstract class AbstractIceCandidate implements IceCandidate
                 socketAddress.getAddress(), 
                 transport, stunClient.getStunServerAddress()), 
             type, transport, 
-            IcePriorityCalculator.calculatePriority(type), controlling, 
-            DEFAULT_COMPONENT_ID, 
+            IcePriorityCalculator.calculatePriority(type, transport), 
+            controlling, DEFAULT_COMPONENT_ID, 
             null, relatedAddress, relatedPort, stunClient);
         }
     
@@ -90,7 +90,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
             IceFoundationCalculator.calculateFoundation(type, baseAddress, 
                 transport), 
             type, transport, 
-            IcePriorityCalculator.calculatePriority(type), controlling, 
+            IcePriorityCalculator.calculatePriority(type, transport), controlling, 
             DEFAULT_COMPONENT_ID, null, null, -1, stunClient);
         }
  
@@ -106,19 +106,19 @@ public abstract class AbstractIceCandidate implements IceCandidate
      * @param baseCandidate The base candidate this candidate was formed from.
      */
     public AbstractIceCandidate(final InetSocketAddress socketAddress, 
-        final int foundation, final IceCandidateType type, 
+        final String foundation, final IceCandidateType type, 
         final IceTransportProtocol transport, final boolean controlling,
         final IceCandidate baseCandidate, final InetAddress relatedAddress,
         final int relatedPort, final StunClient stunClient)
         {
         this(socketAddress, foundation, type, transport, 
-            IcePriorityCalculator.calculatePriority(type), controlling, 
+            IcePriorityCalculator.calculatePriority(type, transport), controlling, 
             DEFAULT_COMPONENT_ID, baseCandidate, relatedAddress, relatedPort,
             stunClient);
         }
 
     protected AbstractIceCandidate(final InetSocketAddress socketAddress, 
-        final int foundation, final IceCandidateType type, 
+        final String foundation, final IceCandidateType type, 
         final IceTransportProtocol transport, final long priority,
         final boolean controlling, final int componentId,
         final IceCandidate baseCandidate, final InetAddress relatedAddress, 
@@ -192,7 +192,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
         return m_componentId;
         }
 
-    public int getFoundation()
+    public String getFoundation()
         {
         return m_foundation;
         }
@@ -230,7 +230,7 @@ public abstract class AbstractIceCandidate implements IceCandidate
         result = PRIME * result +  m_address.hashCode();
         result = PRIME * result + (m_candidateType.hashCode());
         result = PRIME * result + (m_controlling ? 1231 : 1237);
-        result = PRIME * result + m_foundation;
+        result = PRIME * result + m_foundation.hashCode();
         result = PRIME * result + (int) (m_priority ^ (m_priority >>> 32));
         result = PRIME * result + (m_transport.hashCode());
         return result;
@@ -252,12 +252,38 @@ public abstract class AbstractIceCandidate implements IceCandidate
             return false;
         if (m_controlling != other.m_controlling)
             return false;
-        if (m_foundation != other.m_foundation)
+        if (!m_foundation.equals(other.m_foundation))
             return false;
         if (m_priority != other.m_priority)
             return false;
         if (!m_transport.equals(other.m_transport))
             return false;
         return true;
+        }
+    
+
+    public int compareTo(final Object obj)
+        {
+        final AbstractIceCandidate candidate = (AbstractIceCandidate) obj;
+        final Long priority1 = new Long(m_priority);
+        final Long priority2 = new Long(candidate.getPriority());
+        final int priorityComparison = priority1.compareTo(priority2);
+        if (priorityComparison != 0)
+            {
+            // We reverse this because we want to go from highest to lowest.
+            return -priorityComparison;
+            }
+        
+        // Otherwise, the two candidates have the same priority, but we now
+        // need to check the other equality attributes for consistency with
+        // equals.  We don't actually care which is first in these cases,
+        // so we just use equals.
+        
+        if (this.equals(candidate))
+            {
+            return 0;
+            }
+        
+        return 1;
         }
     }

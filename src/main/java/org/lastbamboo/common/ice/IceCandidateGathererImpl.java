@@ -30,19 +30,21 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
 
     private final boolean m_controlling;
 
+    private final StunClient m_udpStunClient;
+
     /**
      * Creates a new class for gathering ICE candidates.
      * 
-     * @param turnClient The TURN client for getting data about TURN 
+     * @param tcpTurnClient The TURN client for getting data about TURN 
      * candidates.
-     * @param controlling Whether or not gathered candidates should be 
-     *  controlling candidates.
      */
-    public IceCandidateGathererImpl(final StunClient turnClient, 
+    public IceCandidateGathererImpl(final StunClient tcpTurnClient, 
+        final StunClient udpStunClient,
         final boolean controlling)
         {
-        m_turnClient = turnClient;
-        m_controlling = controlling;
+        this.m_turnClient = tcpTurnClient;
+        this.m_udpStunClient = udpStunClient;
+        this.m_controlling = controlling;
         }
 
     public Collection<IceCandidate> gatherCandidates()
@@ -67,21 +69,21 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             new LinkedList<IceCandidate>();
 
         // Not this class also processes server-side messages.
-        final StunClient stunClient = new IceStunUdpPeer();
+        //final StunClient stunClient = new IceStunUdpPeer(this.m_iceAgent);
         
         final InetSocketAddress serverReflexiveAddress = 
-            stunClient.getServerReflexiveAddress();
+            this.m_udpStunClient.getServerReflexiveAddress();
         
         // Add the host candidate.  Note the host candidate is also used as
         // the BASE candidate for the server reflexive candidate below.
         final IceUdpHostCandidate hostCandidate = 
-            new IceUdpHostCandidate(stunClient, this.m_controlling);
+            new IceUdpHostCandidate(this.m_udpStunClient, this.m_controlling);
         candidates.add(hostCandidate);
         
         // Add the server reflexive candidate.
         final IceUdpServerReflexiveCandidate serverReflexiveCandidate =
             new IceUdpServerReflexiveCandidate(serverReflexiveAddress, 
-                hostCandidate, stunClient, this.m_controlling);
+                hostCandidate, this.m_udpStunClient, this.m_controlling);
         
         candidates.add(serverReflexiveCandidate);
         return candidates;

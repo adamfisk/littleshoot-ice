@@ -86,7 +86,7 @@ public interface IceCandidate
      * 
      * @return The candidate's foundation.
      */
-    int getFoundation();
+    String getFoundation();
     
     /**
      * Accessor for the base candidate for this candidate.  For host and relay

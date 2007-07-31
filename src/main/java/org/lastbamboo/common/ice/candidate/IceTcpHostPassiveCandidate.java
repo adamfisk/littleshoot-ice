@@ -37,7 +37,7 @@ public class IceTcpHostPassiveCandidate extends AbstractIceCandidate
      * @param componentId The component ID.
      */
     public IceTcpHostPassiveCandidate(final InetSocketAddress socketAddress, 
-        final int foundation, final boolean controlling, final int priority, 
+        final String foundation, final boolean controlling, final int priority, 
         final int componentId)
         {
         super(socketAddress, foundation,

@@ -14,22 +14,27 @@ public class IceStunMessageVisitorFactory implements StunMessageVisitorFactory
     {
     
     private final StunTransactionTracker m_transactionTracker;
+    private final IceAgent m_iceAgent;
 
     /**
      * Creates a new STUN message visitor factory for ICE.
      * 
      * @param transactionTracker The class that keeps track of STUN
      * transactions.
+     * @param agent The top-level agent. 
      */
     public IceStunMessageVisitorFactory(
-        final StunTransactionTracker transactionTracker)
+        final StunTransactionTracker transactionTracker, 
+        final IceAgent agent)
         {
         m_transactionTracker = transactionTracker;
+        m_iceAgent = agent;
         }
 
     public StunMessageVisitor createVisitor(final IoSession session)
         {
-        return new IceStunMessageVisitor(this.m_transactionTracker, session);
+        return new IceStunMessageVisitor(this.m_transactionTracker, session,
+            this.m_iceAgent);
         }
 
     }

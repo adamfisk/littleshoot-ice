@@ -11,8 +11,9 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final IceCandidate m_remoteCandidate;
     private final long m_priority;
     private IceCandidatePairState m_state;
-    private final int m_foundation;
+    private final String m_foundation;
     private final int m_componentId;
+    private boolean m_nominated = false;
 
     /**
      * Creates a new pair.
@@ -27,6 +28,13 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             calculatePriority(localCandidate, remoteCandidate));
         }
 
+    /**
+     * Creates a new pair.
+     * 
+     * @param localCandidate The local candidate.
+     * @param remoteCandidate The candidate from the remote agent.
+     * @param priority The priority of the pair.
+     */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final long priority)
         {
@@ -38,13 +46,14 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         m_componentId = localCandidate.getComponentId();
         m_priority = priority;
         m_state = IceCandidatePairState.FROZEN;
-        m_foundation = localCandidate.getFoundation() + 
-            remoteCandidate.getFoundation();
+        m_foundation = String.valueOf(localCandidate.getFoundation()) + 
+            String.valueOf(remoteCandidate.getFoundation());
         }
 
     private static long calculatePriority(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
+        // See ICE section 5.7.2. 
         // Here's the formula for calculating pair priorities:
         // G = the priority of the controlling candidate.
         // D = the priority of the controlled candidate.
@@ -92,7 +101,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         return this.m_state;
         }
     
-    public int getFoundation()
+    public String getFoundation()
         {
         return this.m_foundation;
         }
@@ -105,6 +114,11 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     public int getComponentId()
         {
         return m_componentId;
+        }
+    
+    public void setNominated(boolean nominated)
+        {
+        this.m_nominated = nominated;
         }
     
     public String toString()

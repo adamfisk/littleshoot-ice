@@ -23,6 +23,15 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
         super(localCandidate, remoteCandidate);
         }
 
+    /**
+     * Pair of UDP ICE candidates.  This constructor is passed in the priority
+     * explicitly, as required for some pairs discovered during the connectivity
+     * check process.
+     * 
+     * @param localCandidate The local candidate.
+     * @param remoteCandidate The remote candidate.
+     * @param priority The explicit priority.
+     */
     public UdpIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final long priority)
         {

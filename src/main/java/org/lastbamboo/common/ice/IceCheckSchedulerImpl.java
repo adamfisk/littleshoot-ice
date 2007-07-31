@@ -10,7 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class that schedules and executes ICE checks. 
+ * Class that schedules and executes ICE checks.  This behavior is defined
+ * in ICE section 5.8.
  */
 public class IceCheckSchedulerImpl implements IceCheckScheduler
     {
@@ -18,16 +19,19 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final IceCheckList m_checkList;
     private final IceMediaStream m_mediaStream;
+    private final IceAgent m_agent;
 
     /**
      * Creates a new scheduler for the specified pairs.
      * 
+     * @param agent The top-level ICE agent.
      * @param stream The media stream.
      * @param checkList The check list.
      */
-    public IceCheckSchedulerImpl(final IceMediaStream stream, 
-        final IceCheckList checkList)
+    public IceCheckSchedulerImpl(final IceAgent agent, 
+        final IceMediaStream stream, final IceCheckList checkList)
         {
+        m_agent = agent;
         m_mediaStream = stream;
         m_checkList = checkList;
         }
@@ -37,11 +41,12 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         m_log.debug("Scheduling checks...");
         final Timer timer = new Timer(true);
         final TimerTask task = createTimerTask(timer);
+        
         //final int Ta = 1;
         timer.schedule(task, 0L);
         }
 
-    protected TimerTask createTimerTask(final Timer timer)
+    private TimerTask createTimerTask(final Timer timer)
         {
         return new TimerTask()
             {
@@ -65,7 +70,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
 
     protected void checkPair(final Timer timer)
         {
-        final IceCandidatePair activePair = getActivePair();
+        final IceCandidatePair activePair = getNextPair();
         if (activePair == null)
             {
             // No more pairs to try.
@@ -83,11 +88,21 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
                 }
             else
                 {
-                // TODO: The delay between checks should be calculated 
-                // here.
                 m_log.debug("Scheduling new timer task...");
                 final TimerTask task = createTimerTask(timer);
-                timer.schedule(task, 0L);
+                final int Ta_i = 20;
+                
+                // TODO: The recommended formula for this is:
+                // (stunPacketSize / rtpPacketSize) * rtpPtime;
+                // We'd have to allow this to be configurable for an arbitrary
+                // protocol in use, not just RTP.  For now, we just use the 
+                // relatively safe value of 20ms supported in most NATs.
+                //
+                // Note also that our goal isn't necessarily to keep the 
+                // bandwidth in line with the ultimate protocol, as the folmula
+                // above intends, but rather to make sure the NAT can handle
+                // the number of mappings we're requesting.
+                timer.schedule(task, this.m_agent.calculateDelay(Ta_i));
                 }
             }
         }
@@ -95,30 +110,43 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     private boolean performCheck(final IceCandidatePair pair)
         {
         final IceConnectivityChecker checker = 
-            new IceConnectivityCheckerImpl(this.m_mediaStream, pair);
+            new IceConnectivityCheckerImpl(this.m_agent, this.m_mediaStream, pair);
         pair.setState(IceCandidatePairState.IN_PROGRESS);
         return checker.check();
         }
 
-    private IceCandidatePair getActivePair()
+    private IceCandidatePair getNextPair()
         {
-        final IceCandidatePair waitingPair = 
-            getPairInState(IceCandidatePairState.WAITING);
-        if (waitingPair == null)
+        final IceCandidatePair triggeredPair = getTriggeredPair();
+        if (triggeredPair != null)
             {
-            final IceCandidatePair frozen = 
-                getPairInState(IceCandidatePairState.FROZEN);
-            if (frozen != null) 
-                {
-                frozen.setState(IceCandidatePairState.WAITING);
-                return frozen;
-                }
-            return null;
+            return triggeredPair;
             }
         else
             {
-            return waitingPair;
+            final IceCandidatePair waitingPair = 
+                getPairInState(IceCandidatePairState.WAITING);
+            if (waitingPair == null)
+                {
+                final IceCandidatePair frozen = 
+                    getPairInState(IceCandidatePairState.FROZEN);
+                if (frozen != null) 
+                    {
+                    frozen.setState(IceCandidatePairState.WAITING);
+                    return frozen;
+                    }
+                return null;
+                }
+            else
+                {
+                return waitingPair;
+                }
             }
+        }
+
+    private IceCandidatePair getTriggeredPair()
+        {
+        return this.m_checkList.getTriggeredPair();
         }
 
     /**
@@ -132,11 +160,14 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         {
         // The pairs are already ordered.
         final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
-        for (final IceCandidatePair pair : pairs)
+        synchronized (pairs)
             {
-            if (pair.getState() == state)
+            for (final IceCandidatePair pair : pairs)
                 {
-                return pair;
+                if (pair.getState() == state)
+                    {
+                    return pair;
+                    }
                 }
             }
             

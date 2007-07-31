@@ -32,12 +32,8 @@ public enum IceTransportProtocol
      * UDP protocol.
      */
     UDP("udp"), 
-    
-    /**
-     * An unknown protocol.  We only include this so we can ideally continue
-     * on with our parsing, if desired.
-     */
-    UNKNOWN("unknown");
+
+    ;
     
     private final String m_name;
 

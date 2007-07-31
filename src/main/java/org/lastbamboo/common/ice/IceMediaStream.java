@@ -18,18 +18,36 @@ public interface IceMediaStream
 
     void connect();
 
-    /**
-     * Whether or not this side is controlling the stream.
-     * @return <code>true</code> if this side controls the stream, otherwise
-     * <code>false</code>.
-     */
-    boolean isControlling();
-
     IceCandidate getLocalCandidate(InetSocketAddress localAddress);
 
     void addLocalCandidate(IceCandidate localCandidate);
     
     IceCandidatePair getPair(InetSocketAddress localAddress, 
         InetSocketAddress remoteAddress);
+
+    /**
+     * Called when connectivity checks have created a new valid pair.  
+     * 
+     * @param validPair The new valid pair.
+     * @param generatingPair The pair that generated the valid pair.
+     * @param useCandidate Whether or not the Binding Request for the check
+     * included the USE CANDIDATE attribute.
+     */
+    void onValidPair(IceCandidatePair validPair, 
+        IceCandidatePair generatingPair, boolean useCandidate);
+
+    /**
+     * Adds a pair to the triggered check queue.
+     * 
+     * @param pair The pair to add.
+     */
+    void addTriggeredCheck(IceCandidatePair pair);
+
+    /**
+     * Recomputes the priorities of pairs in checklists.  This can happen,
+     * for example, if our role has changed from controlling to controlled or
+     * vice versa.
+     */
+    void recomputePairPriorities();
 
     }

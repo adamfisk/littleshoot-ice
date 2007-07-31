@@ -51,7 +51,7 @@ public class IceTcpRelayPassiveCandidate extends AbstractIceCandidate
      * @param componentId The component ID.
      */
     public IceTcpRelayPassiveCandidate(final InetSocketAddress socketAddress,
-        final int foundation, final InetAddress relatedAddress, 
+        final String foundation, final InetAddress relatedAddress, 
         final int relatedPort, final boolean controlling, final long priority,
         final int componentId)
         {

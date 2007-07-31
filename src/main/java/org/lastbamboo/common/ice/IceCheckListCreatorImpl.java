@@ -60,7 +60,8 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         final List<IceCandidatePair> pruned = prunePairs(convertedPairs);
         LOG.debug(pruned.size()+" after pruned");
         final Collection<IceCandidatePair> sorted = sortPairs(pruned);
-        return new IceCheckListImpl(sorted);
+        final List<IceCandidatePair> triggered = createPairsDataStructure();
+        return new IceCheckListImpl(sorted, triggered);
         }
 
     private Collection<IceCandidatePair> sortPairs(
@@ -106,23 +107,22 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         final IceCandidate remoteCandidate = pair.getRemoteCandidate();
         final IceCandidate localCandidate = pair.getLocalCandidate();
         
-        // We have to convert all local UDP server reflexice candidates to
+        // We have to convert all local UDP server reflexive candidates to
         // their base and we have to ignore all TCP passive candidates.
         final IceCandidateVisitor<IceCandidatePair> visitor =
             new IceCandidateVisitor<IceCandidatePair>()
             {
+            public void visitCandidates(Collection<IceCandidate> candidates)
+                {
+                // Not used here.
+                }
+            
             public IceCandidatePair visitUdpServerReflexiveCandidate(
                 final IceUdpServerReflexiveCandidate candidate)
                 {
                 final IceCandidate base = candidate.getBaseCandidate();
                 return new UdpIceCandidatePair(base, remoteCandidate, 
                     pair.getPriority());
-                }
-
-            public void visitCandidates(Collection<IceCandidate> candidates)
-                {
-                // TODO Auto-generated method stub
-                
                 }
 
             public IceCandidatePair visitTcpActiveCandidate(
@@ -227,6 +227,7 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
     private boolean shouldPair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
+        // This is specified in ICE section 5.7.1
         return (
             (localCandidate.getComponentId() == 
             remoteCandidate.getComponentId()) &&
@@ -272,9 +273,6 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
                 return remoteTransport == IceTransportProtocol.TCP_PASS;
             case TCP_PASS:
                 return remoteTransport == IceTransportProtocol.TCP_ACT;
-            case UNKNOWN:
-                LOG.warn("Found unknown local transport!!");
-                return false;
             }
         return false;
         }

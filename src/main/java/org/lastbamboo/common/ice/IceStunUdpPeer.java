@@ -38,8 +38,10 @@ public class IceStunUdpPeer implements StunClient, StunServer
     
     /**
      * Creates a new ICE STUN UDP peer.
+     * 
+     * @param agent The ICE agent.
      */
-    public IceStunUdpPeer()
+    public IceStunUdpPeer(final IceAgent agent)
         {
         
         final StunTransactionTracker tracker = new StunTransactionTrackerImpl();
@@ -50,7 +52,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // Binding Responses, so we use a special visitor that handles only 
         // those but that handles both.
         final StunMessageVisitorFactory messageVisitorFactory =
-            new IceStunMessageVisitorFactory(tracker);
+            new IceStunMessageVisitorFactory(tracker, agent);
         
         // We generate a random port for the server. We use that as both the
         // acceptor port and the local port for the connector, as both
@@ -95,6 +97,12 @@ public class IceStunUdpPeer implements StunClient, StunServer
         {
         return this.m_stunClient.write(request, remoteAddress);
         }
+    
+    public StunMessage write(final BindingRequest request, 
+        final InetSocketAddress remoteAddress, final long rto)
+        {
+        return this.m_stunClient.write(request, remoteAddress, rto);
+        }
 
     public InetSocketAddress getBoundAddress()
         {
@@ -106,10 +114,8 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // We've already started the server for ICE.
         }
 
-    public void start(InetSocketAddress bindAddress)
+    public void start(final InetSocketAddress bindAddress)
         {
         // We've already started the server for ICE.
         }
-    
-
     }

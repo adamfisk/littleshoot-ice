@@ -4,10 +4,12 @@ import java.net.InetSocketAddress;
 
 import org.apache.commons.id.uuid.UUID;
 import org.apache.mina.common.IoSession;
+import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
-import org.lastbamboo.common.stun.stack.message.SuccessfulBindingResponse;
+import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
+import org.lastbamboo.common.stun.stack.message.turn.AllocateErrorResponse;
 import org.lastbamboo.common.stun.stack.transaction.StunClientTransaction;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.slf4j.Logger;
@@ -26,37 +28,70 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
 
     private final StunTransactionTracker m_transactionTracker;
 
+    private final IceAgent m_agent;
+
     /**
      * Creates a new message visitor for the specified session.
-     * @param tracker 
      * 
+     * @param tracker The class that keeps track of outstanding STUN 
+     * transactions.
      * @param session The session with the remote host.
+     * @param agent The top-level ICE agent.
      */
     public IceStunMessageVisitor(final StunTransactionTracker tracker, 
-        final IoSession session)
+        final IoSession session, final IceAgent agent)
         {
         m_transactionTracker = tracker;
         m_session = session;
+        m_agent = agent;
         }
 
     public Void visitBindingRequest(final BindingRequest binding)
         {
         // Just echo back the response.
         m_log.debug("Visiting Binding Request...");
-        // TODO: This should include other attributes!!
-        final InetSocketAddress address = 
-            (InetSocketAddress) m_session.getRemoteAddress();
         
-        final UUID transactionId = binding.getTransactionId();
-        final StunMessage response = 
-            new SuccessfulBindingResponse(transactionId.getRawBytes(), address);
+        // We need to check ICE controlling and controlled roles for conflicts.
+        // This implements:
+        // 7.2.1.1.  Detecting and Repairing Role Conflicts
+        final IceRoleChecker checker = new IceRoleCheckerImpl();
+        final BindingErrorResponse errorResponse = 
+            checker.checkAndRepairRoles(binding, this.m_agent);
         
-        this.m_session.write(response);
+        if (errorResponse != null)
+            {
+            // This can happen in the rare case that there's a role conflict.
+            this.m_session.write(errorResponse);
+            }
+        else
+            {
+            // TODO: This should include other attributes!!
+            final InetSocketAddress address = 
+                (InetSocketAddress) m_session.getRemoteAddress();
+            
+            final UUID transactionId = binding.getTransactionId();
+            final StunMessage response = 
+                new BindingSuccessResponse(transactionId.getRawBytes(), address);
+            
+            this.m_session.write(response);
+            }
         return null;
         }
     
-    public Void visitSuccessfulBindingResponse(
-        final SuccessfulBindingResponse response)
+    public Void visitBindingErrorResponse(final BindingErrorResponse response)
+        {
+        // This likey indicates a role-conflict.  
+        if (m_log.isDebugEnabled())
+            {
+            m_log.warn("Received binding error response: "+
+                response.getAttributes());
+            }
+        
+        return notifyTransaction(response);
+        }
+    
+    public Void visitBindingSuccessResponse(
+        final BindingSuccessResponse response)
         {
         if (m_log.isDebugEnabled())
             {
@@ -66,7 +101,7 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
         return notifyTransaction(response);
         }
     
-    private Void notifyTransaction(final SuccessfulBindingResponse response)
+    private Void notifyTransaction(final StunMessage response)
         {
         final StunClientTransaction ct = 
             this.m_transactionTracker.getClientTransaction(response);
@@ -116,5 +151,12 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
             }
         
         return true;
+        }
+
+    public Void visitAllocateErrorResponse(final AllocateErrorResponse response)
+        {
+        // TODO We need to handle this once we fully integrate STUN and TURN
+        // implementations.
+        return null;
         }
     }

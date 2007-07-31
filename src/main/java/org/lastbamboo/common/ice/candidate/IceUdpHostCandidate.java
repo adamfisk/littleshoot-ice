@@ -40,7 +40,7 @@ public class IceUdpHostCandidate extends AbstractIceCandidate
      * @param componentId The component ID.
      */
     public IceUdpHostCandidate(final InetSocketAddress socketAddress, 
-        final int foundation, final long priority, final boolean controlling,
+        final String foundation, final long priority, final boolean controlling,
         final int componentId)
         {
         super(socketAddress, foundation,
