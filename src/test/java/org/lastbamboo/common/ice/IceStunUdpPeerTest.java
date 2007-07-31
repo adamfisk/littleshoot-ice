@@ -4,11 +4,13 @@ import java.net.InetSocketAddress;
 
 import junit.framework.TestCase;
 
+import org.lastbamboo.common.ice.stubs.IceAgentStub;
+import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
-import org.lastbamboo.common.stun.stack.message.SuccessfulBindingResponse;
+import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +24,9 @@ public class IceStunUdpPeerTest extends TestCase
     
     public void testIceStunUdpPeers() throws Exception
         {
-        final IceStunUdpPeer peer1 = new IceStunUdpPeer();
-        final IceStunUdpPeer peer2 = new IceStunUdpPeer();
+        final IceAgent agent = new IceAgentStub();
+        final IceStunUdpPeer peer1 = new IceStunUdpPeer(agent);
+        final IceStunUdpPeer peer2 = new IceStunUdpPeer(agent);
         
         final InetSocketAddress address1 = peer1.getHostAddress();
         final InetSocketAddress address2 = peer2.getHostAddress();
@@ -37,10 +40,16 @@ public class IceStunUdpPeerTest extends TestCase
             {
             
             @Override
-            public InetSocketAddress visitSuccessfulBindingResponse(
-                final SuccessfulBindingResponse response)
+            public InetSocketAddress visitBindingSuccessResponse(
+                final BindingSuccessResponse response)
                 {
                 return response.getMappedAddress();
+                }
+
+            public InetSocketAddress visitBindingErrorResponse(
+                final BindingErrorResponse response)
+                {
+                return null;
                 }
             };
 

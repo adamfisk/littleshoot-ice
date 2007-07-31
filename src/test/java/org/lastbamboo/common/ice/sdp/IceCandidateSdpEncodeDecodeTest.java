@@ -87,7 +87,7 @@ public final class IceCandidateSdpEncodeDecodeTest extends TestCase
         
         // Now decode it.
         final IceCandidateSdpDecoderImpl decoder = 
-            new IceCandidateSdpDecoderImpl(new SdpFactory());
+            new IceCandidateSdpDecoderImpl();
         
         final Collection<IceCandidate> decoded = decoder.decode(sdp, false);
         assertEquals(3, decoded.size());

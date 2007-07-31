@@ -149,9 +149,8 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         
         assertEquals(numElements, st.countTokens());
         
-        // Parse the foundation.
-        assertTrue(NumberUtils.isNumber(st.nextToken()));
-        //assertEquals("1", st.nextToken());
+        // This will just be the foundation string.
+        st.nextToken();
         
         // Just parse the component ID.
         assertTrue(NumberUtils.isNumber(st.nextToken()));

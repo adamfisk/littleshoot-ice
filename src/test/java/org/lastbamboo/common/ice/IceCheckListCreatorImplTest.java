@@ -87,7 +87,7 @@ public class IceCheckListCreatorImplTest extends TestCase
         final int relatedPort = 42389;
         final InetAddress relatedAddress = NetworkUtils.getLocalHost();
         final IceCandidate c2 = 
-            new IceTcpRelayPassiveCandidate(socketAddress, 2, relatedAddress, 
+            new IceTcpRelayPassiveCandidate(socketAddress, "2", relatedAddress, 
                 relatedPort, controlling, 573L, 1);
         
         final InetSocketAddress baseCandidateAddress = 

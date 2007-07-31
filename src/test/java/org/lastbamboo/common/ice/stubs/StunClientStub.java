@@ -3,11 +3,9 @@ package org.lastbamboo.common.ice.stubs;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.SuccessfulBindingResponse;
 
 public class StunClientStub implements StunClient
     {
@@ -54,6 +52,12 @@ public class StunClientStub implements StunClient
         }
 
     public StunMessage write(BindingRequest request, InetSocketAddress remoteAddress)
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
+    public StunMessage write(BindingRequest request, InetSocketAddress remoteAddress, long rto)
         {
         // TODO Auto-generated method stub
         return null;

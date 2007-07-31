@@ -178,11 +178,11 @@ public class IceFoundationCalculatorTest extends TestCase
             int innerIndex = 0;
             for (final IceCandidate c2: candidates2)
                 {
-                final int f1 = c1.getFoundation();
-                final int f2 = c2.getFoundation();
+                final String f1 = c1.getFoundation();
+                final String f2 = c2.getFoundation();
                 assertFalse("Foundations equal: "+f1+" "+f2+"\n"+
                     "outerIndex: "+outerIndex+" innerIndex: "+innerIndex, 
-                    f1 == f2);
+                    f1.equals(f2));
                 innerIndex++;
                 }
             outerIndex++;
