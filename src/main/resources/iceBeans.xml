@@ -1,66 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
-
-    <!--
-        Creates ICE candidates from SDP data.
-    -->
-    <bean id="iceSdpDecoder"
-          class="org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl">
-        <constructor-arg><ref local="stackSdpFactory"/></constructor-arg>
-        </bean>
-
-    <!--
-        The object that creates the SIP stack SDP factory.  XXX: THIS CAN THROW
-        AN EXCEPTION, APPARENTLY, BUT THAT SHOULD NEVER HAPPEN.
-    -->
-    <bean id="stackSdpFactory"
-          class="org.lastbamboo.common.sdp.api.SdpFactory"
-          factory-method="getInstance"/>
-
-    <bean id="iceTcpPassiveServer"
-        class="org.lastbamboo.common.ice.IceTcpPassiveServerImpl">
-        </bean>
-
         
-    <!--
-        The class for generating ICE candidates.
-    -->
-    <bean id="iceCandidateGenerator"
-          class="org.lastbamboo.common.ice.IceCandidateGeneratorImpl">
+
+    <bean id="iceOfferAnswerFactory"
+        class="org.lastbamboo.common.ice.IceOfferAnswerFactory">
         <constructor-arg><ref bean="turnClient"/></constructor-arg>
         </bean>
         
-    <!--
-        The class for generating ICE offers.
-    -->
-    <bean id="iceOfferGenerator"
-          class="org.lastbamboo.common.ice.offer.IceOfferGenerator">
-        <constructor-arg><ref local="iceCandidateGenerator"/></constructor-arg>
-        </bean>
-
-    <!--
-        The class for generating ICE answers.
-    -->
-    <bean id="iceAnswerGenerator"
-          class="org.lastbamboo.common.ice.answer.IceAnswerGenerator">
-        <constructor-arg><ref local="iceCandidateGenerator"/></constructor-arg>
-        </bean>
-        
-    <!--
-        The class for processing ICE answers.
-    -->
-    <bean id="iceAnswerProcessorFactory"
-          class="org.lastbamboo.common.ice.answer.IceAnswerProcessorFactory">
-        <constructor-arg><ref local="iceSdpDecoder"/></constructor-arg>
-        </bean>
-
-    <!--
-        The factory for creating processors for ICE offers.  The offer is
-        in the form of SDP.
-    -->
-    <bean id="offerProcessorFactory"
-          class="org.lastbamboo.common.ice.offer.IceOfferProcessorFactory">
-        <constructor-arg><ref local="iceAnswerGenerator"/></constructor-arg>
-        </bean>
     </beans>
