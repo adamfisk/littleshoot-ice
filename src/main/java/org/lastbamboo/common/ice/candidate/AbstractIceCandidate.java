@@ -264,9 +264,9 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
 
     public int compareTo(final Object obj)
         {
-        final AbstractIceCandidate candidate = (AbstractIceCandidate) obj;
+        final AbstractIceCandidate other = (AbstractIceCandidate) obj;
         final Long priority1 = new Long(m_priority);
-        final Long priority2 = new Long(candidate.getPriority());
+        final Long priority2 = new Long(other.getPriority());
         final int priorityComparison = priority1.compareTo(priority2);
         if (priorityComparison != 0)
             {
@@ -276,14 +276,20 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         
         // Otherwise, the two candidates have the same priority, but we now
         // need to check the other equality attributes for consistency with
-        // equals.  We don't actually care which is first in these cases,
-        // so we just use equals.
+        // equals.  
+
+        if (!m_address.equals(other.m_address))
+            return -1;
+        if (!m_candidateType.equals(other.m_candidateType))
+            return -1;
+        if (m_controlling != other.m_controlling)
+            return -1;
+        if (!m_foundation.equals(other.m_foundation))
+            return -1;
+        if (!m_transport.equals(other.m_transport))
+            return -1;
         
-        if (this.equals(candidate))
-            {
-            return 0;
-            }
-        
-        return 1;
+        // In this case, they really are the same.
+        return 0;
         }
     }

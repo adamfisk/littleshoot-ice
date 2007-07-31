@@ -1,7 +1,6 @@
 package org.lastbamboo.common.ice;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.slf4j.Logger;
