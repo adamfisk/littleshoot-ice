@@ -34,6 +34,7 @@ public class IceRoleCheckerImpl implements IceRoleChecker
             m_log.warn("No control information.  Old ICE implementation?");
             // The agent may have implemented a previous version of ICE.
             // We have no way of detecting a role conflict if there is one.
+            return null;
             }
         
         // Resolve the conflict if we think we're the controlling agent but
