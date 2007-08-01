@@ -9,7 +9,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
 
     private final IceCandidate m_localCandidate;
     private final IceCandidate m_remoteCandidate;
-    private final long m_priority;
+    private long m_priority;
     private IceCandidatePairState m_state;
     private final String m_foundation;
     private final int m_componentId;
@@ -48,6 +48,12 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         m_state = IceCandidatePairState.FROZEN;
         m_foundation = String.valueOf(localCandidate.getFoundation()) + 
             String.valueOf(remoteCandidate.getFoundation());
+        }
+    
+    public void recomputePriority()
+        {
+        this.m_priority = calculatePriority(
+            this.m_localCandidate, this.m_remoteCandidate);
         }
 
     private static long calculatePriority(final IceCandidate localCandidate, 
@@ -141,7 +147,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean equals(final Object obj)
         {
         if (this == obj)
             return true;
@@ -165,5 +171,23 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         else if (!m_remoteCandidate.equals(other.m_remoteCandidate))
             return false;
         return true;
+        }
+    
+    public int compareTo(final Object obj)
+        {
+        final AbstractIceCandidatePair other = (AbstractIceCandidatePair) obj;
+        final Long priority1 = new Long(m_priority);
+        final Long priority2 = new Long(other.getPriority());
+        final int priorityComparison = priority1.compareTo(priority2);
+        if (priorityComparison != 0)
+            {
+            // We reverse this because we want to go from highest to lowest.
+            return -priorityComparison;
+            }
+        if (!m_localCandidate.equals(other.m_localCandidate))
+            return -1;
+        else if (!m_remoteCandidate.equals(other.m_remoteCandidate))
+            return -1;
+        return 1;
         }
     }

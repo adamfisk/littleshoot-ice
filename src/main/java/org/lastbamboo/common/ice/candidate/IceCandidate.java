@@ -112,4 +112,11 @@ public interface IceCandidate
     
     int getRelatedPort();
 
+    /**
+     * Sets the controlling status of this candidate.
+     * 
+     * @param controlling The controlling status.
+     */
+    void setControlling(boolean controlling);
+
     }

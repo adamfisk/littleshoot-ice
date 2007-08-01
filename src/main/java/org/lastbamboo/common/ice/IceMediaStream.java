@@ -47,7 +47,8 @@ public interface IceMediaStream
      * Recomputes the priorities of pairs in checklists.  This can happen,
      * for example, if our role has changed from controlling to controlled or
      * vice versa.
+     * @param controlling The current controlling status of the agent.
      */
-    void recomputePairPriorities();
+    void recomputePairPriorities(boolean controlling);
 
     }

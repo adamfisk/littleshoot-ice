@@ -5,7 +5,7 @@ package org.lastbamboo.common.ice.candidate;
 /**
  * Interface for a pair of ICE candidates.
  */
-public interface IceCandidatePair
+public interface IceCandidatePair extends Comparable
     {
 
     /**
@@ -78,4 +78,10 @@ public interface IceCandidatePair
      * pair for exchanging media.
      */
     void setNominated(boolean nominated);
+
+    /**
+     * Recomputes the priority for the pair.
+     */
+    void recomputePriority();
+
     }

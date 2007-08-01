@@ -68,9 +68,6 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates =
             new LinkedList<IceCandidate>();
 
-        // Not this class also processes server-side messages.
-        //final StunClient stunClient = new IceStunUdpPeer(this.m_iceAgent);
-        
         final InetSocketAddress serverReflexiveAddress = 
             this.m_udpStunClient.getServerReflexiveAddress();
         

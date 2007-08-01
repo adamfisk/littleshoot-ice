@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Random;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
@@ -57,11 +56,16 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
         final boolean controlling)
         {
         this.m_iceCandidateDecoder = new IceCandidateSdpDecoderImpl();
+        
+        // TODO: We need to create separate ICE STUN handlers for ***each***
+        // media stream!!!
         this.m_udpStunClient = new IceStunUdpPeer(this);
         this.m_controlling = controlling;
         this.m_tieBreaker = 
             new BigInteger(64, new Random()).toByteArray();
 
+        // TODO: This should actually create a Collection of media streams, 
+        // each of which has gathered it's own candidates!!
         final IceCandidateGatherer gatherer =
             new IceCandidateGathererImpl(tcpTurnClient, this.m_udpStunClient, 
                 controlling);
@@ -101,6 +105,17 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
         this.m_controlling = controlling;
         }
     
+    public void recomputePairPriorities()
+        {
+        synchronized (this.m_mediaStreams)
+            {
+            for (final IceMediaStream stream : this.m_mediaStreams)
+                {
+                stream.recomputePairPriorities(this.m_controlling);
+                }
+            }
+        }
+    
     public byte[] getTieBreaker()
         {
         return m_tieBreaker;
@@ -137,12 +152,15 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
         final Collection<IceCandidatePair> validPairs = 
             mediaStream.getValidPairs();
         
-        for (final IceCandidatePair pair : validPairs)
+        synchronized (validPairs)
             {
-            final Socket socket = pair.accept(this);
-            if (socket != null)
+            for (final IceCandidatePair pair : validPairs)
                 {
-                return socket;
+                final Socket socket = pair.accept(this);
+                if (socket != null)
+                    {
+                    return socket;
+                    }
                 }
             }
         
@@ -159,14 +177,6 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
         {
         // TODO: Add processing for UDP pairs.
         return null;
-        }
-
-    public void recomputePairPriorities()
-        {
-        for (final IceMediaStream stream : this.m_mediaStreams)
-            {
-            stream.recomputePairPriorities();
-            }
         }
 
     }

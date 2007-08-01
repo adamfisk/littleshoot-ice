@@ -65,13 +65,21 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
             }
         else
             {
+            // We now implement the sections of 7.2 following 7.2.1.1 since
+            // we're returning a success response.
+            
             // TODO: This should include other attributes!!
-            final InetSocketAddress address = 
+            final InetSocketAddress remoteAddress = 
                 (InetSocketAddress) m_session.getRemoteAddress();
+            
+            // Check to see if the remote address matches the address of
+            // any remote candidates we know about.  If it does not, it's a
+            // new peer reflexive address.
+            
             
             final UUID transactionId = binding.getTransactionId();
             final StunMessage response = 
-                new BindingSuccessResponse(transactionId.getRawBytes(), address);
+                new BindingSuccessResponse(transactionId.getRawBytes(), remoteAddress);
             
             this.m_session.write(response);
             }

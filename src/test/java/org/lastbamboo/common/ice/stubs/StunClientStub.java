@@ -23,7 +23,8 @@ public class StunClientStub implements StunClient
         // TODO Auto-generated constructor stub
         }
 
-    public StunClientStub(InetAddress stunServerAddress, InetSocketAddress hostAddress)
+    public StunClientStub(final InetAddress stunServerAddress, 
+        final InetSocketAddress hostAddress)
         {
         m_stunServerAddress = stunServerAddress;
         m_hostAddress = hostAddress;

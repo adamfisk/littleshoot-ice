@@ -1,7 +1,10 @@
 package org.lastbamboo.common.ice;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,10 +16,12 @@ public class IceCheckListImpl implements IceCheckList
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
-    private final Collection<IceCandidatePair> m_pairs;
+    
+    private final List<IceCandidatePair> m_triggered;
+    private final List<IceCandidatePair> m_pairs;
+
     private volatile IceCheckListState m_state;
-    private boolean m_active;
-    private final Collection<IceCandidatePair> m_triggered;
+    private volatile boolean m_active;
 
     /**
      * Creates a new check list.
@@ -25,8 +30,8 @@ public class IceCheckListImpl implements IceCheckList
      * @param triggered The triggered list.  Initially empty.  This is passed
      * in the assure consistency of data structures.
      */
-    public IceCheckListImpl(final Collection<IceCandidatePair> pairs, 
-        final Collection<IceCandidatePair> triggered)
+    public IceCheckListImpl(final List<IceCandidatePair> pairs, 
+        final List<IceCandidatePair> triggered)
         {
         m_pairs = pairs;
         m_triggered = triggered;
@@ -101,14 +106,25 @@ public class IceCheckListImpl implements IceCheckList
             }
         }
 
-    public void recomputePairPriorities()
+    public void recomputePairPriorities(final boolean controlling)
         {
-        synchronized (this.m_triggered)
+        recompute(this.m_triggered, controlling);
+        recompute(this.m_pairs, controlling);
+        }
+
+    private static void recompute(final List<IceCandidatePair> pairs, 
+        final boolean controlling)
+        {
+        synchronized (pairs)
             {
-            for (final IceCandidatePair pair : this.m_triggered)
+            for (final IceCandidatePair pair : pairs)
                 {
-                //pair.recomputePriority();
+                final IceCandidate local = pair.getLocalCandidate();
+                local.setControlling(controlling);
+                pair.recomputePriority();
                 }
+            
+            Collections.sort(pairs);
             }
         }
 

@@ -27,7 +27,7 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
 
     private final String m_foundation;
     
-    private final boolean m_controlling;
+    private boolean m_controlling;
 
     private final IceCandidate m_baseCandidate;
     
@@ -155,6 +155,11 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         m_relatedAddress = relatedAddress;
         m_relatedPort = relatedPort;
         this.m_stunClient = stunClient;
+        }
+    
+    public void setControlling(final boolean controlling)
+        {
+        this.m_controlling = controlling;
         }
 
     public IceTransportProtocol getTransport()

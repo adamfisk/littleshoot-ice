@@ -59,12 +59,12 @@ public class IceCheckListCreatorImpl implements IceCheckListCreator
         LOG.debug(convertedPairs.size()+" converted");
         final List<IceCandidatePair> pruned = prunePairs(convertedPairs);
         LOG.debug(pruned.size()+" after pruned");
-        final Collection<IceCandidatePair> sorted = sortPairs(pruned);
+        final List<IceCandidatePair> sorted = sortPairs(pruned);
         final List<IceCandidatePair> triggered = createPairsDataStructure();
         return new IceCheckListImpl(sorted, triggered);
         }
 
-    private Collection<IceCandidatePair> sortPairs(
+    private List<IceCandidatePair> sortPairs(
         final List<IceCandidatePair> pairs)
         {
         final Comparator<IceCandidatePair> comparator = 
