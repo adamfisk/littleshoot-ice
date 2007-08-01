@@ -133,7 +133,8 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
 
     private byte[] encodeCandidates()
         {
-        final IceCandidateSdpEncoder encoder = new IceCandidateSdpEncoder();
+        final IceCandidateSdpEncoder encoder = 
+            new IceCandidateSdpEncoder("message", "http");
         encoder.visitCandidates(m_localCandidates);
         return encoder.getSdp();
         }

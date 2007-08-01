@@ -80,11 +80,20 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
 
     private IceUdpServerReflexiveCandidate m_udpServerReflexiveCandidate;
 
+    private final String m_mimeContentType;
+
+    private final String m_mimeContentSubtype;
+
     /**
      * Creates a new encoder for encoder ICE candidates into SDP.
+     * @param mimeContentType 
+     * @param mimeContentSubtype 
      */
-    public IceCandidateSdpEncoder()
+    public IceCandidateSdpEncoder(final String mimeContentType, 
+        final String mimeContentSubtype)
         {
+        m_mimeContentType = mimeContentType;
+        m_mimeContentSubtype = mimeContentSubtype;
         this.m_sdpFactory = new SdpFactory();
         final InetAddress address = getAddress();
         final String addrType = 
@@ -264,8 +273,9 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         final InetSocketAddress socketAddress = candidate.getSocketAddress();
         final String protocol = candidate.getTransport().getName();
         final MediaDescription md = 
-            this.m_sdpFactory.createMediaDescription("message", 
-                socketAddress.getPort(), 1, protocol, new String[]{"http"});
+            this.m_sdpFactory.createMediaDescription(this.m_mimeContentType, 
+                socketAddress.getPort(), 1, protocol, 
+                new String[]{this.m_mimeContentSubtype});
     
         final Connection conn = this.m_sdpFactory.createConnection("IN", 
             Connection.IP4, socketAddress.getAddress().getHostAddress());
