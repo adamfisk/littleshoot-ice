@@ -1,16 +1,7 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.candidate;
 
 import java.util.Collection;
 
-import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 
 
 /**

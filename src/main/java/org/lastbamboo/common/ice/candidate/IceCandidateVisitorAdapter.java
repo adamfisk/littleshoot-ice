@@ -2,7 +2,6 @@ package org.lastbamboo.common.ice.candidate;
 
 import java.util.Collection;
 
-import org.lastbamboo.common.ice.IceCandidateVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

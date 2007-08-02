@@ -1,4 +1,4 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.candidate;
 
 import java.util.HashMap;
 import java.util.Map;

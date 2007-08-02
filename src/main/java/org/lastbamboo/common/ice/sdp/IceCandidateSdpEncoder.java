@@ -9,8 +9,8 @@ import java.util.Vector;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.ObjectUtils.Null;
-import org.lastbamboo.common.ice.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;

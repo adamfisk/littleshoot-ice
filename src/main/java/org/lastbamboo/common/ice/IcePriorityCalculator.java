@@ -1,5 +1,7 @@
 package org.lastbamboo.common.ice;
 
+import org.lastbamboo.common.ice.candidate.IceCandidateType;
+
 /**
  * Class for calculating ICE priorities.  This includes the transport 
  * preferences as discussed in draft-ietf-mmusic-ice-tcp-04.  Since this 

@@ -5,7 +5,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.apache.commons.lang.ClassUtils;
-import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.stun.client.StunClient;

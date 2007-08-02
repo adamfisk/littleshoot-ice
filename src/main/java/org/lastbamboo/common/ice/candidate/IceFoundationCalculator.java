@@ -2,7 +2,6 @@ package org.lastbamboo.common.ice.candidate;
 
 import java.net.InetAddress;
 
-import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 
 /**

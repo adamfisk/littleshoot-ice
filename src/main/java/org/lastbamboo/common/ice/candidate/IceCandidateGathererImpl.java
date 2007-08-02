@@ -1,4 +1,4 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.candidate;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -6,12 +6,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
+import org.lastbamboo.common.ice.IceStunUdpPeer;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.ShootConstants;
@@ -60,6 +55,9 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             createUdpCandidates();
         
         candidates.addAll(udpCandidates);
+        
+        // We now need to eliminate redundant candidates, as specified in
+        // 4.1.1.3. Eliminating Redundant Candidates.
         return candidates; 
         }
     

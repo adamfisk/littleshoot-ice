@@ -3,8 +3,6 @@ package org.lastbamboo.common.ice.candidate;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import org.lastbamboo.common.ice.IceCandidateType;
-import org.lastbamboo.common.ice.IceCandidateVisitor;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.stun.client.StunClient;
 

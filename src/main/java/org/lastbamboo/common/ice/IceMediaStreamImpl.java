@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.math.RandomUtils;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
+import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
