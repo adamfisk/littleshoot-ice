@@ -4,7 +4,6 @@ import java.net.InetSocketAddress;
 import java.util.Queue;
 import java.util.concurrent.PriorityBlockingQueue;
 
-import org.lastbamboo.common.ice.IceCandidateComparator;
 
 import junit.framework.TestCase;
 

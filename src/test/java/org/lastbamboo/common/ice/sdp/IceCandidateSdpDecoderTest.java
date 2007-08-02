@@ -8,11 +8,11 @@ import java.util.TreeSet;
 
 import junit.framework.TestCase;
 
-import org.lastbamboo.common.ice.IceCandidateType;
-import org.lastbamboo.common.ice.IceCandidateVisitor;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceCandidateType;
+import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;

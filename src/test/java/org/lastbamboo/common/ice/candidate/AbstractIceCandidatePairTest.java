@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.lastbamboo.common.ice.stubs.StunClientStub;
-
 import junit.framework.TestCase;
+
+import org.lastbamboo.common.ice.stubs.StunClientStub;
 
 /**
  * Test for ICE candidate pairs.

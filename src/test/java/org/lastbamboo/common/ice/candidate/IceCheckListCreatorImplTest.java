@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IceCheckList;
 import org.lastbamboo.common.ice.IceCheckListCreator;
 import org.lastbamboo.common.ice.IceCheckListCreatorImpl;
