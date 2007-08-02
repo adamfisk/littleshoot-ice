@@ -2,22 +2,18 @@ package org.lastbamboo.common.ice.candidate;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import junit.framework.TestCase;
 
 import org.lastbamboo.common.ice.IceCheckList;
 import org.lastbamboo.common.ice.IceCheckListCreator;
 import org.lastbamboo.common.ice.IceCheckListCreatorImpl;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.util.NetworkUtils;
-
-import junit.framework.TestCase;
 
 /**
  * Test for check list creation.
@@ -97,9 +93,10 @@ public class IceCheckListCreatorImplTest extends TestCase
                 controlling, 1); 
         candidates.add(udpHost);
         
-        final StunClient stunClient = new TestStunClient(local);
+        final InetAddress stunServerAddress = 
+            InetAddress.getByName("35.52.3.53");
         final IceCandidate udpServerReflexive = 
-            new IceUdpServerReflexiveCandidate(srvRfl, udpHost, stunClient, 
+            new IceUdpServerReflexiveCandidate(srvRfl, udpHost, stunServerAddress, 
                 controlling);
         candidates.add(udpServerReflexive);
         
@@ -110,64 +107,13 @@ public class IceCheckListCreatorImplTest extends TestCase
             new IceTcpHostPassiveCandidate(srvRfl, controlling);
         
         final IceCandidate tcpRelayPassiveCandidate =
-            new IceTcpRelayPassiveCandidate(srvRfl, stunClient, 
+            new IceTcpRelayPassiveCandidate(srvRfl, stunServerAddress, 
                 InetAddress.getByName("32.43.87.6"), 7429, controlling);
         
         candidates.add(tcpActiveCandidate);
         candidates.add(tcpHostPassiveCandidate);
         candidates.add(tcpRelayPassiveCandidate);
         return candidates;
-        }
-    
-    private static final class TestStunClient implements StunClient
-        {
-
-        private final InetSocketAddress m_host;
-
-        private TestStunClient(InetSocketAddress host)
-            {
-            m_host = host;
-            }
-
-        public InetSocketAddress getHostAddress()
-            {
-            return this.m_host;
-            }
-
-        public InetSocketAddress getRelayAddress()
-            {
-            return new InetSocketAddress("43.52.3.53", 4729);
-            }
-
-        public InetSocketAddress getServerReflexiveAddress()
-            {
-            return new InetSocketAddress("88.52.3.53", 4729);
-            }
-
-        public InetAddress getStunServerAddress()
-            {
-            try
-                {
-                return InetAddress.getByName("35.52.3.53");
-                }
-            catch (UnknownHostException e)
-                {
-                return null;
-                }
-            }
-
-        public StunMessage write(BindingRequest request, InetSocketAddress remoteAddress)
-            {
-            // TODO Auto-generated method stub
-            return null;
-            }
-
-        public StunMessage write(BindingRequest request, InetSocketAddress remoteAddress, long rto)
-            {
-            // TODO Auto-generated method stub
-            return null;
-            }
-        
         }
 
     }

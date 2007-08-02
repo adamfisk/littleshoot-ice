@@ -21,13 +21,12 @@ import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
-import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
-import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
@@ -137,7 +136,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             // We can't close the STUN "client" here because we're also a 
             // server and have to always be ready to receive incoming
             // server-side messages.
-            final StunClient client = candidate.getStunClient();
+            //final StunClient client = candidate.getStunClient();
             
             // Now send a BindingRequest with PRIORITY, USE-CANDIDATE, 
             // ICE-CONTROLLING etc.
@@ -181,7 +180,12 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             // TODO: Add CREDENTIALS attribute.
             final BindingRequest request = new BindingRequest(attributes);
             
-            final StunMessage response = client.write(request, remoteAddress);
+            final IceStunConnectivityChecker checker =
+                this.m_pair.getConnectivityChecker();
+            
+            // TODO: Obtain RTO properly.
+            final long rto = 20L;
+            final StunMessage response = checker.write(request, rto);
             
             final StunMessageVisitor<IceCandidate> visitor = 
                 new StunMessageVisitorAdapter<IceCandidate>()
@@ -217,10 +221,10 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                         // from the pair, i.e. the candidate we're visiting.
                         
                         // We use the PRIORITY from the Binding Request, as
-                        // specified in section 7.1.2.2.2.
+                        // specified in section 7.1.2.2.1.
                         final IceCandidate prc = 
                             new IceUdpPeerReflexiveCandidate(mappedAddress, 
-                                candidate, client, m_iceAgent.isControlling(), 
+                                candidate, m_iceAgent.isControlling(), 
                                 priority);
                         m_mediaStream.addLocalCandidate(prc);
                         return prc;

@@ -1,4 +1,4 @@
-package org.lastbamboo.common.ice.candidate;
+package org.lastbamboo.common.ice;
 
 import java.net.InetSocketAddress;
 
@@ -10,7 +10,6 @@ import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
-import org.lastbamboo.common.ice.IceStunConnectivityChecker;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.decoder.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;

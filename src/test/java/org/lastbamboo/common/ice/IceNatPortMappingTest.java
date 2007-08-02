@@ -1,6 +1,7 @@
 package org.lastbamboo.common.ice;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 import org.lastbamboo.common.stun.client.UdpStunClient;
 
@@ -26,7 +27,9 @@ public class IceNatPortMappingTest extends TestCase
             {
             final UdpStunClient client = 
                 new UdpStunClient(InetAddress.getByName(servers[i]));
-            //System.out.println(client.getServerReflexiveAddress());
+            final InetSocketAddress srflx = client.getServerReflexiveAddress();
+            //System.out.println("Got address: "+srflx);
+            assertNotNull(srflx);
             }
         }
     }

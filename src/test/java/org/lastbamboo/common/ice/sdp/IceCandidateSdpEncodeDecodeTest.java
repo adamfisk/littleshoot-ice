@@ -15,9 +15,7 @@ import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.sdp.api.SdpFactory;
-import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.client.UdpStunClient;
+import org.lastbamboo.common.util.NetworkUtils;
 
 /**
  * Test for the class for generating SDP data.
@@ -59,20 +57,22 @@ public final class IceCandidateSdpEncodeDecodeTest extends TestCase
         
         //final StunClient stunClient = new StunClientStub(stunServerAddress);
         
-        final StunClient stunClient = new UdpStunClient();
-        //final InetSocketAddress hostSocketAddress = 
-          //  new InetSocketAddress(NetworkUtils.getLocalHost(), 3124);
+        //final StunClient stunClient = new UdpStunClient();
+        
+        final InetSocketAddress hostAddress = 
+            new InetSocketAddress(NetworkUtils.getLocalHost(), 3124);
+        
         final IceCandidate baseCandidate = 
-            new IceUdpHostCandidate(stunClient, false);
+            new IceUdpHostCandidate(hostAddress, false);
         
         final IceUdpServerReflexiveCandidate udpServerReflexiveCandidate = 
             new IceUdpServerReflexiveCandidate(sa1, baseCandidate, 
-                stunClient, false);
+                stunServerAddress, false);
         
         
         final IceTcpRelayPassiveCandidate tcpRelayPassiveCandidate =
             new IceTcpRelayPassiveCandidate(sa2,  
-                stunClient, relayRelatedAddress, relayRelatedPort, false);
+                stunServerAddress, relayRelatedAddress, relayRelatedPort, false);
 
         final IceTcpHostPassiveCandidate tcpHostPassiveCandidate =
             new IceTcpHostPassiveCandidate(sa3, false);

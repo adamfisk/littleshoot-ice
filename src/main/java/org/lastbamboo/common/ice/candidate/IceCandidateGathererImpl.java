@@ -106,16 +106,22 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final InetSocketAddress serverReflexiveAddress = 
             this.m_iceUdpStunPeer.getServerReflexiveAddress();
         
+        final InetAddress stunServerAddress = 
+            this.m_iceUdpStunPeer.getStunServerAddress();
+        
         // Add the host candidate.  Note the host candidate is also used as
         // the BASE candidate for the server reflexive candidate below.
+        final InetSocketAddress hostAddress = 
+            this.m_iceUdpStunPeer.getHostAddress();
+        final InetAddress baseAddress = hostAddress.getAddress();
         final IceUdpHostCandidate hostCandidate = 
-            new IceUdpHostCandidate(this.m_iceUdpStunPeer, this.m_controlling);
+            new IceUdpHostCandidate(hostAddress, this.m_controlling);
         candidates.add(hostCandidate);
         
         // Add the server reflexive candidate.
         final IceUdpServerReflexiveCandidate serverReflexiveCandidate =
             new IceUdpServerReflexiveCandidate(serverReflexiveAddress, 
-                hostCandidate, this.m_iceUdpStunPeer, this.m_controlling);
+                hostCandidate, stunServerAddress, this.m_controlling);
         
         candidates.add(serverReflexiveCandidate);
         return candidates;
@@ -136,11 +142,13 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final InetSocketAddress relatedAddress = 
             this.m_tcpTurnClient.getServerReflexiveAddress();
         
+        final InetAddress stunServerAddress =
+            this.m_tcpTurnClient.getStunServerAddress();
         // Add the relay candidate.  Note that for relay candidates, the base
         // candidate is the relay candidate itself. 
         final IceTcpRelayPassiveCandidate candidate = 
             new IceTcpRelayPassiveCandidate(relayAddress, 
-                this.m_tcpTurnClient, relatedAddress.getAddress(), 
+                stunServerAddress, relatedAddress.getAddress(), 
                 relatedAddress.getPort(), this.m_controlling);
         candidates.add(candidate);
         

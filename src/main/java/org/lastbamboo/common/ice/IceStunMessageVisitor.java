@@ -142,7 +142,7 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                         // We need to cancel the in-progress transaction.  
                         // This just means we won't re-submit requests and will
                         // not treat the lack of response as a failure.
-                        final StunClient client = localCandidate.getStunClient();
+                        //final StunClient client = localCandidate.getStunClient();
                         //client.cancelTransaction();
                     
                         // TODO: How the hell are we going to accomplish that??

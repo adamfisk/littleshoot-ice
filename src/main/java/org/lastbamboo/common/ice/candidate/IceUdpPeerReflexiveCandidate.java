@@ -3,7 +3,6 @@ package org.lastbamboo.common.ice.candidate;
 import java.net.InetSocketAddress;
 
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.stun.client.StunClient;
 
 /**
  * Peer reflexive ICE UDP candidate.
@@ -17,24 +16,24 @@ public class IceUdpPeerReflexiveCandidate extends AbstractIceCandidate
      * @param peerReflexiveAddress The address of the peer reflexive 
      * candidate.
      * @param baseCandidate The local base candidate.
-     * @param stunClient The ICE STUN client class.
      * @param controlling Whether or not this candidate is the controlling
      * candidate.
+     * @param priority The priority of the candidate.
      */
     public IceUdpPeerReflexiveCandidate(
         final InetSocketAddress peerReflexiveAddress,
-        final IceCandidate baseCandidate, final StunClient stunClient,
+        final IceCandidate baseCandidate, 
         final boolean controlling, final long priority)
         {
         super(peerReflexiveAddress, 
             IceFoundationCalculator.calculateFoundation(IceCandidateType.PEER_REFLEXIVE, 
                baseCandidate.getSocketAddress().getAddress(), 
-               IceTransportProtocol.UDP, stunClient.getStunServerAddress()), 
+               IceTransportProtocol.UDP), 
             IceCandidateType.PEER_REFLEXIVE, 
             IceTransportProtocol.UDP, priority, controlling, 
             DEFAULT_COMPONENT_ID, baseCandidate, 
             baseCandidate.getSocketAddress().getAddress(), 
-            baseCandidate.getSocketAddress().getPort(), stunClient);
+            baseCandidate.getSocketAddress().getPort());
         }
     
     /**
@@ -55,7 +54,7 @@ public class IceUdpPeerReflexiveCandidate extends AbstractIceCandidate
         {
         super(peerReflexiveAddress, foundation, 
             IceCandidateType.PEER_REFLEXIVE, IceTransportProtocol.UDP, 
-            priority, controlling, componentId, null, null, -1, null);
+            priority, controlling, componentId, null, null, -1);
         }
 
     public <T> T accept(final IceCandidateVisitor<T> visitor)

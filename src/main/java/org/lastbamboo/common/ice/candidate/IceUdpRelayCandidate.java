@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.stun.client.StunClient;
 
 /**
  * Relay ICE UDP candidate.
@@ -17,7 +16,7 @@ public class IceUdpRelayCandidate extends AbstractIceCandidate
      * candidate for relays is the candidate itself.
      * 
      * @param relayAddress The address of the relay candidate.
-     * @param stunClient The ICE STUN client class.
+     * @param stunServerAddress The address of the STUN server.
      * @param relatedAddress The address related to this candidate.  In this
      * case, the mapped address received in the Allocate Response.
      * @param relatedPort The port related to this candidate.  In this
@@ -26,16 +25,16 @@ public class IceUdpRelayCandidate extends AbstractIceCandidate
      * candidate.
      */
     public IceUdpRelayCandidate(final InetSocketAddress relayAddress, 
-        final StunClient stunClient,
+        final InetAddress stunServerAddress,
         final InetAddress relatedAddress, final int relatedPort,
         final boolean controlling)
         {
         super(relayAddress, 
             IceFoundationCalculator.calculateFoundation(IceCandidateType.RELAYED, 
                relayAddress.getAddress(), 
-               IceTransportProtocol.UDP, stunClient.getStunServerAddress()), 
+               IceTransportProtocol.UDP, stunServerAddress), 
             IceCandidateType.RELAYED, IceTransportProtocol.UDP, controlling, 
-            null, relatedAddress, relatedPort, stunClient);
+            null, relatedAddress, relatedPort);
         }
 
     public <T> T accept(IceCandidateVisitor<T> visitor)

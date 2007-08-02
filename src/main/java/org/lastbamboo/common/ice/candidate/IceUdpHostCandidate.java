@@ -1,9 +1,9 @@
 package org.lastbamboo.common.ice.candidate;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.stun.client.StunClient;
 
 /**
  * ICE UDP candidate for the local host.
@@ -14,16 +14,15 @@ public class IceUdpHostCandidate extends AbstractIceCandidate
     /**
      * Creates a new UDP ICE candidate for the local host.
      * 
-     * @param stunClient The STUN client.
+     * @param hostAddress The candidate address and port.
      * @param controlling Whether or not this candidate is the controlling
      * candidate.
      */
-    public IceUdpHostCandidate(final StunClient stunClient, 
+    public IceUdpHostCandidate(final InetSocketAddress hostAddress,
         final boolean controlling)
         {
-        super (stunClient.getHostAddress(), 
-             stunClient.getHostAddress().getAddress(), IceCandidateType.HOST, 
-             IceTransportProtocol.UDP, controlling, stunClient);
+        super (hostAddress, hostAddress.getAddress(), IceCandidateType.HOST, 
+             IceTransportProtocol.UDP, controlling);
         }
 
 
@@ -43,7 +42,7 @@ public class IceUdpHostCandidate extends AbstractIceCandidate
         {
         super(socketAddress, foundation,
             IceCandidateType.HOST, IceTransportProtocol.UDP,
-            priority, controlling, componentId, null, null, -1, null);
+            priority, controlling, componentId, null, null, -1);
         }
 
     public <T> T accept(final IceCandidateVisitor<T> visitor)

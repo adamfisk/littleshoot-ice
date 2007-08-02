@@ -7,7 +7,6 @@ import java.net.Socket;
 import org.apache.commons.lang.ClassUtils;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.stun.client.StunClient;
 
 /**
  * Class that abstracts out general attributes of all ICE session candidates.
@@ -32,7 +31,6 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
     private final IceCandidate m_baseCandidate;
     
     private final int m_componentId;
-    private final StunClient m_stunClient;
     
     private final InetAddress m_relatedAddress;
     private final int m_relatedPort;
@@ -42,34 +40,6 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
      */
     protected final static int DEFAULT_COMPONENT_ID = 1;
     
-    /**
-     * Creates a new candidate where the candidate itself is also the base
-     * candidate.
-     * 
-     * @param socketAddress The candidate address.
-     * @param type The type of candidate, such as server reflexive.
-     * @param transport The transport used, such as UDP or passive TCP.
-     * @param stunClient The address of the STUN server used to 
-     * determine the candidate address.
-     * @param relatedAddress The related address. 
-     * @param relatedPort The related port.
-     * @param controlling Whether or not this candidate is the controlling
-     * candidate.
-     */
-    public AbstractIceCandidate(final InetSocketAddress socketAddress, 
-        final IceCandidateType type, final IceTransportProtocol transport, 
-        final StunClient stunClient, final InetAddress relatedAddress, 
-        final int relatedPort, final boolean controlling)
-        {
-        this(socketAddress, 
-            IceFoundationCalculator.calculateFoundation(type, 
-                socketAddress.getAddress(), 
-                transport, stunClient.getStunServerAddress()), 
-            type, transport, 
-            IcePriorityCalculator.calculatePriority(type, transport), 
-            controlling, DEFAULT_COMPONENT_ID, 
-            null, relatedAddress, relatedPort, stunClient);
-        }
     
     /**
      * Creates a new ICE candidate.
@@ -83,15 +53,14 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
      */
     public AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final InetAddress baseAddress, final IceCandidateType type, 
-        final IceTransportProtocol transport, final boolean controlling,
-        final StunClient stunClient)
+        final IceTransportProtocol transport, final boolean controlling)
         {
         this(socketAddress, 
             IceFoundationCalculator.calculateFoundation(type, baseAddress, 
                 transport), 
             type, transport, 
             IcePriorityCalculator.calculatePriority(type, transport), controlling, 
-            DEFAULT_COMPONENT_ID, null, null, -1, stunClient);
+            DEFAULT_COMPONENT_ID, null, null, -1);
         }
  
     /**
@@ -109,12 +78,11 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         final String foundation, final IceCandidateType type, 
         final IceTransportProtocol transport, final boolean controlling,
         final IceCandidate baseCandidate, final InetAddress relatedAddress,
-        final int relatedPort, final StunClient stunClient)
+        final int relatedPort)
         {
         this(socketAddress, foundation, type, transport, 
             IcePriorityCalculator.calculatePriority(type, transport), controlling, 
-            DEFAULT_COMPONENT_ID, baseCandidate, relatedAddress, relatedPort,
-            stunClient);
+            DEFAULT_COMPONENT_ID, baseCandidate, relatedAddress, relatedPort);
         }
 
     protected AbstractIceCandidate(final InetSocketAddress socketAddress, 
@@ -122,7 +90,7 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         final IceTransportProtocol transport, final long priority,
         final boolean controlling, final int componentId,
         final IceCandidate baseCandidate, final InetAddress relatedAddress, 
-        final int relatedPort, final StunClient stunClient)
+        final int relatedPort)
         {
         if (socketAddress == null)
             {
@@ -154,7 +122,6 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         
         m_relatedAddress = relatedAddress;
         m_relatedPort = relatedPort;
-        this.m_stunClient = stunClient;
         }
     
     public void setControlling(final boolean controlling)
@@ -221,13 +188,6 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         {
         return m_relatedPort;
         }
-
-    public StunClient getStunClient()
-        {
-        return m_stunClient;
-        }
-
-
     
 
     @Override

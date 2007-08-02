@@ -104,8 +104,6 @@ public interface IceCandidate
      */
     boolean isControlling();
     
-    StunClient getStunClient();
-    
     InetAddress getRelatedAddress();
     
     int getRelatedPort();

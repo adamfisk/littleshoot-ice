@@ -2,6 +2,7 @@ package org.lastbamboo.common.ice.candidate;
 
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunConnectivityChecker;
+import org.lastbamboo.common.ice.IceUdpStunConnectivityChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

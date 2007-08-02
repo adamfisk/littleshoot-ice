@@ -21,7 +21,7 @@ public class IceTcpHostPassiveCandidate extends AbstractIceCandidate
         final boolean controlling)
         {
         super(socketAddress, socketAddress.getAddress(), IceCandidateType.HOST, 
-            IceTransportProtocol.TCP_PASS, controlling, null);
+            IceTransportProtocol.TCP_PASS, controlling);
         }
 
     /**
@@ -40,7 +40,7 @@ public class IceTcpHostPassiveCandidate extends AbstractIceCandidate
         {
         super(socketAddress, foundation,
             IceCandidateType.HOST, IceTransportProtocol.TCP_PASS,
-            priority, controlling, componentId, null, null, -1, null);
+            priority, controlling, componentId, null, null, -1);
         }
 
     public <T> T accept(final IceCandidateVisitor<T> visitor)

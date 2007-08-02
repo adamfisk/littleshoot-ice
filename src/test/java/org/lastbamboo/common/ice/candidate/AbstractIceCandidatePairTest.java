@@ -8,8 +8,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.lastbamboo.common.ice.stubs.StunClientStub;
-
 /**
  * Test for ICE candidate pairs.
  */
@@ -39,11 +37,9 @@ public class AbstractIceCandidatePairTest extends TestCase
         final InetSocketAddress udpRemoteAddress = 
             new InetSocketAddress("91.43.3.2", 3224);
         final IceCandidate udpLocal =
-            new IceUdpHostCandidate(
-                new StunClientStub(stunServerAddress, udpLocalAddress), true);
+            new IceUdpHostCandidate(udpLocalAddress, true);
         final IceCandidate udpRemote =
-            new IceUdpHostCandidate(
-                new StunClientStub(stunServerAddress, udpRemoteAddress), false);
+            new IceUdpHostCandidate(udpRemoteAddress, false);
         final UdpIceCandidatePair udpPair =
             new UdpIceCandidatePair(udpLocal, udpRemote);
 
