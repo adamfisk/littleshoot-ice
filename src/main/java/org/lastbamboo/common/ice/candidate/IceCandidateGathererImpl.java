@@ -54,18 +54,17 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         
         final Collection<IceCandidate> tcpCandidates = 
             createTcpCandidates();
+        
+        // 4.1.1.3. Eliminating Redundant Candidates.
         eliminateRedundantCandidates(tcpCandidates);
         candidates.addAll(tcpCandidates);
         
         final Collection<IceCandidate> udpCandidates =
             createUdpCandidates();
 
+        // 4.1.1.3. Eliminating Redundant Candidates.
         eliminateRedundantCandidates(udpCandidates);
         candidates.addAll(udpCandidates);
-        
-        // We now need to eliminate redundant candidates, as specified in
-        // 4.1.1.3. Eliminating Redundant Candidates.
-        
         
         return candidates; 
         }
