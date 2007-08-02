@@ -1,5 +1,7 @@
 package org.lastbamboo.common.ice.candidate;
 
+import org.lastbamboo.common.ice.IceStunConnectivityChecker;
+
 
 /**
  * Class for a pair of ICE candidates. 
@@ -14,6 +16,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final String m_foundation;
     private final int m_componentId;
     private boolean m_nominated = false;
+    private final IceStunConnectivityChecker m_connectivityChecker;
 
     /**
      * Creates a new pair.
@@ -22,10 +25,13 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * @param remoteCandidate The candidate from the remote agent.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate)
+        final IceCandidate remoteCandidate, 
+        final IceStunConnectivityChecker connectivityChecker)
         {
         this(localCandidate, remoteCandidate, 
-            calculatePriority(localCandidate, remoteCandidate));
+            IceCandidatePairPriorityCalculator.calculatePriority(
+                localCandidate, remoteCandidate),
+            connectivityChecker);
         }
 
     /**
@@ -36,7 +42,8 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * @param priority The priority of the pair.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final long priority)
+        final IceCandidate remoteCandidate, final long priority,
+        final IceStunConnectivityChecker connectivityChecker)
         {
         m_localCandidate = localCandidate;
         m_remoteCandidate = remoteCandidate;
@@ -48,43 +55,13 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         m_state = IceCandidatePairState.FROZEN;
         m_foundation = String.valueOf(localCandidate.getFoundation()) + 
             String.valueOf(remoteCandidate.getFoundation());
+        this.m_connectivityChecker = connectivityChecker;
         }
     
     public void recomputePriority()
         {
-        this.m_priority = calculatePriority(
+        this.m_priority = IceCandidatePairPriorityCalculator.calculatePriority(
             this.m_localCandidate, this.m_remoteCandidate);
-        }
-
-    private static long calculatePriority(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate)
-        {
-        // See ICE section 5.7.2. 
-        // Here's the formula for calculating pair priorities:
-        // G = the priority of the controlling candidate.
-        // D = the priority of the controlled candidate.
-        // pair priority = 2^32*MIN(G,D) + 2*MAX(G,D) + (G>D?1:0)
-        // 
-        // Below we use:
-        // pair priority = A + B + C
-        final long G;
-        final long D;
-        if (localCandidate.isControlling())
-            {
-            G = localCandidate.getPriority();
-            D = remoteCandidate.getPriority();
-            }
-        else
-            {
-            G = remoteCandidate.getPriority();
-            D = localCandidate.getPriority();
-            }
-        final long A = (long) (Math.pow(2, 32) * Math.min(G, D));
-        final long B = 2 * Math.max(G, D);
-        final int C = G > D ? 1 : 0;
-        
-        final long pairPriority = A + B + C;
-        return pairPriority;
         }
 
     public IceCandidate getLocalCandidate()
@@ -127,12 +104,17 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         this.m_nominated = nominated;
         }
     
+    public IceStunConnectivityChecker getConnectivityChecker()
+        {
+        return m_connectivityChecker;
+        }
+    
     public String toString()
         {
         return 
             "priority:   "+this.m_priority+"\n"+
-            "local:      "+this.m_localCandidate.getPriority()+"\n"+
-            "remote:     "+this.m_remoteCandidate.getPriority()+"\n"+
+            "local:      "+this.m_localCandidate+"\n"+
+            "remote:     "+this.m_remoteCandidate+"\n"+
             "foundation: "+this.m_foundation;
         }
 

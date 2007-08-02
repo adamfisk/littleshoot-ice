@@ -1,7 +1,9 @@
 package org.lastbamboo.common.ice.candidate;
 
 import org.apache.mina.common.IoSession;
-
+import org.lastbamboo.common.ice.IceStunConnectivityChecker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A UDP ICE candidate pair. 
@@ -9,6 +11,8 @@ import org.apache.mina.common.IoSession;
 public class UdpIceCandidatePair extends AbstractIceCandidatePair
     {
 
+    private final static Logger LOG = 
+        LoggerFactory.getLogger(UdpIceCandidatePair.class);
     private IoSession m_session;
 
     /**
@@ -20,7 +24,8 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
     public UdpIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
-        super(localCandidate, remoteCandidate);
+        super(localCandidate, remoteCandidate, 
+            createConnectivityChecker(localCandidate, remoteCandidate));
         }
 
     /**
@@ -35,7 +40,18 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
     public UdpIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final long priority)
         {
-        super(localCandidate, remoteCandidate, priority);
+        super(localCandidate, remoteCandidate, priority, 
+            createConnectivityChecker(localCandidate, remoteCandidate));
+        }
+    
+    private static IceStunConnectivityChecker createConnectivityChecker(
+        final IceCandidate localCandidate, final IceCandidate remoteCandidate)
+        {
+        LOG.debug("Creating ICE connectivity checker from "+
+            localCandidate+" to "+remoteCandidate);
+        return new IceUdpStunConnectivityChecker(
+            localCandidate.getSocketAddress(), 
+            remoteCandidate.getSocketAddress());
         }
     
     public void setIoSession(final IoSession session)
@@ -52,5 +68,4 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
         {
         return visitor.visitUdpIceCandidatePair(this);
         }
-
     }

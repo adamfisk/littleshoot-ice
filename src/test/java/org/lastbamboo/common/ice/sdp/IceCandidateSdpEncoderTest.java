@@ -49,7 +49,8 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         final org.lastbamboo.common.sdp.api.SdpFactory sdpFactory = 
             org.lastbamboo.common.sdp.api.SdpFactory.getInstance();
         
-        final IceCandidateSdpEncoder encoder = new IceCandidateSdpEncoder();
+        final IceCandidateSdpEncoder encoder = 
+            new IceCandidateSdpEncoder("message", "http");
         
         final InetAddress stunServerAddress = 
             InetAddress.getByName("23.42.4.96");

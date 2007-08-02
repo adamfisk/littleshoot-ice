@@ -40,8 +40,10 @@ public class IceStunUdpPeer implements StunClient, StunServer
      * Creates a new ICE STUN UDP peer.
      * 
      * @param agent The ICE agent.
+     * @param iceMediaStream The media stream this ICE UDP peer is working for.
      */
-    public IceStunUdpPeer(final IceAgent agent)
+    public IceStunUdpPeer(final IceAgent agent, 
+        final IceMediaStream iceMediaStream)
         {
         
         final StunTransactionTracker tracker = new StunTransactionTrackerImpl();
@@ -52,7 +54,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // Binding Responses, so we use a special visitor that handles only 
         // those but that handles both.
         final StunMessageVisitorFactory messageVisitorFactory =
-            new IceStunMessageVisitorFactory(tracker, agent);
+            new IceStunMessageVisitorFactory(tracker, agent, iceMediaStream);
         
         // We generate a random port for the server. We use that as both the
         // acceptor port and the local port for the connector, as both

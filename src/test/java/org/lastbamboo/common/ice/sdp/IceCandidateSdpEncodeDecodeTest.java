@@ -39,7 +39,8 @@ public final class IceCandidateSdpEncodeDecodeTest extends TestCase
     public void testDecode() throws Exception
         {
         // First encode everything so we test both sides.
-        final IceCandidateSdpEncoder encoder = new IceCandidateSdpEncoder();
+        final IceCandidateSdpEncoder encoder = 
+            new IceCandidateSdpEncoder("message", "http");
         
         final InetAddress stunServerAddress = 
             InetAddress.getByName("23.42.4.96");

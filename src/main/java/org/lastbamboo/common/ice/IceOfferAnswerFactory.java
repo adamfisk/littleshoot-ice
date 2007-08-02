@@ -11,6 +11,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
     {
 
     private final StunClient m_tcpTurnClient;
+    private final IceMediaStreamFactory m_mediaStreamFactory;
 
     /**
      * Creates a new ICE agent factory.  The factory maintains a reference to
@@ -19,18 +20,22 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
      * 
      * @param tcpTurnClient The persistent TCP TURN client.
      */
-    public IceOfferAnswerFactory(final StunClient tcpTurnClient)
+    public IceOfferAnswerFactory(final StunClient tcpTurnClient,
+        final IceMediaStreamFactory mediaStreamFactory)
         {
         m_tcpTurnClient = tcpTurnClient;
+        m_mediaStreamFactory = mediaStreamFactory;
         }
 
     public OfferAnswer createOfferer()
         {
-        return new IceAgentImpl(this.m_tcpTurnClient, true);
+        return new IceAgentImpl(this.m_tcpTurnClient, true, 
+            this.m_mediaStreamFactory);
         }
     
     public OfferAnswer createAnswerer()
         {
-        return new IceAgentImpl(this.m_tcpTurnClient, false);
+        return new IceAgentImpl(this.m_tcpTurnClient, false, 
+            this.m_mediaStreamFactory);
         }
     }

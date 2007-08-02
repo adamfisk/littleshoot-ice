@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import org.apache.commons.lang.ClassUtils;
 import org.lastbamboo.common.ice.IceCandidateType;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
@@ -227,17 +228,20 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         return m_stunClient;
         }
 
+
+    
+
     @Override
     public int hashCode()
         {
         final int PRIME = 31;
         int result = 1;
-        result = PRIME * result +  m_address.hashCode();
-        result = PRIME * result + (m_candidateType.hashCode());
-        result = PRIME * result + (m_controlling ? 1231 : 1237);
-        result = PRIME * result + m_foundation.hashCode();
+        result = PRIME * result + ((m_address == null) ? 0 : m_address.hashCode());
+        result = PRIME * result + ((m_candidateType == null) ? 0 : m_candidateType.hashCode());
+        result = PRIME * result + m_componentId;
+        result = PRIME * result + ((m_foundation == null) ? 0 : m_foundation.hashCode());
         result = PRIME * result + (int) (m_priority ^ (m_priority >>> 32));
-        result = PRIME * result + (m_transport.hashCode());
+        result = PRIME * result + ((m_transport == null) ? 0 : m_transport.hashCode());
         return result;
         }
 
@@ -251,21 +255,40 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         if (getClass() != obj.getClass())
             return false;
         final AbstractIceCandidate other = (AbstractIceCandidate) obj;
-        if (!m_address.equals(other.m_address))
+        if (m_address == null)
+            {
+            if (other.m_address != null)
+                return false;
+            }
+        else if (!m_address.equals(other.m_address))
             return false;
-        if (!m_candidateType.equals(other.m_candidateType))
+        if (m_candidateType == null)
+            {
+            if (other.m_candidateType != null)
+                return false;
+            }
+        else if (!m_candidateType.equals(other.m_candidateType))
             return false;
-        if (m_controlling != other.m_controlling)
+        if (m_componentId != other.m_componentId)
             return false;
-        if (!m_foundation.equals(other.m_foundation))
+        if (m_foundation == null)
+            {
+            if (other.m_foundation != null)
+                return false;
+            }
+        else if (!m_foundation.equals(other.m_foundation))
             return false;
         if (m_priority != other.m_priority)
             return false;
-        if (!m_transport.equals(other.m_transport))
+        if (m_transport == null)
+            {
+            if (other.m_transport != null)
+                return false;
+            }
+        else if (!m_transport.equals(other.m_transport))
             return false;
         return true;
         }
-    
 
     public int compareTo(final Object obj)
         {
@@ -287,14 +310,26 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
             return -1;
         if (!m_candidateType.equals(other.m_candidateType))
             return -1;
-        if (m_controlling != other.m_controlling)
+        if (m_foundation != other.m_foundation)
             return -1;
-        if (!m_foundation.equals(other.m_foundation))
+        if (m_controlling != other.m_controlling)
             return -1;
         if (!m_transport.equals(other.m_transport))
             return -1;
         
         // In this case, they really are the same.
         return 0;
+        }
+    
+    @Override
+    public String toString()
+        {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(ClassUtils.getShortClassName(getClass()));
+        sb.append(" ");
+        sb.append(m_controlling);
+        sb.append(" ");
+        sb.append(m_address);
+        return sb.toString();
         }
     }

@@ -366,13 +366,13 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                 else
                     {
                     // It's not a triggered check, so use the original 
-                    // candidate's priority.
-                    //remotePriority = remoteCandidate.getPriority();
+                    // candidate's priority, or, i.e., use the original 
+                    // candidate.
                     newRemoteCandidate = remoteCandidate;
                     }
                 
-                pairToAdd = 
-                    new UdpIceCandidatePair(newLocalCandidate, newRemoteCandidate);
+                pairToAdd = new UdpIceCandidatePair(newLocalCandidate, 
+                    newRemoteCandidate);
                 }
             }
         

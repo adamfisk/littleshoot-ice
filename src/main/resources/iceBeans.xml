@@ -1,11 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
+     
+    <!-- 
+        This is the message/http ICE media stream.
+     -->    
+    <bean id="iceMediaStreamDesc"
+        class="org.lastbamboo.common.ice.IceMediaStreamDesc">
+        <constructor-arg><value>true</value></constructor-arg>
+        <constructor-arg><value>true</value></constructor-arg>
+        <constructor-arg><value>message</value></constructor-arg>
+        <constructor-arg><value>http</value></constructor-arg>
+        <constructor-arg><value>1</value></constructor-arg>
+        </bean>   
         
+    <!-- 
+        The factory for creating media streams.
+     -->
+    <bean id="iceMediaStreamFactory"
+        class="org.lastbamboo.common.ice.IceMediaStreamFactoryImpl">
+        <constructor-arg><ref local="iceMediaStreamDesc"/></constructor-arg>
+        </bean>
 
     <bean id="iceOfferAnswerFactory"
         class="org.lastbamboo.common.ice.IceOfferAnswerFactory">
         <constructor-arg><ref bean="turnClient"/></constructor-arg>
+        <constructor-arg><ref local="iceMediaStreamFactory"/></constructor-arg>
         </bean>
         
     </beans>

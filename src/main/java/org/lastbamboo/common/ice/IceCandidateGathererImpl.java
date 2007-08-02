@@ -26,11 +26,11 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
     
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    private final StunClient m_turnClient;
+    private final StunClient m_tcpTurnClient;
 
     private final boolean m_controlling;
 
-    private final StunClient m_udpStunClient;
+    private final IceStunUdpPeer m_iceUdpStunPeer;
 
     /**
      * Creates a new class for gathering ICE candidates.
@@ -39,11 +39,11 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
      * candidates.
      */
     public IceCandidateGathererImpl(final StunClient tcpTurnClient, 
-        final StunClient udpStunClient,
+        final IceStunUdpPeer udpStunClient,
         final boolean controlling)
         {
-        this.m_turnClient = tcpTurnClient;
-        this.m_udpStunClient = udpStunClient;
+        this.m_tcpTurnClient = tcpTurnClient;
+        this.m_iceUdpStunPeer = udpStunClient;
         this.m_controlling = controlling;
         }
 
@@ -69,18 +69,21 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             new LinkedList<IceCandidate>();
 
         final InetSocketAddress serverReflexiveAddress = 
-            this.m_udpStunClient.getServerReflexiveAddress();
+            this.m_iceUdpStunPeer.getServerReflexiveAddress();
+        
+        final InetSocketAddress localAddress = 
+            this.m_iceUdpStunPeer.getHostAddress();
         
         // Add the host candidate.  Note the host candidate is also used as
         // the BASE candidate for the server reflexive candidate below.
         final IceUdpHostCandidate hostCandidate = 
-            new IceUdpHostCandidate(this.m_udpStunClient, this.m_controlling);
+            new IceUdpHostCandidate(this.m_iceUdpStunPeer, this.m_controlling);
         candidates.add(hostCandidate);
         
         // Add the server reflexive candidate.
         final IceUdpServerReflexiveCandidate serverReflexiveCandidate =
             new IceUdpServerReflexiveCandidate(serverReflexiveAddress, 
-                hostCandidate, this.m_udpStunClient, this.m_controlling);
+                hostCandidate, this.m_iceUdpStunPeer, this.m_controlling);
         
         candidates.add(serverReflexiveCandidate);
         return candidates;
@@ -91,21 +94,21 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
         final InetSocketAddress relayAddress = 
-            this.m_turnClient.getRelayAddress();
+            this.m_tcpTurnClient.getRelayAddress();
         
         final InetSocketAddress baseSocketAddress = 
-            this.m_turnClient.getHostAddress();
+            this.m_tcpTurnClient.getHostAddress();
         final InetAddress baseRelayAddress = baseSocketAddress.getAddress();
 
         // For relayed candidates, the related address is the mapped address.
         final InetSocketAddress relatedAddress = 
-            this.m_turnClient.getServerReflexiveAddress();
+            this.m_tcpTurnClient.getServerReflexiveAddress();
         
         // Add the relay candidate.  Note that for relay candidates, the base
         // candidate is the relay candidate itself. 
         final IceTcpRelayPassiveCandidate candidate = 
             new IceTcpRelayPassiveCandidate(relayAddress, 
-                this.m_turnClient, relatedAddress.getAddress(), 
+                this.m_tcpTurnClient, relatedAddress.getAddress(), 
                 relatedAddress.getPort(), this.m_controlling);
         candidates.add(candidate);
         

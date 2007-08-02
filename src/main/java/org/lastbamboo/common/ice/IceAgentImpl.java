@@ -15,7 +15,6 @@ import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
-import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +28,12 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
-    private final Collection<IceCandidate> m_localCandidates;
     private boolean m_controlling;
-    
+
+    /**
+     * TODO: This is just a placeholder for now for the most part, as we only
+     * currently support a single media stream.
+     */
     private final Collection<IceMediaStream> m_mediaStreams =
         new LinkedList<IceMediaStream>();
 
@@ -40,9 +42,11 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
      */
     private final byte[] m_tieBreaker;
 
-    private final StunClient m_udpStunClient;
+    //private final StunClient m_udpStunClient;
 
     private final IceCandidateSdpDecoder m_iceCandidateDecoder;
+
+    private final IceMediaStream m_mediaStream;
 
     /**
      * Creates a new ICE agent.
@@ -53,23 +57,18 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
      * should rarely happen.
      */
     public IceAgentImpl(final StunClient tcpTurnClient, 
-        final boolean controlling)
+        final boolean controlling, 
+        final IceMediaStreamFactory mediaStreamFactory)
         {
         this.m_iceCandidateDecoder = new IceCandidateSdpDecoderImpl();
-        
-        // TODO: We need to create separate ICE STUN handlers for ***each***
-        // media stream!!!
-        this.m_udpStunClient = new IceStunUdpPeer(this);
         this.m_controlling = controlling;
         this.m_tieBreaker = 
             new BigInteger(64, new Random()).toByteArray();
 
-        // TODO: This should actually create a Collection of media streams, 
-        // each of which has gathered it's own candidates!!
-        final IceCandidateGatherer gatherer =
-            new IceCandidateGathererImpl(tcpTurnClient, this.m_udpStunClient, 
-                controlling);
-        this.m_localCandidates = gatherer.gatherCandidates();
+        // TODO: We only currently support a single media stream!!
+        this.m_mediaStream = 
+            mediaStreamFactory.createStream(this, tcpTurnClient);
+        this.m_mediaStreams.add(this.m_mediaStream);
         }
 
     public void onValidPairsForAllComponents(final IceMediaStream mediaStream)
@@ -107,13 +106,7 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
     
     public void recomputePairPriorities()
         {
-        synchronized (this.m_mediaStreams)
-            {
-            for (final IceMediaStream stream : this.m_mediaStreams)
-                {
-                stream.recomputePairPriorities(this.m_controlling);
-                }
-            }
+        this.m_mediaStream.recomputePairPriorities(this.m_controlling);
         }
     
     public byte[] getTieBreaker()
@@ -123,35 +116,27 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
     
     public byte[] generateAnswer()
         {
-        return encodeCandidates();
+        return m_mediaStream.encodeCandidates();
         }
     
     public byte[] generateOffer()
         {
-        return encodeCandidates();
-        }
-
-    private byte[] encodeCandidates()
-        {
-        final IceCandidateSdpEncoder encoder = 
-            new IceCandidateSdpEncoder("message", "http");
-        encoder.visitCandidates(m_localCandidates);
-        return encoder.getSdp();
+        return m_mediaStream.encodeCandidates();
         }
 
     public Socket createSocket(final ByteBuffer answer) throws IOException
         {
         // TODO: We should process all possible media streams.
-        final Collection<IceCandidate> remoteCandidates = 
-            this.m_iceCandidateDecoder.decode(answer, this.m_controlling);
-        final IceMediaStream mediaStream = 
-            new IceMediaStreamImpl(this, m_localCandidates, remoteCandidates);
         
-        this.m_mediaStreams.add(mediaStream);
-        mediaStream.connect();
+        // Note we set the controlling status of remote candidates to 
+        // whatever we are not!!
+        final Collection<IceCandidate> remoteCandidates = 
+            this.m_iceCandidateDecoder.decode(answer, !this.m_controlling);
+
+        this.m_mediaStream.establishStream(remoteCandidates);
         
         final Collection<IceCandidatePair> validPairs = 
-            mediaStream.getValidPairs();
+            this.m_mediaStream.getValidPairs();
         
         synchronized (validPairs)
             {

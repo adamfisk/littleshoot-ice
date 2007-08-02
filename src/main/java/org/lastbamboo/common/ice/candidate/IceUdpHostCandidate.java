@@ -48,7 +48,7 @@ public class IceUdpHostCandidate extends AbstractIceCandidate
             priority, controlling, componentId, null, null, -1, null);
         }
 
-    public <T> T accept(IceCandidateVisitor<T> visitor)
+    public <T> T accept(final IceCandidateVisitor<T> visitor)
         {
         return visitor.visitUdpHostCandidate(this);
         }

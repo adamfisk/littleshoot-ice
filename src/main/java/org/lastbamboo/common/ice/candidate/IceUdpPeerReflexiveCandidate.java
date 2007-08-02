@@ -38,6 +38,27 @@ public class IceUdpPeerReflexiveCandidate extends AbstractIceCandidate
             baseCandidate.getSocketAddress().getAddress(), 
             baseCandidate.getSocketAddress().getPort(), stunClient);
         }
+    
+    /**
+     * Creates a new UDP ICE candidate for the server peer candidate.
+     * 
+     * @param peerReflexiveAddress The address of the peer reflexive 
+     * candidate.
+     * @param foundation The foundation.
+     * @param componentId The component ID.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
+     * @param priority The priority for the candidate.
+     */
+    public IceUdpPeerReflexiveCandidate(
+        final InetSocketAddress peerReflexiveAddress,
+        final String foundation, final int componentId,
+        final boolean controlling, final long priority)
+        {
+        super(peerReflexiveAddress, foundation, 
+            IceCandidateType.PEER_REFLEXIVE, IceTransportProtocol.UDP, 
+            priority, controlling, componentId, null, null, -1, null);
+        }
 
     public <T> T accept(final IceCandidateVisitor<T> visitor)
         {

@@ -120,7 +120,15 @@ public class IceCheckListImpl implements IceCheckList
             for (final IceCandidatePair pair : pairs)
                 {
                 final IceCandidate local = pair.getLocalCandidate();
+                final IceCandidate remote = pair.getRemoteCandidate();
                 local.setControlling(controlling);
+                
+                // Note we also set the controlling status of the remote 
+                // candidate because there's nothing in the SDP specifying the
+                // controlling status -- it's just an externally configured
+                // property based on starting roles and any role conflicts that
+                // may emerge over the course of establishing a media session.
+                remote.setControlling(!controlling);
                 pair.recomputePriority();
                 }
             
