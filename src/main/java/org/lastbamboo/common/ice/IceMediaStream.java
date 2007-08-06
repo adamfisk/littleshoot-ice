@@ -44,14 +44,15 @@ public interface IceMediaStream
         InetSocketAddress remoteAddress);
 
     /**
-     * Called when connectivity checks have created a new valid pair.  
+     * Called when connectivity checks have created a new valid pair and the
+     * media stream needs to update the states of other pairs.  
      * 
      * @param validPair The new valid pair.
      * @param generatingPair The pair that generated the valid pair.
      * @param useCandidate Whether or not the Binding Request for the check
      * included the USE CANDIDATE attribute.
      */
-    void onValidPair(IceCandidatePair validPair, 
+    void updatePairStates(IceCandidatePair validPair, 
         IceCandidatePair generatingPair, boolean useCandidate);
 
     /**

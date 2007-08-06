@@ -353,20 +353,20 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                     remoteCandidate);
                 }
             }
+        m_mediaStream.addValidPair(pairToAdd);
         
         // We now set the state of the pair that *generated* the check
         // to succeeded, as specified in ICE section:
         // 7.1.2.2.3.  Updating Pair States
         this.m_pair.setState(IceCandidatePairState.SUCCEEDED);
         
-        m_mediaStream.onValidPair(pairToAdd, this.m_pair, useCandidate);
-        
-        // See:
-        // http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2.1.5
-        if (pairToAdd.shouldNominateOnSuccess())
-            {
-            pairToAdd.nominate();
-            }
+        // 1) Tell the media stream to update pair states as a result of 
+        // a valid pair.
+        m_mediaStream.updatePairStates(pairToAdd, this.m_pair, useCandidate);
+
+        // 2) Tell the ICE agent to unfreeze check lists for other media 
+        // streams.
+        m_iceAgent.onUnfreezeCheckLists(m_mediaStream);
         return null;
         }
     

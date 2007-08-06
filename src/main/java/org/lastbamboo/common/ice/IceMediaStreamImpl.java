@@ -314,28 +314,32 @@ public class IceMediaStreamImpl implements IceMediaStream
         return null;
         }
 
-    public void onValidPair(final IceCandidatePair validPair, 
+    public void updatePairStates(final IceCandidatePair validPair, 
         final IceCandidatePair generatingPair, final boolean useCandidate)
         {
-        this.m_validPairs.add(validPair);
         
-        
-        // Now set pairs with the same foundation as the pair that 
+        // Now set FROZEN pairs with the same foundation as the pair that 
         // *generated* the check for this media stream to waiting.
         updateToWaiting(generatingPair);
+        
+        // We need to 
         
         if (this.m_iceAgent.isControlling())
             {
             if (useCandidate)
                 {
-                validPair.setNominated(true);
+                validPair.nominate();
                 }
             }
         else
             {
             // Controlled agents are handled differently.  
-            // See ICE Section 7.2.1.5.
-            // TODO: Implemented controlled agent handling.
+            // See ICE Section 7.2.1.5 at:
+            // http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2.1.5
+            if (useCandidate)
+                {
+                validPair.nominate();
+                }
             }
         
         // Update check list and timer states.  See section 7.1.2.3.
@@ -388,12 +392,14 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void addValidPair(final IceCandidatePair pair)
         {
-        // Currently just used for TCP.  Not quite what we want probably.
         this.m_validPairs.add(pair);
         }
     
     private void updateToWaiting(final IceCandidatePair successfulPair)
         {
+        // TODO: This should happen for ALL components.  We only currently
+        // support one component.  See:
+        // http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.1.2.2.3
         final Closure<IceCandidatePair> closure =
             new Closure<IceCandidatePair>()
             {
