@@ -36,6 +36,12 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
                 // We don't perform STUN checks over TCP for now.
                 return null;
                 }
+
+            public void cancelTransaction()
+                {
+                // TODO Auto-generated method stub
+                
+                }
             };
         }
     

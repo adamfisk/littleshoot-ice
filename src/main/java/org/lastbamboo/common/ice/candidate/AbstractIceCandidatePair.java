@@ -58,6 +58,11 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         this.m_connectivityChecker = connectivityChecker;
         }
     
+    public void cancelStunTransaction()
+        {
+        this.m_connectivityChecker.cancelTransaction();
+        }
+    
     public void recomputePriority()
         {
         this.m_priority = IceCandidatePairPriorityCalculator.calculatePriority(

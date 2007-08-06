@@ -15,6 +15,7 @@ import org.lastbamboo.common.stun.stack.decoder.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
+import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
@@ -38,6 +39,8 @@ public class IceUdpStunConnectivityChecker implements
     private volatile StunMessage m_response;
 
     private volatile BindingRequest m_currentRequest;
+
+    private volatile boolean m_transactionCancelled;
 
     /**
      * Creates a new ICE connectivity checker over UDP.
@@ -94,6 +97,8 @@ public class IceUdpStunConnectivityChecker implements
 
         public StunMessage visitBindingRequest(final BindingRequest request)
             {
+            // TODO: We need to send the response, presumably with 
+            // re-transmissions??
             return null;
             }
         
@@ -141,6 +146,8 @@ public class IceUdpStunConnectivityChecker implements
         // lock forever!!
         synchronized (this.m_currentRequest)
             {   
+            this.m_transactionCancelled = false;
+            
             // This method will retransmit the same request multiple times 
             // because it's being sent unreliably.  All of the requests will be 
             // identical, using the same transaction ID.
@@ -149,7 +156,9 @@ public class IceUdpStunConnectivityChecker implements
             
             long waitTime = 0L;
 
-            while (!transactionComplete() && requests < 7)
+            while (!transactionComplete() && 
+                requests < 7 && 
+                !this.m_transactionCancelled)
                 {
                 waitIfNoResponse(bindingRequest, waitTime);
                 
@@ -171,15 +180,26 @@ public class IceUdpStunConnectivityChecker implements
             // If we still don't receive a response, then the transaction 
             // has failed.  
             waitIfNoResponse(bindingRequest, 1600);
+            if (transactionComplete())
+                {
+                return this.m_response;
+                }
+            
+            if (this.m_transactionCancelled)
+                {
+                return new CanceledStunMessage();
+                }
+            else
+                {
+                m_log.warn("Did not get response!!");
+                return new NullStunMessage();
+                }
             }
-        
-        if (transactionComplete())
-            {
-            return this.m_response;
-            }
-        
-        m_log.warn("Did not get response!!");
-        return new NullStunMessage();
+        }
+    
+    public void cancelTransaction()
+        {
+        this.m_transactionCancelled = true;
         }
     
 
@@ -203,4 +223,5 @@ public class IceUdpStunConnectivityChecker implements
                 }
             }
         }
+
     }

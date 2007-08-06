@@ -429,4 +429,9 @@ public class IceMediaStreamImpl implements IceMediaStream
         this.m_checkList.recomputePairPriorities(controlling);
         }
 
+    public void addPair(final IceCandidatePair pair)
+        {
+        this.m_checkList.addPair(pair);
+        }
+
     }

@@ -136,4 +136,13 @@ public class IceCheckListImpl implements IceCheckList
             }
         }
 
+    public void addPair(final IceCandidatePair pair)
+        {
+        synchronized (this.m_pairs)
+            {
+            this.m_pairs.add(pair);
+            Collections.sort(this.m_pairs);
+            }
+        }
+
     }

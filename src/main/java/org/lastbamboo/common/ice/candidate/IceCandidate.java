@@ -115,4 +115,11 @@ public interface IceCandidate
      */
     void setControlling(boolean controlling);
 
+    /**
+     * Sets the priority of the candidate.
+     * 
+     * @param priority The priority of the candidate.
+     */
+    void setPriority(long priority);
+
     }

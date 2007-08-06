@@ -3,6 +3,7 @@ package org.lastbamboo.common.ice.candidate;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 
 /**
@@ -33,7 +34,11 @@ public class IceUdpServerReflexiveCandidate extends AbstractIceCandidate
                 baseCandidate.getSocketAddress().getAddress(), 
                 IceTransportProtocol.UDP, stunServerAddress), 
             IceCandidateType.SERVER_REFLEXIVE, 
-            IceTransportProtocol.UDP, controlling, baseCandidate, 
+            IceTransportProtocol.UDP, 
+            IcePriorityCalculator.calculatePriority(
+                IceCandidateType.SERVER_REFLEXIVE, 
+                IceTransportProtocol.UDP), controlling, 
+            DEFAULT_COMPONENT_ID, baseCandidate, 
             baseCandidate.getSocketAddress().getAddress(), 
             baseCandidate.getSocketAddress().getPort());
         }

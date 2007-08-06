@@ -110,5 +110,12 @@ public interface IceMediaStream
      * @return The media stream encoded in SDP.
      */
     byte[] encodeCandidates();
+
+    /**
+     * Adds the specified ICE candidate pair to the check list.
+     * 
+     * @param pair The pair to add.
+     */
+    void addPair(IceCandidatePair pair);
     
     }

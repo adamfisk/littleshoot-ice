@@ -92,4 +92,10 @@ public class IceMediaStreamImplStub implements IceMediaStream
 
         }
 
+    public void addPair(IceCandidatePair pair)
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
     }

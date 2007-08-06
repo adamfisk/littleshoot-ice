@@ -8,12 +8,11 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
-import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
-import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.turn.AllocateErrorResponse;
 import org.lastbamboo.common.stun.stack.transaction.StunClientTransaction;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
@@ -130,6 +129,8 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                 this.m_iceMediaStream.getPair(localAddress, remoteAddress);
             if (existingPair != null)
                 {
+                // This is the case where the new pair is already on the 
+                // check list.  See ICE section 7.2.1.4. Triggered Checks
                 final IceCandidatePairState state = existingPair.getState();
                 switch (state)
                     {
@@ -142,10 +143,9 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                         // We need to cancel the in-progress transaction.  
                         // This just means we won't re-submit requests and will
                         // not treat the lack of response as a failure.
-                        //final StunClient client = localCandidate.getStunClient();
-                        //client.cancelTransaction();
+                        existingPair.cancelStunTransaction();
                     
-                        // TODO: How the hell are we going to accomplish that??
+                        // Add the pair to the existing check queue.
                         existingPair.setState(IceCandidatePairState.WAITING);
                         this.m_iceMediaStream.addTriggeredCheck(existingPair);
                         break;
@@ -161,9 +161,25 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
             else
                 {
                 
-                // TODO: Perform processing of new pairs.
+                // Continue with the rest of ICE section 7.2.1.4, 
+                // "Triggered Checks"
+                
+                // TODO: The remote candidate needs a username fragement and
+                // password.  We don't implement this yet.  This is the 
+                // description of what we need to do:
+                
+                // "The username fragment for the remote candidate is equal to 
+                // the part after the colon of the USERNAME in the Binding 
+                // Request that was just received.  Using that username 
+                // fragment, the agent can check the SDP messages received 
+                // from its peer (there may be more than one in cases of 
+                // forking), and find this username fragment.  The
+                // corresponding password is then selected."
                 final IceCandidatePair pair = 
                     new UdpIceCandidatePair(localCandidate, remoteCandidate);
+                pair.setState(IceCandidatePairState.WAITING);
+                this.m_iceMediaStream.addPair(pair);
+                this.m_iceMediaStream.addTriggeredCheck(pair);
                 }
             
             }

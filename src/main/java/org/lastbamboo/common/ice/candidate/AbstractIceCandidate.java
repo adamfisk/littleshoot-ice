@@ -22,7 +22,7 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
 
     private final IceCandidateType m_candidateType;
     
-    private final long m_priority;
+    private long m_priority;
 
     private final String m_foundation;
     
@@ -62,28 +62,6 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
             IcePriorityCalculator.calculatePriority(type, transport), controlling, 
             DEFAULT_COMPONENT_ID, null, null, -1);
         }
- 
-    /**
-     * Creates a new ICE candidate.
-     * 
-     * @param socketAddress The candidate address and port.
-     * @param foundation The foundation.
-     * @param type The type of candidate.
-     * @param transport The transport protocol.
-     * @param controlling Whether or not this candidate is the controlling
-     * candidate.
-     * @param baseCandidate The base candidate this candidate was formed from.
-     */
-    public AbstractIceCandidate(final InetSocketAddress socketAddress, 
-        final String foundation, final IceCandidateType type, 
-        final IceTransportProtocol transport, final boolean controlling,
-        final IceCandidate baseCandidate, final InetAddress relatedAddress,
-        final int relatedPort)
-        {
-        this(socketAddress, foundation, type, transport, 
-            IcePriorityCalculator.calculatePriority(type, transport), controlling, 
-            DEFAULT_COMPONENT_ID, baseCandidate, relatedAddress, relatedPort);
-        }
 
     protected AbstractIceCandidate(final InetSocketAddress socketAddress, 
         final String foundation, final IceCandidateType type, 
@@ -122,6 +100,11 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         
         m_relatedAddress = relatedAddress;
         m_relatedPort = relatedPort;
+        }
+    
+    public void setPriority(final long priority)
+        {
+        this.m_priority = priority;
         }
     
     public void setControlling(final boolean controlling)

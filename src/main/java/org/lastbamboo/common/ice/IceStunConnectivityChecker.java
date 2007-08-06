@@ -19,4 +19,15 @@ public interface IceStunConnectivityChecker
      * @return The response message.
      */
     StunMessage write(BindingRequest request, long rto);
+
+    /**
+     * Cancels the existing STUN transaction.  The behavior for this is 
+     * described in ICE section 7.2.1.4. on triggered checks.  From that 
+     * section, cancellation:<p> 
+     * 
+     * "means that the agent will not retransmit the 
+     * request, will not treat the lack of response to be a failure, but will 
+     * wait the duration of the transaction timeout for a response."
+     */
+    void cancelTransaction();
     }

@@ -31,7 +31,6 @@ import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
-import org.lastbamboo.common.stun.stack.message.attributes.ice.IceUseCandidateAttribute;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,19 +127,13 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             final IceUdpHostCandidate candidate)
             {
             m_log.debug("Checking UDP host candidate...");
+            
+            // See ICE section 7 "Performing Connectivity Checks".
             final IceCandidate remoteCandidate = 
                 this.m_pair.getRemoteCandidate();
-            final InetSocketAddress remoteAddress = 
-                remoteCandidate.getSocketAddress();
-            
-            // We can't close the STUN "client" here because we're also a 
-            // server and have to always be ready to receive incoming
-            // server-side messages.
-            //final StunClient client = candidate.getStunClient();
             
             // Now send a BindingRequest with PRIORITY, USE-CANDIDATE, 
             // ICE-CONTROLLING etc.
-            
             final Collection<StunAttribute> attributes = 
                 new LinkedList<StunAttribute>();
             
@@ -164,8 +157,8 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             if (isControlling)
                 {
                 controlling = new IceControllingAttribute(tieBreaker);
-                // We use aggressive nomination.
-                attributes.add(new IceUseCandidateAttribute());
+                // TODO: Use aggressive nomination?
+                //attributes.add(new IceUseCandidateAttribute());
                 hasUseCandidate = true;
                 }
             else
@@ -257,7 +250,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                         m_iceAgent.setControlling(false);
                         }
                     
-                    // As stated in ICE 17:
+                    // As stated in ICE 17 section 7.1.2.1. Failure Cases:
                     // "the agent MUST enqueue the candidate pair whose check
                     // generated the 487 into the triggered check queue.  The 
                     // state of that pair is set to Waiting."
@@ -272,6 +265,8 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                     
                     return null;
                     }
+                
+                
                 };
                 
             final IceCandidate newLocalCandidate = response.accept(visitor);
@@ -284,7 +279,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             else
                 {
                 return processSuccess(newLocalCandidate, remoteCandidate, 
-                    hasUseCandidate);
+                    hasUseCandidate, priority);
                 }
             
             }
@@ -296,27 +291,23 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             return null;
             }
     
-        public IoSession visitUdpRelayCandidate(IceUdpRelayCandidate candidate)
+        public IoSession visitUdpRelayCandidate(
+            final IceUdpRelayCandidate candidate)
             {
             // TODO Auto-generated method stub
             return null;
             }
     
-        public IoSession visitUdpServerReflexiveCandidate(IceUdpServerReflexiveCandidate candidate)
+        public IoSession visitUdpServerReflexiveCandidate(
+            final IceUdpServerReflexiveCandidate candidate)
             {
             return null;
             }
         }
     
-    private boolean isTriggeredCheck(final InetSocketAddress remoteAddress)
-        {
-        // TODO We don't currently deal with the triggered check case.
-        // Implement this whenever we add triggered check handling!!
-        return false;
-        }
-    
-    private IoSession processSuccess(IceCandidate newLocalCandidate, 
-        final IceCandidate remoteCandidate, final boolean useCandidate)
+    private IoSession processSuccess(final IceCandidate newLocalCandidate, 
+        final IceCandidate remoteCandidate, final boolean useCandidate, 
+        final long bindingRequestPriority)
         {
         final InetSocketAddress remoteAddress = 
             remoteCandidate.getSocketAddress();
@@ -352,19 +343,15 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                 // remote candidate.  In that case, the priority is taken as the
                 // value of the PRIORITY attribute in the Binding Request which
                 // triggered the check that just completed.
-                //final long remotePriority;
-                final IceCandidate newRemoteCandidate;
                 if (isTriggeredCheck(remoteAddress))
                     {
                     // It's a triggered check, so we use the priority
                     // from the Binding Request we just sent.
                     
-                    // TODO: We don't currently support triggered checks.
-                    // We need to construct a new remote candidate in 
-                    // this case!!
-                    // remotePriority = priority;
-                    
-                    newRemoteCandidate = null;
+                    // TODO: Review this a little bit.  Is it OK to just use
+                    // the remote candidate we started with and change the
+                    // priority here?
+                    remoteCandidate.setPriority(bindingRequestPriority);
                     throw new NullPointerException(
                         "We don't yet support triggered checks!!!");
                     }
@@ -373,11 +360,10 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                     // It's not a triggered check, so use the original 
                     // candidate's priority, or, i.e., use the original 
                     // candidate.
-                    newRemoteCandidate = remoteCandidate;
                     }
                 
                 pairToAdd = new UdpIceCandidatePair(newLocalCandidate, 
-                    newRemoteCandidate);
+                    remoteCandidate);
                 }
             }
         
@@ -389,6 +375,12 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
         m_mediaStream.onValidPair(pairToAdd, this.m_pair, useCandidate);
         
         return null;
+        }
+    
+    
+    private boolean isTriggeredCheck(final InetSocketAddress remoteAddress)
+        {
+        return !this.m_mediaStream.hasRemoteCandidate(remoteAddress);
         }
 
     /**

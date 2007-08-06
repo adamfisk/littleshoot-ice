@@ -72,4 +72,11 @@ public interface IceCheckList
      * @param controlling The current controlling status of the agent.
      */
     void recomputePairPriorities(boolean controlling);
+
+    /**
+     * Adds the specified ICE candidate pair to the check list.
+     * 
+     * @param pair The pair to add.
+     */
+    void addPair(IceCandidatePair pair);
     }
