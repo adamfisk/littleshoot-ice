@@ -17,6 +17,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final int m_componentId;
     private boolean m_nominated = false;
     private final IceStunConnectivityChecker m_connectivityChecker;
+    private boolean m_nominateOnSuccess = false;
 
     /**
      * Creates a new pair.
@@ -56,6 +57,16 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         m_foundation = String.valueOf(localCandidate.getFoundation()) + 
             String.valueOf(remoteCandidate.getFoundation());
         this.m_connectivityChecker = connectivityChecker;
+        }
+    
+    public void nominateOnSuccess()
+        {
+        this.m_nominateOnSuccess = true;
+        }
+    
+    public boolean shouldNominateOnSuccess()
+        {
+        return this.m_nominateOnSuccess;
         }
     
     public void cancelStunTransaction()
@@ -104,9 +115,9 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         return m_componentId;
         }
     
-    public void setNominated(boolean nominated)
+    public void nominate()
         {
-        this.m_nominated = nominated;
+        this.m_nominated = true;
         }
     
     public IceStunConnectivityChecker getConnectivityChecker()
@@ -114,6 +125,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         return m_connectivityChecker;
         }
     
+    @Override
     public String toString()
         {
         return 

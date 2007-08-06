@@ -80,14 +80,14 @@ public interface IceCandidatePair extends Comparable
     <T> T accept(IceCandidatePairVisitor<T> visitor);
 
     /**
-     * Sets whether or not this pair is "nominated" as the final pair for
-     * exchanging media.  The nominated pair with the highest priority is the
-     * pair that is ultimately used.
+     * Nominates this pair as potentially the final pair for exchanging media.  
+     * The nominated pair with the highest priority is the pair that is 
+     * ultimately used.
      * 
      * @param nominated Whether or not this pair is nominated as the final 
      * pair for exchanging media.
      */
-    void setNominated(boolean nominated);
+    void nominate();
 
     /**
      * Recomputes the priority for the pair.
@@ -104,5 +104,24 @@ public interface IceCandidatePair extends Comparable
      * wait the duration of the transaction timeout for a response."
      */
     void cancelStunTransaction();
+
+    /**
+     * Tells the pair to set its nominated flag if a response arrives that
+     * produces a successful result.  If no such response arrives, the nominated
+     * flag does not change.
+     */
+    void nominateOnSuccess();
+
+    /**
+     * Returns whether or not this pair should be automatically nominated if it
+     * results in successful response. The default is false, but this can
+     * change for controlled candidates.  See:
+     * 
+     * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2.1.5
+     * 
+     * @return Whether or not to automatically nominate this pair if it results
+     * in a successful response.
+     */
+    boolean shouldNominateOnSuccess();
 
     }

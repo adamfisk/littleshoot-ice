@@ -138,7 +138,7 @@ public class IceMediaStreamImpl implements IceMediaStream
         final Map<StunAttributeType, StunAttribute> attributes = 
             request.getAttributes();
         final IcePriorityAttribute priorityAttribute = 
-            (IcePriorityAttribute) attributes.get(StunAttributeType.PRIORITY);
+            (IcePriorityAttribute) attributes.get(StunAttributeType.ICE_PRIORITY);
         final long priority = priorityAttribute.getPriority();
         
         // We set the foundation to a random value.

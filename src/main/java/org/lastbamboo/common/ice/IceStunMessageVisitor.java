@@ -13,6 +13,8 @@ import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
+import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
+import org.lastbamboo.common.stun.stack.message.attributes.ice.IceUseCandidateAttribute;
 import org.lastbamboo.common.stun.stack.message.turn.AllocateErrorResponse;
 import org.lastbamboo.common.stun.stack.transaction.StunClientTransaction;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
@@ -127,8 +129,11 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
             // Now we need to handle triggered checks.
             final IceCandidatePair existingPair = 
                 this.m_iceMediaStream.getPair(localAddress, remoteAddress);
+            final IceCandidatePair computedPair;
             if (existingPair != null)
                 {
+                computedPair = existingPair;
+                
                 // This is the case where the new pair is already on the 
                 // check list.  See ICE section 7.2.1.4. Triggered Checks
                 final IceCandidatePairState state = existingPair.getState();
@@ -160,7 +165,8 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                 }
             else
                 {
-                
+                computedPair = 
+                    new UdpIceCandidatePair(localCandidate, remoteCandidate);
                 // Continue with the rest of ICE section 7.2.1.4, 
                 // "Triggered Checks"
                 
@@ -175,11 +181,37 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                 // from its peer (there may be more than one in cases of 
                 // forking), and find this username fragment.  The
                 // corresponding password is then selected."
-                final IceCandidatePair pair = 
-                    new UdpIceCandidatePair(localCandidate, remoteCandidate);
-                pair.setState(IceCandidatePairState.WAITING);
-                this.m_iceMediaStream.addPair(pair);
-                this.m_iceMediaStream.addTriggeredCheck(pair);
+                computedPair.setState(IceCandidatePairState.WAITING);
+                this.m_iceMediaStream.addPair(computedPair);
+                this.m_iceMediaStream.addTriggeredCheck(computedPair);
+                }
+            
+            // 7.2.1.5. Updating the Nominated Flag
+            
+            // If the ICE USE CANDIDATE attribute is set, and we're in the 
+            // controlling role, we need to deal with nominating the pair.
+            if (binding.getAttributes().containsKey(
+                StunAttributeType.ICE_USE_CANDIDATE) &&
+                !this.m_agent.isControlling())
+                {
+                final IceCandidatePairState state = computedPair.getState();
+                
+                switch (state)
+                    {
+                    case SUCCEEDED:
+                        computedPair.nominate();
+                        break;
+                    case IN_PROGRESS:
+                        computedPair.nominateOnSuccess();
+                        break;
+                    case WAITING:
+                        // No action.
+                    case FROZEN:
+                        // No action.
+                    case FAILED:
+                        // No action.
+                    }
+                
                 }
             
             }

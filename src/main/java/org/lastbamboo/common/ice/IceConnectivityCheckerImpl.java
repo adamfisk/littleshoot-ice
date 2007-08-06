@@ -187,17 +187,6 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                 public IceCandidate visitBindingSuccessResponse(
                     final BindingSuccessResponse sbr)
                     {
-                    // TODO: We're supposed to verify the source IP and port as  
-                    // well as the destination IP address and port with the 
-                    // actual values the Binding Request was sent to and from,
-                    // respectively.
-                    
-                    // **** We can do this by just adding the check to the 
-                    // STUN transaction handling code, I think.  With normal
-                    // STUN client/server interections, the above should
-                    // always be the case, so adding the check should have no
-                    // effect.
-                    
                     // Now check the mapped address and see if it matches
                     // any of the local candidates we know about.  If it 
                     // does not, it's a new peer reflexive candidate.  If it 
@@ -352,8 +341,6 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
                     // the remote candidate we started with and change the
                     // priority here?
                     remoteCandidate.setPriority(bindingRequestPriority);
-                    throw new NullPointerException(
-                        "We don't yet support triggered checks!!!");
                     }
                 else
                     {
@@ -374,6 +361,12 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
         
         m_mediaStream.onValidPair(pairToAdd, this.m_pair, useCandidate);
         
+        // See:
+        // http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2.1.5
+        if (pairToAdd.shouldNominateOnSuccess())
+            {
+            pairToAdd.nominate();
+            }
         return null;
         }
     
