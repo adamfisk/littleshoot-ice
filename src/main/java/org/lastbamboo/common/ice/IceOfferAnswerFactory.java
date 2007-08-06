@@ -19,6 +19,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
      * to the TURN server and is used across all ICE sessions.
      * 
      * @param tcpTurnClient The persistent TCP TURN client.
+     * @param mediaStreamFactory The factory for creating ICE media streams.
      */
     public IceOfferAnswerFactory(final StunClient tcpTurnClient,
         final IceMediaStreamFactory mediaStreamFactory)
