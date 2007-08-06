@@ -42,8 +42,6 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
      */
     private final byte[] m_tieBreaker;
 
-    //private final StunClient m_udpStunClient;
-
     private final IceCandidateSdpDecoder m_iceCandidateDecoder;
 
     private final IceMediaStream m_mediaStream;
@@ -55,6 +53,7 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
      * @param controlling Whether or not this agent will start out as 
      * controlling.  This can change with role conflicts, although that
      * should rarely happen.
+     * @param mediaStreamFactory Factory for creating media streams.
      */
     public IceAgentImpl(final StunClient tcpTurnClient, 
         final boolean controlling, 
