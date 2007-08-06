@@ -48,25 +48,10 @@ public class IceMediaStreamImpl implements IceMediaStream
      * Creates a new media stream for ICE.
      * 
      * @param iceAgent The top-level agent for this session.
-     * @param localCandidates The candidates from the local agent.
-     * @param remoteCandidates The candidates from the remote agent.
+     * @param desc The class describing the media stream we're establishing
+     * a connection for.
+     * @param tcpTurnClient The TCP TURN client connection.   
      */
-    /*
-    public IceMediaStreamImpl(
-        final IceAgent iceAgent,
-        final Collection<IceCandidate> localCandidates, 
-        final Collection<IceCandidate> remoteCandidates)
-        {
-        m_iceAgent = iceAgent;
-        final IceCheckListCreator checkListCreator = 
-            new IceCheckListCreatorImpl();
-        
-        m_checkList = 
-            checkListCreator.createCheckList(localCandidates, remoteCandidates);
-        m_localCandidates = localCandidates;
-        }
-        */
-    
     public IceMediaStreamImpl(final IceAgent iceAgent, 
         final IceMediaStreamDesc desc, final StunClient tcpTurnClient)
         {
@@ -318,6 +303,9 @@ public class IceMediaStreamImpl implements IceMediaStream
         final IceCandidatePair generatingPair, final boolean useCandidate)
         {
         
+        // Set the state of the pair that *generated* the check to succeeded.
+        generatingPair.setState(IceCandidatePairState.SUCCEEDED);
+        
         // Now set FROZEN pairs with the same foundation as the pair that 
         // *generated* the check for this media stream to waiting.
         updateToWaiting(generatingPair);
@@ -395,6 +383,13 @@ public class IceMediaStreamImpl implements IceMediaStream
         this.m_validPairs.add(pair);
         }
     
+    /**
+     * Implements part 1 of "7.1.2.2.3. Updating Pair States."  All pairs with
+     * the same foundation as the successful pair that are in the FROZEN state
+     * are switched to the WAITING state.
+     *  
+     * @param successfulPair The pair that succeeded.
+     */
     private void updateToWaiting(final IceCandidatePair successfulPair)
         {
         // TODO: This should happen for ALL components.  We only currently

@@ -355,10 +355,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             }
         m_mediaStream.addValidPair(pairToAdd);
         
-        // We now set the state of the pair that *generated* the check
-        // to succeeded, as specified in ICE section:
         // 7.1.2.2.3.  Updating Pair States
-        this.m_pair.setState(IceCandidatePairState.SUCCEEDED);
         
         // 1) Tell the media stream to update pair states as a result of 
         // a valid pair.
