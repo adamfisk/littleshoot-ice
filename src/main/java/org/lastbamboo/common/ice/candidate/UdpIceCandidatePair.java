@@ -1,8 +1,8 @@
 package org.lastbamboo.common.ice.candidate;
 
 import org.apache.mina.common.IoSession;
-import org.lastbamboo.common.ice.IceStunConnectivityChecker;
-import org.lastbamboo.common.ice.IceUdpStunConnectivityChecker;
+import org.lastbamboo.common.ice.IceStunChecker;
+import org.lastbamboo.common.ice.IceUdpStunChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,13 +45,28 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
             createConnectivityChecker(localCandidate, remoteCandidate));
         }
     
-    private static IceStunConnectivityChecker createConnectivityChecker(
+    /**
+     * Pair of UDP ICE candidates.  This constructor uses an existing 
+     * connectivity checker.
+     * 
+     * @param localCandidate The local candidate.
+     * @param remoteCandidate The remote candidate.
+     * @param connectivityChecker The connectivity checker to use.
+     */
+    public UdpIceCandidatePair(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, 
+        final IceStunChecker connectivityChecker)
+        {
+        super(localCandidate, remoteCandidate, connectivityChecker);
+        }
+
+    private static IceStunChecker createConnectivityChecker(
         final IceCandidate localCandidate, final IceCandidate remoteCandidate)
         {
         LOG.debug("Creating ICE connectivity checker from "+
             localCandidate+" to "+remoteCandidate);
-        return new IceUdpStunConnectivityChecker(
-            localCandidate.getSocketAddress(), 
+        return new IceUdpStunChecker(
+            localCandidate.getBaseCandidate().getSocketAddress(), 
             remoteCandidate.getSocketAddress());
         }
     

@@ -28,8 +28,7 @@ import org.slf4j.LoggerFactory;
  * Class that performs STUN connectivity checks for ICE over UDP.  Each 
  * ICE candidate pair has its own connectivity checker. 
  */
-public class IceUdpStunConnectivityChecker implements
-    IceStunConnectivityChecker
+public class IceUdpStunChecker implements IceStunChecker
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -40,7 +39,7 @@ public class IceUdpStunConnectivityChecker implements
 
     private volatile BindingRequest m_currentRequest;
 
-    private volatile boolean m_transactionCancelled;
+    private volatile boolean m_transactionCancelled = false;
 
     /**
      * Creates a new ICE connectivity checker over UDP.
@@ -48,7 +47,7 @@ public class IceUdpStunConnectivityChecker implements
      * @param localAddress The local address.
      * @param remoteAddress The remote address.
      */
-    public IceUdpStunConnectivityChecker(final InetSocketAddress localAddress, 
+    public IceUdpStunChecker(final InetSocketAddress localAddress, 
         final InetSocketAddress remoteAddress)
         {
         this.m_ioSession = createClientSession(localAddress, remoteAddress);
@@ -99,18 +98,22 @@ public class IceUdpStunConnectivityChecker implements
             {
             // TODO: We need to send the response, presumably with 
             // re-transmissions??
+            
+            m_log.debug("Got Binding Request!!!");
             return null;
             }
         
         public StunMessage visitBindingSuccessResponse(
             final BindingSuccessResponse response)
             {
+            m_log.debug("Got Binding Response: {}", response);
             return handleResponse(m_currentRequest, response);
             }
         
         public StunMessage visitBindingErrorResponse(
             final BindingErrorResponse response)
             {
+            m_log.debug("Got Binding Error Response: {}", response);
             return handleResponse(m_currentRequest, response);
             }   
         
@@ -132,6 +135,7 @@ public class IceUdpStunConnectivityChecker implements
                 }
             else
                 {
+                m_log.warn("Response has different transaction ID");
                 return new NullStunMessage();
                 }
 
@@ -144,14 +148,16 @@ public class IceUdpStunConnectivityChecker implements
         
         // TODO: We need to be able to cancel this request and not hold the 
         // lock forever!!
+        this.m_transactionCancelled = false;
+        
+        // This method will retransmit the same request multiple times 
+        // because it's being sent unreliably.  All of the requests will be 
+        // identical, using the same transaction ID.
+        this.m_currentRequest = bindingRequest;
+        
         synchronized (this.m_currentRequest)
             {   
-            this.m_transactionCancelled = false;
-            
-            // This method will retransmit the same request multiple times 
-            // because it's being sent unreliably.  All of the requests will be 
-            // identical, using the same transaction ID.
-            this.m_currentRequest = bindingRequest;
+            m_log.debug("Got request lock");
             int requests = 0;
             
             long waitTime = 0L;
@@ -160,6 +166,7 @@ public class IceUdpStunConnectivityChecker implements
                 requests < 7 && 
                 !this.m_transactionCancelled)
                 {
+                m_log.debug("Waiting...");
                 waitIfNoResponse(bindingRequest, waitTime);
                 
                 // See draft-ietf-behave-rfc3489bis-06.txt section 7.1.  We
@@ -168,6 +175,7 @@ public class IceUdpStunConnectivityChecker implements
                 // an expanding interval between requests based on the 
                 // estimated round-trip-time to the server.  This is because
                 // some requests can be lost with UDP.
+                m_log.debug("Writing Binding Request...");
                 this.m_ioSession.write(bindingRequest);
                 
                 // Wait a little longer with each send.
@@ -182,11 +190,13 @@ public class IceUdpStunConnectivityChecker implements
             waitIfNoResponse(bindingRequest, 1600);
             if (transactionComplete())
                 {
+                m_log.debug("Returning success response...");
                 return this.m_response;
                 }
             
             if (this.m_transactionCancelled)
                 {
+                m_log.debug("The transaction was canceled!");
                 return new CanceledStunMessage();
                 }
             else
@@ -199,6 +209,7 @@ public class IceUdpStunConnectivityChecker implements
     
     public void cancelTransaction()
         {
+        m_log.debug("Cancelling transaction!!");
         this.m_transactionCancelled = true;
         }
     
@@ -211,7 +222,7 @@ public class IceUdpStunConnectivityChecker implements
     private void waitIfNoResponse(final BindingRequest request, 
         final long waitTime)
         {
-        if (this.m_response == null)
+        if (this.m_response == null && waitTime > 0L)
             {
             try
                 {

@@ -30,7 +30,7 @@ public class PriorityTest extends TestCase
         assertTrue(host.getPriority() > relay.getPriority());
         
         final Queue<IceCandidate> candidates = 
-            new PriorityBlockingQueue<IceCandidate>(4, new IceCandidateComparator());
+            new PriorityBlockingQueue<IceCandidate>(4);
         candidates.add(relay);
         candidates.add(host);
         

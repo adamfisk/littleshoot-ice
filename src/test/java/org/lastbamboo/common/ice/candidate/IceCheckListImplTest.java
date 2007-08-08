@@ -9,8 +9,7 @@ import java.util.LinkedList;
 import junit.framework.TestCase;
 
 import org.lastbamboo.common.ice.IceCheckList;
-import org.lastbamboo.common.ice.IceCheckListCreator;
-import org.lastbamboo.common.ice.IceCheckListCreatorImpl;
+import org.lastbamboo.common.ice.IceCheckListImpl;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.util.NetworkUtils;
@@ -18,7 +17,7 @@ import org.lastbamboo.common.util.NetworkUtils;
 /**
  * Test for check list creation.
  */
-public class IceCheckListCreatorImplTest extends TestCase
+public class IceCheckListImplTest extends TestCase
     {
 
     /**
@@ -31,9 +30,8 @@ public class IceCheckListCreatorImplTest extends TestCase
         final Collection<IceCandidate> localCandidates = createCandidates(true);
         final Collection<IceCandidate> remoteCandidates = createCandidates(false);
         
-        final IceCheckListCreator creator = new IceCheckListCreatorImpl();
-        final IceCheckList checkList = 
-            creator.createCheckList(localCandidates, remoteCandidates);
+        final IceCheckList checkList = new IceCheckListImpl(localCandidates);
+        checkList.formCheckList(remoteCandidates);
         
         final Collection<IceCandidatePair> pairs = checkList.getPairs();
         

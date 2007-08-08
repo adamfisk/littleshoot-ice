@@ -40,7 +40,6 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
      */
     protected final static int DEFAULT_COMPONENT_ID = 1;
     
-    
     /**
      * Creates a new ICE candidate.
      * 

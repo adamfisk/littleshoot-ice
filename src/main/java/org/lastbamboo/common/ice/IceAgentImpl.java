@@ -70,6 +70,26 @@ public class IceAgentImpl implements IceAgent, IceCandidatePairVisitor<Socket>
         this.m_mediaStreams.add(this.m_mediaStream);
         }
 
+    public IceAgentImpl(final StunClient tcpTurnClient, 
+        final boolean controlling, 
+        final IceMediaStreamFactory mediaStreamFactory, final ByteBuffer offer) 
+        throws IOException
+        {
+        this.m_iceCandidateDecoder = new IceCandidateSdpDecoderImpl();
+        this.m_controlling = controlling;
+        this.m_tieBreaker = 
+            new BigInteger(64, new Random()).toByteArray();
+
+        this.m_mediaStreams.add(this.m_mediaStream);
+        final Collection<IceCandidate> remoteCandidates = 
+            this.m_iceCandidateDecoder.decode(offer, !controlling);
+        
+        // TODO: We only currently support a single media stream!!
+        this.m_mediaStream = 
+            mediaStreamFactory.createStream(this, tcpTurnClient);
+        this.m_mediaStream.establishStream(remoteCandidates);
+        }
+
     public void onValidPairsForAllComponents(final IceMediaStream mediaStream)
         {
         // See ICE section 7.1.2.2.3.  This indicates the media stream has a

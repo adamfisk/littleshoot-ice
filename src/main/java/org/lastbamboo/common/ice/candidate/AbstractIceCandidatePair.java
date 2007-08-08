@@ -1,6 +1,6 @@
 package org.lastbamboo.common.ice.candidate;
 
-import org.lastbamboo.common.ice.IceStunConnectivityChecker;
+import org.lastbamboo.common.ice.IceStunChecker;
 
 
 /**
@@ -16,7 +16,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final String m_foundation;
     private final int m_componentId;
     private boolean m_nominated = false;
-    private final IceStunConnectivityChecker m_connectivityChecker;
+    private final IceStunChecker m_connectivityChecker;
     private boolean m_nominateOnSuccess = false;
 
     /**
@@ -27,7 +27,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final IceStunConnectivityChecker connectivityChecker)
+        final IceStunChecker connectivityChecker)
         {
         this(localCandidate, remoteCandidate, 
             IceCandidatePairPriorityCalculator.calculatePriority(
@@ -44,7 +44,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final long priority,
-        final IceStunConnectivityChecker connectivityChecker)
+        final IceStunChecker connectivityChecker)
         {
         m_localCandidate = localCandidate;
         m_remoteCandidate = remoteCandidate;
@@ -120,7 +120,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         this.m_nominated = true;
         }
     
-    public IceStunConnectivityChecker getConnectivityChecker()
+    public IceStunChecker getConnectivityChecker()
         {
         return m_connectivityChecker;
         }

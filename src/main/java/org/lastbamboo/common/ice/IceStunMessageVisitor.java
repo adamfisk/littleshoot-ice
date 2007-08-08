@@ -14,7 +14,6 @@ import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
-import org.lastbamboo.common.stun.stack.message.attributes.ice.IceUseCandidateAttribute;
 import org.lastbamboo.common.stun.stack.message.turn.AllocateErrorResponse;
 import org.lastbamboo.common.stun.stack.transaction.StunClientTransaction;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
@@ -235,7 +234,8 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
         {
         if (m_log.isDebugEnabled())
             {
-            m_log.debug("Received binding response: "+response);
+            m_log.debug("Received binding response: "+response + " from: " + 
+                this.m_session.getRemoteAddress());
             }
         
         return notifyTransaction(response);

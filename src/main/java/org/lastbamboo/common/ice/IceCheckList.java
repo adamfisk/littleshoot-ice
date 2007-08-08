@@ -2,6 +2,7 @@ package org.lastbamboo.common.ice;
 
 import java.util.Collection;
 
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 
 /**
@@ -63,7 +64,7 @@ public interface IceCheckList
      * 
      * @return The top triggered pair.
      */
-    IceCandidatePair getTriggeredPair();
+    IceCandidatePair removeTopTriggeredPair();
 
     /**
      * Recomputes the priorities of pairs in checklists.  This can happen,
@@ -79,4 +80,15 @@ public interface IceCheckList
      * @param pair The pair to add.
      */
     void addPair(IceCandidatePair pair);
+
+    /**
+     * Forms the check list.  The check list is not created upon construction
+     * because we can receive incoming checks before we've received the 
+     * answer, requiring adding triggered pairs to the list before we can
+     * create a proper check list.
+     * 
+     * @param remoteCandidates The remote candidates to use in forming a 
+     * check list.
+     */
+    void formCheckList(Collection<IceCandidate> remoteCandidates);
     }

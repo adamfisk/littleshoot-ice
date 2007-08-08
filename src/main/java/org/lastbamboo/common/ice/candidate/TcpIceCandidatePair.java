@@ -2,7 +2,7 @@ package org.lastbamboo.common.ice.candidate;
 
 import java.net.Socket;
 
-import org.lastbamboo.common.ice.IceStunConnectivityChecker;
+import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 
@@ -26,9 +26,9 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
         super(localCandidate, remoteCandidate, createConnectivityChecker());
         }
     
-    private static IceStunConnectivityChecker createConnectivityChecker()
+    private static IceStunChecker createConnectivityChecker()
         {
-        return new IceStunConnectivityChecker()
+        return new IceStunChecker()
             {
             public StunMessage write(final BindingRequest request, 
                 final long rto)

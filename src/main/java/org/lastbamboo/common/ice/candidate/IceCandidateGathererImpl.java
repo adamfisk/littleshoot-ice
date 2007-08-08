@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
+import org.lastbamboo.common.ice.IceMediaStreamDesc;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.ShootConstants;
@@ -29,6 +30,8 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
 
     private final StunClient m_iceUdpStunPeer;
 
+    private final IceMediaStreamDesc m_desc;
+
     /**
      * Creates a new class for gathering ICE candidates.
      * 
@@ -38,13 +41,16 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
      * will also handle peer reflexive connectivity checks. 
      * @param controlling Whether or not this is the controlling agent at the
      * start of processing.
+     * @param desc The description of the media stream to create.
      */
     public IceCandidateGathererImpl(final StunClient tcpTurnClient, 
-        final StunClient udpStunClient, final boolean controlling)
+        final StunClient udpStunClient, final boolean controlling, 
+        final IceMediaStreamDesc desc)
         {
         this.m_tcpTurnClient = tcpTurnClient;
         this.m_iceUdpStunPeer = udpStunClient;
         this.m_controlling = controlling;
+        this.m_desc = desc;
         }
 
     public Collection<IceCandidate> gatherCandidates()
@@ -52,19 +58,25 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
         
-        final Collection<IceCandidate> tcpCandidates = 
-            createTcpCandidates();
-        
-        // 4.1.1.3. Eliminating Redundant Candidates.
-        eliminateRedundantCandidates(tcpCandidates);
-        candidates.addAll(tcpCandidates);
-        
-        final Collection<IceCandidate> udpCandidates =
-            createUdpCandidates();
+        if (this.m_desc.isTcp())
+            {
+            final Collection<IceCandidate> tcpCandidates = 
+                createTcpCandidates();
+            
+            // 4.1.1.3. Eliminating Redundant Candidates.
+            eliminateRedundantCandidates(tcpCandidates);
+            candidates.addAll(tcpCandidates);
+            }
 
-        // 4.1.1.3. Eliminating Redundant Candidates.
-        eliminateRedundantCandidates(udpCandidates);
-        candidates.addAll(udpCandidates);
+        if (this.m_desc.isUdp())
+            {
+            final Collection<IceCandidate> udpCandidates =
+                createUdpCandidates();
+    
+            // 4.1.1.3. Eliminating Redundant Candidates.
+            eliminateRedundantCandidates(udpCandidates);
+            candidates.addAll(udpCandidates);
+            }
         
         return candidates; 
         }
@@ -113,7 +125,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         // the BASE candidate for the server reflexive candidate below.
         final InetSocketAddress hostAddress = 
             this.m_iceUdpStunPeer.getHostAddress();
-        final InetAddress baseAddress = hostAddress.getAddress();
+        
         final IceUdpHostCandidate hostCandidate = 
             new IceUdpHostCandidate(hostAddress, this.m_controlling);
         candidates.add(hostCandidate);

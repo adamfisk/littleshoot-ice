@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import junit.framework.TestCase;
 
+import org.lastbamboo.common.ice.IceMediaStreamDesc;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
@@ -26,9 +27,11 @@ public class IceCandidateGathererImplTest extends TestCase
         {
         final StunClient turnClient = new HostAndServerReflexiveSame();
         final StunClient udpStunClient = new HostAndServerReflexiveSame();
+        final IceMediaStreamDesc desc = 
+            new IceMediaStreamDesc(true, true, "message", "http", 1);
         
         final IceCandidateGatherer gatherer = 
-            new IceCandidateGathererImpl(turnClient, udpStunClient, true);
+            new IceCandidateGathererImpl(turnClient, udpStunClient, true, desc);
         
         final Collection<IceCandidate> candidates = gatherer.gatherCandidates();
         

@@ -1,8 +1,10 @@
 package org.lastbamboo.common.ice.stubs;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.util.Collection;
+import java.util.Random;
 
 import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.IceAgent;
@@ -14,11 +16,13 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
  */
 public class IceAgentStub implements IceAgent
     {
+    
+    private final byte[] m_tieBreaker = 
+        new BigInteger(64, new Random()).toByteArray();
 
     public byte[] getTieBreaker()
         {
-        // TODO Auto-generated method stub
-        return null;
+        return m_tieBreaker;
         }
 
     public boolean isControlling()

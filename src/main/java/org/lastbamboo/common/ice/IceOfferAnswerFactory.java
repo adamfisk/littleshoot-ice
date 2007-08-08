@@ -1,5 +1,8 @@
 package org.lastbamboo.common.ice;
 
+import java.io.IOException;
+
+import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerFactory;
 import org.lastbamboo.common.stun.client.StunClient;
@@ -34,9 +37,9 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
             this.m_mediaStreamFactory);
         }
     
-    public OfferAnswer createAnswerer()
+    public OfferAnswer createAnswerer(final ByteBuffer offer) throws IOException
         {
         return new IceAgentImpl(this.m_tcpTurnClient, false, 
-            this.m_mediaStreamFactory);
+            this.m_mediaStreamFactory, offer);
         }
     }

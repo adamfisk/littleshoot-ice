@@ -117,7 +117,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
 
     private IceCandidatePair getNextPair()
         {
-        final IceCandidatePair triggeredPair = getTriggeredPair();
+        final IceCandidatePair triggeredPair = removeTopTriggeredPair();
         if (triggeredPair != null)
             {
             return triggeredPair;
@@ -144,9 +144,9 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             }
         }
 
-    private IceCandidatePair getTriggeredPair()
+    private IceCandidatePair removeTopTriggeredPair()
         {
-        return this.m_checkList.getTriggeredPair();
+        return this.m_checkList.removeTopTriggeredPair();
         }
 
     /**

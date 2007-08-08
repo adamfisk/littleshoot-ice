@@ -6,7 +6,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 /**
  * Interface for classes that perform ICE connectivity checks using STUN. 
  */
-public interface IceStunConnectivityChecker
+public interface IceStunChecker
     {
 
     /**

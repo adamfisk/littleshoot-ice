@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
@@ -34,7 +35,7 @@ public class IceMediaStreamImpl implements IceMediaStream
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
-    private IceCheckList m_checkList;
+    private final IceCheckList m_checkList;
     
     private final Collection<IceCandidatePair> m_validPairs =
         new LinkedList<IceCandidatePair>();
@@ -42,7 +43,8 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final Collection<IceCandidate> m_localCandidates;
     private final IceAgent m_iceAgent;
     private final IceMediaStreamDesc m_desc;
-    private Collection<IceCandidate> m_remoteCandidates;
+    private final Collection<IceCandidate> m_remoteCandidates = 
+        new LinkedList<IceCandidate>();
     
     /**
      * Creates a new media stream for ICE.
@@ -61,8 +63,9 @@ public class IceMediaStreamImpl implements IceMediaStream
         
         final IceCandidateGatherer gatherer =
             new IceCandidateGathererImpl(tcpTurnClient, udpStunClient, 
-                iceAgent.isControlling());
+                iceAgent.isControlling(), desc);
         this.m_localCandidates = gatherer.gatherCandidates();
+        m_checkList = new IceCheckListImpl(this.m_localCandidates);
         }
 
     public byte[] encodeCandidates()
@@ -73,36 +76,22 @@ public class IceMediaStreamImpl implements IceMediaStream
         encoder.visitCandidates(m_localCandidates);
         return encoder.getSdp();
         }
-
-    /*
-    public void connect()
-        {
-        m_log.debug("Processing check list");
-        
-        // NOTE: All classes are operating on shared pairs instances here,
-        // so changes to any data in pairs here changes pair data in all 
-        // associated classes.
-        final Collection<IceCandidatePair> pairs = m_checkList.getPairs();
-        
-        processPairGroups(pairs);
-        
-        final IceCheckScheduler scheduler = 
-            new IceCheckSchedulerImpl(this.m_iceAgent, this, m_checkList);
-        scheduler.scheduleChecks();
-
-        m_checkList.check();
-        }
-        */
     
     public void establishStream(final Collection<IceCandidate> remoteCandidates)
         {
-        this.m_remoteCandidates = remoteCandidates;
-        final IceCheckListCreator checkListCreator = 
-            new IceCheckListCreatorImpl();
+        synchronized (this.m_remoteCandidates)
+            {
+            synchronized (remoteCandidates)
+                {
+                this.m_remoteCandidates.addAll(remoteCandidates);
+                }
+            }
+
         
-        m_checkList = 
-            checkListCreator.createCheckList(this.m_localCandidates, 
-                remoteCandidates);
+        m_checkList.formCheckList(remoteCandidates);
+        //m_checkList = 
+          //  checkListCreator.createCheckList(this.m_localCandidates, 
+            //    remoteCandidates);
         
         final Collection<IceCandidatePair> pairs = m_checkList.getPairs();
         
@@ -159,6 +148,10 @@ public class IceMediaStreamImpl implements IceMediaStream
      */
     private void processPairGroups(final Collection<IceCandidatePair> pairs)
         {
+        if (m_log.isDebugEnabled())
+            {
+            m_log.debug("Processing "+pairs.size()+" pairs...");
+            }
         final Map<String, List<IceCandidatePair>> groupsMap = 
             new HashMap<String, List<IceCandidatePair>>();
         
@@ -262,6 +255,10 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         // A little inefficient here, but we're not talking about a lot of
         // candidates.
+        if (candidates == null)
+            {
+            m_log.error("Null candidates for: "+this);
+            }
         synchronized (candidates)
             {
             for (final IceCandidate candidate : candidates)
@@ -287,6 +284,12 @@ public class IceMediaStreamImpl implements IceMediaStream
     public IceCandidatePair getPair(final InetSocketAddress localAddress, 
         final InetSocketAddress remoteAddress)
         {
+        // The check list might not exist yet if the offerer receives incoming
+        // requests before it has received an answer.
+        if (this.m_checkList == null)
+            {
+            return null;
+            }
         final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
         for (final IceCandidatePair pair : pairs)
             {
@@ -339,6 +342,9 @@ public class IceMediaStreamImpl implements IceMediaStream
             // TODO: We only currently have one component!!
             if (this.m_validPairs.isEmpty())
                 {
+                // The check list is definitely created at this point, as
+                // we're updating pair state for a pair that had to have
+                // been on the check list.
                 this.m_checkList.setState(IceCheckListState.FAILED);
                 }
             
@@ -432,7 +438,15 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void addPair(final IceCandidatePair pair)
         {
+        m_log.debug("Adding pair to media stream: {}", this);
         this.m_checkList.addPair(pair);
+        }
+    
+    @Override
+    public String toString()
+        {
+        return ClassUtils.getShortClassName(getClass())+ " controlling: "+
+            this.m_iceAgent.isControlling();
         }
 
     }
