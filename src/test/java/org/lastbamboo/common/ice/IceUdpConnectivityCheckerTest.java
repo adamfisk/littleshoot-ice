@@ -10,6 +10,8 @@ import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.util.NetworkUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import junit.framework.TestCase;
 
@@ -17,6 +19,8 @@ import junit.framework.TestCase;
 public class IceUdpConnectivityCheckerTest extends TestCase
     {
 
+    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    
     public void testCheckAgainstPublicServer() throws Exception
         {
         final IceAgent iceAgent = new IceAgentStub();
@@ -38,7 +42,7 @@ public class IceUdpConnectivityCheckerTest extends TestCase
             new IceUdpServerReflexiveCandidate(serverReflexiveAddress, 
                 localCandidate, stunServer, true);
         
-        System.out.println("About to create pair");
+        m_log.debug("About to create pair");
         final IceCandidatePair udpPair = 
             new UdpIceCandidatePair(localCandidate, remoteCandidate);
         final IceUdpConnectivityChecker checker = 
