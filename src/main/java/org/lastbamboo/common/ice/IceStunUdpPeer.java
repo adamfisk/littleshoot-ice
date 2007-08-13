@@ -54,14 +54,27 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // Binding Responses, so we use a special visitor that handles only 
         // those but that handles both.
         final StunMessageVisitorFactory messageVisitorFactory =
-            new IceStunMessageVisitorFactory(tracker, agent, iceMediaStream);
+            new IceStunServerMessageVisitorFactory(tracker, agent, iceMediaStream);
         
         // We generate a random port for the server. We use that as both the
         // acceptor port and the local port for the connector, as both
         // need to be the same for ICE to function.  Note this only works 
         // because both the client and server are using the SO_REUSEADDRESS
         // option.
-        this.m_stunServer = new StunServerImpl(messageVisitorFactory);
+        
+        // We also add whether we're the offerer or answerer for thread
+        // naming here just to make log reading easier.
+        final String offererOrAnswerer;
+        if (agent.isControlling())
+            {
+            offererOrAnswerer = "Offerer";
+            }
+        else
+            {
+            offererOrAnswerer = "Answerer";
+            }
+        this.m_stunServer = 
+            new StunServerImpl(messageVisitorFactory, offererOrAnswerer);
         
         // We pass null here so the server binds to any available port.
         this.m_stunServer.start(null);

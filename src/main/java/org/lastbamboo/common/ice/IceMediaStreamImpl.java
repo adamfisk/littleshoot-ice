@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.math.RandomUtils;
@@ -37,8 +39,8 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final IceCheckList m_checkList;
     
-    private final Collection<IceCandidatePair> m_validPairs =
-        new LinkedList<IceCandidatePair>();
+    private final Queue<IceCandidatePair> m_validPairs =
+        new PriorityQueue<IceCandidatePair>();
 
     private final Collection<IceCandidate> m_localCandidates;
     private final IceAgent m_iceAgent;
@@ -57,15 +59,40 @@ public class IceMediaStreamImpl implements IceMediaStream
     public IceMediaStreamImpl(final IceAgent iceAgent, 
         final IceMediaStreamDesc desc, final StunClient tcpTurnClient)
         {
+        this(iceAgent, desc, tcpTurnClient, null);
+        }
+    
+    /**
+     * Creates a new media stream for ICE.
+     * 
+     * @param iceAgent The top-level agent for this session.
+     * @param desc The class describing the media stream we're establishing
+     * a connection for.
+     * @param tcpTurnClient The TCP TURN client.   
+     * @param udpStunClient The STUN client to use for UDP.
+     */
+    public IceMediaStreamImpl(final IceAgent iceAgent, 
+        final IceMediaStreamDesc desc, final StunClient tcpTurnClient,
+        final StunClient udpStunClient)
+        {
         m_iceAgent = iceAgent;
         m_desc = desc;
-        final IceStunUdpPeer udpStunClient = new IceStunUdpPeer(iceAgent, this);
+        final StunClient udpStunClientToUse;
+        if (udpStunClient == null && desc.isUdp())
+            {
+            udpStunClientToUse = new IceStunUdpPeer(iceAgent, this);
+            }
+        else
+            {
+            udpStunClientToUse = udpStunClient;
+            }
         
         final IceCandidateGatherer gatherer =
-            new IceCandidateGathererImpl(tcpTurnClient, udpStunClient, 
+            new IceCandidateGathererImpl(tcpTurnClient, udpStunClientToUse, 
                 iceAgent.isControlling(), desc);
         this.m_localCandidates = gatherer.gatherCandidates();
-        m_checkList = new IceCheckListImpl(this.m_localCandidates);
+        this.m_checkList = 
+            new IceCheckListImpl(iceAgent, this, this.m_localCandidates);
         }
 
     public byte[] encodeCandidates()
@@ -86,14 +113,11 @@ public class IceMediaStreamImpl implements IceMediaStream
                 this.m_remoteCandidates.addAll(remoteCandidates);
                 }
             }
-
         
         m_checkList.formCheckList(remoteCandidates);
-        //m_checkList = 
-          //  checkListCreator.createCheckList(this.m_localCandidates, 
-            //    remoteCandidates);
         
         final Collection<IceCandidatePair> pairs = m_checkList.getPairs();
+        m_log.debug("Created pairs: \n{}", pairs);
         
         processPairGroups(pairs);
         
@@ -130,6 +154,7 @@ public class IceMediaStreamImpl implements IceMediaStream
             }
         final int componentId = localCandidate.getComponentId();
         
+        m_log.debug("Creating new peer reflexive candidate");
         final IceCandidate prc = 
             new IceUdpPeerReflexiveCandidate(remoteAddress, foundation, 
                 componentId, this.m_iceAgent.isControlling(), priority);
@@ -221,7 +246,7 @@ public class IceMediaStreamImpl implements IceMediaStream
             }
         }
 
-    public Collection<IceCandidatePair> getValidPairs()
+    public Queue<IceCandidatePair> getValidPairs()
         {
         return m_validPairs;
         }
@@ -255,10 +280,6 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         // A little inefficient here, but we're not talking about a lot of
         // candidates.
-        if (candidates == null)
-            {
-            m_log.error("Null candidates for: "+this);
-            }
         synchronized (candidates)
             {
             for (final IceCandidate candidate : candidates)
@@ -268,7 +289,9 @@ public class IceMediaStreamImpl implements IceMediaStream
                     return candidate;
                     }
                 }
+            m_log.debug(address+" not found in "+candidates);
             }
+        
         return null;
         }
     
@@ -442,11 +465,15 @@ public class IceMediaStreamImpl implements IceMediaStream
         this.m_checkList.addPair(pair);
         }
     
+    public IceCheckListState getCheckListState()
+        {
+        return this.m_checkList.getState();
+        }
+    
     @Override
     public String toString()
         {
         return ClassUtils.getShortClassName(getClass())+ " controlling: "+
             this.m_iceAgent.isControlling();
         }
-
     }

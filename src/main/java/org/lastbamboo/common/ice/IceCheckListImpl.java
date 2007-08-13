@@ -58,13 +58,21 @@ public class IceCheckListImpl implements IceCheckList
 
     private final Collection<IceCandidate> m_localCandidates;
 
+    private final IceAgent m_iceAgent;
+
+    private final IceMediaStream m_iceMediaStream;
+
     /**
      * Creates a new check list, starting with only local candidates.
      * 
      * @param localCandidates The local candidates to use in the check list.
      */
-    public IceCheckListImpl(final Collection<IceCandidate> localCandidates)
+    public IceCheckListImpl(final IceAgent iceAgent, 
+        final IceMediaStream iceMediaStream,
+        final Collection<IceCandidate> localCandidates)
         {
+        m_iceAgent = iceAgent;
+        m_iceMediaStream = iceMediaStream;
         m_localCandidates = localCandidates;
         }
 
@@ -390,6 +398,7 @@ public class IceCheckListImpl implements IceCheckList
         {
         final IceCandidate localCandidate = pair.getFirst();
         final IceCandidate remoteCandidate = pair.getSecond();
+        
         final IceCandidateVisitor<IceCandidatePair> visitor = 
             new IceCandidateVisitorAdapter<IceCandidatePair>()
             {
@@ -402,7 +411,14 @@ public class IceCheckListImpl implements IceCheckList
             public IceCandidatePair visitUdpHostCandidate(
                 final IceUdpHostCandidate candidate)
                 {
-                return new UdpIceCandidatePair(candidate, remoteCandidate);
+                final IceStunServerBindingRequestHandler bindingRequestHandler =
+                    new IceStunServerBindingRequestHandlerImpl(m_iceAgent, 
+                        m_iceMediaStream);
+                
+                final IceStunChecker checker = 
+                    new IceUdpStunChecker(candidate, remoteCandidate, 
+                        bindingRequestHandler, m_iceAgent);
+                return new UdpIceCandidatePair(candidate, remoteCandidate, checker);
                 }
             };
         

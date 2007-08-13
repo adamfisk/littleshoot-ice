@@ -20,7 +20,7 @@ public class IceMediaStreamFactoryImpl implements IceMediaStreamFactory
         m_streamDesc = streamDesc;
         }
 
-    public IceMediaStream createStream(final IceAgent iceAgent, 
+    public IceMediaStream newStream(final IceAgent iceAgent, 
         final StunClient tcpTurnClient)
         {
         return new IceMediaStreamImpl(iceAgent, this.m_streamDesc, 

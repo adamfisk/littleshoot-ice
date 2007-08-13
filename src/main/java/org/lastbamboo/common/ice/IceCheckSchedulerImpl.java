@@ -39,7 +39,16 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     public void scheduleChecks()
         {
         m_log.debug("Scheduling checks...");
-        final Timer timer = new Timer(true);
+        final String offererOrAnswerer;
+        if (this.m_agent.isControlling())
+            {
+            offererOrAnswerer = "STUN-Offerer-Timer";
+            }
+        else
+            {
+            offererOrAnswerer = "STUN-Answerer-Timer";
+            }
+        final Timer timer = new Timer(offererOrAnswerer, true);
         final TimerTask task = createTimerTask(timer);
         
         //final int Ta = 1;
@@ -80,7 +89,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             }
         else
             {
-            m_log.debug("About to perform check...");
+            m_log.debug("About to perform check on: {}", activePair);
             if (performCheck(activePair))
                 {
                 this.m_checkList.setState(IceCheckListState.COMPLETED);

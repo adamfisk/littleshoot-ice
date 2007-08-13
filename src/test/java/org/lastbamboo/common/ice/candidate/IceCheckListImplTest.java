@@ -8,10 +8,14 @@ import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
+import org.lastbamboo.common.ice.IceAgent;
 import org.lastbamboo.common.ice.IceCheckList;
 import org.lastbamboo.common.ice.IceCheckListImpl;
+import org.lastbamboo.common.ice.IceMediaStream;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
+import org.lastbamboo.common.ice.stubs.IceAgentStub;
+import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
 import org.lastbamboo.common.util.NetworkUtils;
 
 /**
@@ -30,7 +34,10 @@ public class IceCheckListImplTest extends TestCase
         final Collection<IceCandidate> localCandidates = createCandidates(true);
         final Collection<IceCandidate> remoteCandidates = createCandidates(false);
         
-        final IceCheckList checkList = new IceCheckListImpl(localCandidates);
+        final IceAgent agent = new IceAgentStub();
+        final IceMediaStream mediaStream = new IceMediaStreamImplStub();
+        final IceCheckList checkList = 
+            new IceCheckListImpl(agent, mediaStream, localCandidates);
         checkList.formCheckList(remoteCandidates);
         
         final Collection<IceCandidatePair> pairs = checkList.getPairs();

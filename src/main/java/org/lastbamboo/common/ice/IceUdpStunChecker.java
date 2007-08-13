@@ -1,26 +1,32 @@
 package org.lastbamboo.common.ice;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.id.uuid.UUID;
 import org.apache.mina.common.ConnectFuture;
+import org.apache.mina.common.ExecutorThreadModel;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.stun.client.StunClientMessageVisitor;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.decoder.StunProtocolCodecFactory;
-import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
+import org.lastbamboo.common.stun.stack.message.IcmpErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionListener;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,37 +34,77 @@ import org.slf4j.LoggerFactory;
  * Class that performs STUN connectivity checks for ICE over UDP.  Each 
  * ICE candidate pair has its own connectivity checker. 
  */
-public class IceUdpStunChecker implements IceStunChecker
+public class IceUdpStunChecker implements IceStunChecker, 
+    StunTransactionListener
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
     private final IoSession m_ioSession;
 
-    private volatile StunMessage m_response;
-
-    private volatile BindingRequest m_currentRequest;
-
+    /**
+     * TODO: Review if this works!!
+     */
     private volatile boolean m_transactionCancelled = false;
+
+    private final IceStunServerBindingRequestHandler m_bindingRequestHandler;
+
+    private final IceAgent m_iceAgent;
+    
+    private volatile int m_writeCallsForPair = 0;
+    
+    private final Map<UUID, StunMessage> m_idsToResponses =
+        new ConcurrentHashMap<UUID, StunMessage>();
+
+    private final StunTransactionTrackerImpl m_transactionTracker;
+
+    private boolean m_icmpError;
+    
+    private final Object REQUEST_LOCK = new Object();
 
     /**
      * Creates a new ICE connectivity checker over UDP.
      * 
-     * @param localAddress The local address.
-     * @param remoteAddress The remote address.
+     * @param localCandidate The local address.
+     * @param remoteCandidate The remote address.
+     * @param bindingRequestHandler Visitor for Binding Requests.
+     * @param iceAgent The top-level ICE agent.
      */
-    public IceUdpStunChecker(final InetSocketAddress localAddress, 
-        final InetSocketAddress remoteAddress)
+    public IceUdpStunChecker(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, 
+        final IceStunServerBindingRequestHandler bindingRequestHandler, 
+        final IceAgent iceAgent)
         {
-        this.m_ioSession = createClientSession(localAddress, remoteAddress);
+        this.m_bindingRequestHandler = bindingRequestHandler;
+        this.m_iceAgent = iceAgent;
+        this.m_ioSession = createClientSession(
+            localCandidate.getBaseCandidate().getSocketAddress(), 
+            remoteCandidate.getSocketAddress());
+        
+        this.m_transactionTracker = new StunTransactionTrackerImpl();
         }
     
     private IoSession createClientSession(final InetSocketAddress localAddress, 
         final InetSocketAddress remoteAddress) 
         {
         final DatagramConnector connector = new DatagramConnector();
+        
         final DatagramConnectorConfig cfg = connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
+
+        final String controlling;
+        if (this.m_iceAgent.isControlling())
+            {
+            controlling = "Controlling";
+            }
+        else
+            {
+            controlling = "Not-Controlling";
+            }
+        
+        cfg.setThreadModel(
+            ExecutorThreadModel.getInstance(
+                "IceUdpStunChecker-"+controlling));
         final ProtocolCodecFactory codecFactory = 
             new StunProtocolCodecFactory();
         final ProtocolCodecFilter stunFilter = 
@@ -75,6 +121,13 @@ public class IceUdpStunChecker implements IceStunChecker
             connector.connect(remoteAddress, localAddress, ioHandler);
         cf.join();
         final IoSession session = cf.getSession();
+        
+        if (session == null)
+            {
+            m_log.error("Could not create session from "+
+                localAddress +" to "+remoteAddress);
+            throw new NullPointerException("Could not create session!!");
+            }
         return session;
         }
     
@@ -85,89 +138,94 @@ public class IceUdpStunChecker implements IceStunChecker
         public StunMessageVisitor<StunMessage> createVisitor(
             final IoSession session)
             {
-            return new IceConnectivityStunMessageVisitor();
+            return new IceConnectivityStunMessageVisitor(m_transactionTracker);
             }
-        
         }
     
     private class IceConnectivityStunMessageVisitor 
-        extends StunMessageVisitorAdapter<StunMessage>
+        extends StunClientMessageVisitor<StunMessage>
         {
-
-        public StunMessage visitBindingRequest(final BindingRequest request)
+        
+        private IceConnectivityStunMessageVisitor(
+            final StunTransactionTracker transactionTracker)
             {
-            // TODO: We need to send the response, presumably with 
-            // re-transmissions??
-            
-            m_log.debug("Got Binding Request!!!");
+            super(transactionTracker);
+            }
+
+        public StunMessage visitBindingRequest(final BindingRequest binding)
+            {
+            m_log.debug("Handling Binding Request on: {}", m_ioSession);
+            m_bindingRequestHandler.handleBindingRequest(m_ioSession, binding);
             return null;
             }
         
-        public StunMessage visitBindingSuccessResponse(
-            final BindingSuccessResponse response)
-            {
-            m_log.debug("Got Binding Response: {}", response);
-            return handleResponse(m_currentRequest, response);
-            }
         
-        public StunMessage visitBindingErrorResponse(
-            final BindingErrorResponse response)
+        public StunMessage visitIcmpErrorMesssage(
+            final IcmpErrorStunMessage message)
             {
-            m_log.debug("Got Binding Error Response: {}", response);
-            return handleResponse(m_currentRequest, response);
-            }   
-        
-        private StunMessage handleResponse(final BindingRequest request, 
-            final StunMessage response)
-            {
-            final UUID requestId = request.getTransactionId();
-            final UUID responseId = response.getTransactionId();
-            if (requestId.equals(responseId))
+            if (m_log.isDebugEnabled())
                 {
-                // This indicates the transaction succeeded, although it may
-                // have resulted in a Binding Error Response.
-                synchronized (request)
-                    {
-                    m_response = response;
-                    request.notify();
-                    }
-                return response;
+                m_log.debug("Received ICMP error: "+message);
                 }
-            else
+            m_icmpError = true;
+            synchronized (REQUEST_LOCK)
                 {
-                m_log.warn("Response has different transaction ID");
-                return new NullStunMessage();
+                REQUEST_LOCK.notify();
                 }
-
+            return null;
             }
         }
-
     public StunMessage write(final BindingRequest bindingRequest, 
         final long rto)
         {
-        
-        // TODO: We need to be able to cancel this request and not hold the 
-        // lock forever!!
-        this.m_transactionCancelled = false;
-        
-        // This method will retransmit the same request multiple times 
-        // because it's being sent unreliably.  All of the requests will be 
+        m_log.debug("Writing Binding Request...");
+        this.m_writeCallsForPair++;
+        try
+            {
+            return writeInternal(bindingRequest, rto);
+            }
+        catch (final Throwable t)
+            {
+            m_log.error("Could not write Binding Request", t);
+            return new NullStunMessage();
+            }
+        }
+    
+    private StunMessage writeInternal(final BindingRequest bindingRequest, 
+        final long rto)
+        {
+
+        // This method will retransmit the same request multiple times because
+        // it's being sent unreliably.  All of these requests will be 
         // identical, using the same transaction ID.
-        this.m_currentRequest = bindingRequest;
+        final UUID id = bindingRequest.getTransactionId();
+        final InetSocketAddress localAddress = 
+            (InetSocketAddress) this.m_ioSession.getLocalAddress();
+        final InetSocketAddress remoteAddress =
+            (InetSocketAddress) this.m_ioSession.getRemoteAddress();
         
-        synchronized (this.m_currentRequest)
+        this.m_transactionTracker.addTransaction(bindingRequest, this, 
+            localAddress, remoteAddress);
+        
+        synchronized (REQUEST_LOCK)
             {   
             m_log.debug("Got request lock");
+            this.m_transactionCancelled = false;
+            this.m_icmpError = false;
             int requests = 0;
             
             long waitTime = 0L;
 
-            while (!transactionComplete() && 
-                requests < 7 && 
-                !this.m_transactionCancelled)
+            while (!m_idsToResponses.containsKey(id) && requests < 7 &&
+                !this.m_transactionCancelled && !this.m_icmpError)
                 {
                 m_log.debug("Waiting...");
                 waitIfNoResponse(bindingRequest, waitTime);
+                if (this.m_icmpError)
+                    {
+                    m_log.debug("ICMP error -- breaking");
+                    break;
+                    }
                 
                 // See draft-ietf-behave-rfc3489bis-06.txt section 7.1.  We
                 // continually send the same request until we receive a 
@@ -175,7 +233,9 @@ public class IceUdpStunChecker implements IceStunChecker
                 // an expanding interval between requests based on the 
                 // estimated round-trip-time to the server.  This is because
                 // some requests can be lost with UDP.
-                m_log.debug("Writing Binding Request...");
+                m_log.debug("Writing Binding Request number "+requests+
+                    " on: "+this.m_ioSession);
+
                 this.m_ioSession.write(bindingRequest);
                 
                 // Wait a little longer with each send.
@@ -187,11 +247,22 @@ public class IceUdpStunChecker implements IceStunChecker
             // Now we wait for 1.6 seconds after the last request was sent.
             // If we still don't receive a response, then the transaction 
             // has failed.  
-            waitIfNoResponse(bindingRequest, 1600);
-            if (transactionComplete())
+            if (!this.m_transactionCancelled && !this.m_icmpError)
                 {
-                m_log.debug("Returning success response...");
-                return this.m_response;
+                waitIfNoResponse(bindingRequest, 1600);
+                }
+            
+            if (this.m_icmpError)
+                {
+                m_log.debug("Got ICMP error");
+                return new IcmpErrorStunMessage();
+                }
+            
+            if (m_idsToResponses.containsKey(id))
+                {
+                final StunMessage response = this.m_idsToResponses.get(id);
+                m_log.debug("Returning some sort of response...");
+                return response;
                 }
             
             if (this.m_transactionCancelled)
@@ -206,27 +277,23 @@ public class IceUdpStunChecker implements IceStunChecker
                 }
             }
         }
-    
+
     public void cancelTransaction()
         {
         m_log.debug("Cancelling transaction!!");
         this.m_transactionCancelled = true;
         }
     
-
-    private boolean transactionComplete()
-        {
-        return this.m_response != null;
-        }
-
     private void waitIfNoResponse(final BindingRequest request, 
         final long waitTime)
         {
-        if (this.m_response == null && waitTime > 0L)
+        m_log.debug("Waiting "+waitTime+" milliseconds...");
+        if (waitTime == 0L) return;
+        if (!m_idsToResponses.containsKey(request.getTransactionId()))
             {
             try
                 {
-                request.wait(waitTime);
+                REQUEST_LOCK.wait(waitTime);
                 }
             catch (final InterruptedException e)
                 {
@@ -235,4 +302,27 @@ public class IceUdpStunChecker implements IceStunChecker
             }
         }
 
+    public Object onTransactionFailed(final StunMessage request,
+        final StunMessage response)
+        {
+        m_log.warn("Transaction failed");
+        return notifyWaiters(request, response);
+        }
+    
+    public Object onTransactionSucceeded(final StunMessage request, 
+        final StunMessage response)
+        {
+        return notifyWaiters(request, response);
+        }
+
+    private Object notifyWaiters(final StunMessage request, 
+        final StunMessage response)
+        {
+        synchronized (REQUEST_LOCK)
+            {
+            this.m_idsToResponses.put(request.getTransactionId(), response);
+            REQUEST_LOCK.notify();
+            }
+        return null;
+        }
     }

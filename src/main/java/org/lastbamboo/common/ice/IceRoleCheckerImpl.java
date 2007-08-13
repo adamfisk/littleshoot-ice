@@ -43,6 +43,7 @@ public class IceRoleCheckerImpl implements IceRoleChecker
         else if (agent.isControlling() &&
             attributes.containsKey(StunAttributeType.ICE_CONTROLLING))
             {
+            m_log.debug("We both think we're controlling...");
             final IceControllingAttribute attribute = 
                 (IceControllingAttribute) attributes.get(
                     StunAttributeType.ICE_CONTROLLING);
@@ -62,6 +63,8 @@ public class IceRoleCheckerImpl implements IceRoleChecker
         else if (!agent.isControlling() && 
             attributes.containsKey(StunAttributeType.ICE_CONTROLLED))
             {
+            m_log.debug("We both think we're controlled...");
+            m_log.debug("Transaction ID: {}", request.getTransactionId());
             final IceControlledAttribute attribute = 
                 (IceControlledAttribute) attributes.get(
                     StunAttributeType.ICE_CONTROLLED);

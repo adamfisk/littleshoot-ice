@@ -1,5 +1,7 @@
 package org.lastbamboo.common.ice;
 
+import java.util.Collection;
+
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 
 /**
@@ -63,5 +65,12 @@ public interface IceAgent extends OfferAnswer
      * vice versa.
      */
     void recomputePairPriorities();
+
+    /**
+     * Accessor for all the media streams for the agent.
+     * 
+     * @return The media streams for the agent.
+     */
+    Collection<IceMediaStream> getMediaStreams();
 
     }

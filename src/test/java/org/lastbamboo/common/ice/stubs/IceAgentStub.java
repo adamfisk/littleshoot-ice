@@ -91,4 +91,16 @@ public class IceAgentStub implements IceAgent
         
         }
 
+    public Collection<IceMediaStream> getMediaStreams()
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
+    public void processOffer(ByteBuffer offer) throws IOException
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
     }

@@ -130,6 +130,11 @@ public class IceStunUdpPeerTest extends TestCase
                     };
                 return clientVisitor;
                 }
+
+            public void onIcmpError()
+                {
+                fail("ICMP error!!");
+                }
             };
         
         final AtomicInteger clientRequestsReceived = new AtomicInteger(0);
@@ -156,6 +161,11 @@ public class IceStunUdpPeerTest extends TestCase
                         }
                     };
                 return clientVisitor;
+                }
+
+            public void onIcmpError()
+                {
+                fail("ICMP error!!");
                 }
             };
 

@@ -9,6 +9,6 @@ import org.lastbamboo.common.stun.client.StunClient;
 public interface IceMediaStreamFactory
     {
 
-    IceMediaStream createStream(IceAgent iceAgent, StunClient tcpTurnClient);
+    IceMediaStream newStream(IceAgent iceAgent, StunClient tcpTurnClient);
 
     }

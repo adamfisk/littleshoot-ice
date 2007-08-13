@@ -2,7 +2,9 @@ package org.lastbamboo.common.ice.stubs;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Queue;
 
+import org.lastbamboo.common.ice.IceCheckListState;
 import org.lastbamboo.common.ice.IceMediaStream;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
@@ -67,7 +69,7 @@ public class IceMediaStreamImplStub implements IceMediaStream
         return null;
         }
 
-    public Collection<IceCandidatePair> getValidPairs()
+    public Queue<IceCandidatePair> getValidPairs()
         {
         // TODO Auto-generated method stub
         return null;
@@ -96,6 +98,12 @@ public class IceMediaStreamImplStub implements IceMediaStream
         {
         // TODO Auto-generated method stub
         
+        }
+
+    public IceCheckListState getCheckListState()
+        {
+        // TODO Auto-generated method stub
+        return null;
         }
 
     }

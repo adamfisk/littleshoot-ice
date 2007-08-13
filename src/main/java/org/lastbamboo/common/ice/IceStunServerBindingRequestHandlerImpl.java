@@ -12,11 +12,7 @@ import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
-import org.lastbamboo.common.stun.stack.message.turn.AllocateErrorResponse;
-import org.lastbamboo.common.stun.stack.transaction.StunClientTransaction;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,14 +20,13 @@ import org.slf4j.LoggerFactory;
  * STUN message visitor for ICE.  ICE STUN only needs to handle Binding 
  * Requests and Binding Responses as opposed to all STUN messages.
  */
-public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
+public class IceStunServerBindingRequestHandlerImpl 
+    implements IceStunServerBindingRequestHandler
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
-    private final IoSession m_session;
-
-    private final StunTransactionTracker m_transactionTracker;
+    //private final IoSession m_session;
 
     private final IceAgent m_agent;
 
@@ -40,27 +35,27 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
     /**
      * Creates a new message visitor for the specified session.
      * 
-     * @param tracker The class that keeps track of outstanding STUN 
-     * transactions.
      * @param session The session with the remote host.
      * @param agent The top-level ICE agent.
      * @param iceMediaStream The media stream this STUN processor is working 
      * for. 
      */
-    public IceStunMessageVisitor(final StunTransactionTracker tracker, 
-        final IoSession session, final IceAgent agent, 
+    public IceStunServerBindingRequestHandlerImpl(
+        final IceAgent agent, 
         final IceMediaStream iceMediaStream)
         {
-        m_transactionTracker = tracker;
-        m_session = session;
         m_agent = agent;
         m_iceMediaStream = iceMediaStream;
         }
 
-    public Void visitBindingRequest(final BindingRequest binding)
+    public void handleBindingRequest(final IoSession ioSession,
+        final BindingRequest binding)
         {
-        // Just echo back the response.
         m_log.debug("Visiting Binding Request...");
+        if (ioSession == null)
+            {
+            throw new NullPointerException("Null session!?!?");
+            }
         
         // We need to check ICE controlling and controlled roles for conflicts.
         // This implements:
@@ -72,16 +67,17 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
         if (errorResponse != null)
             {
             // This can happen in the rare case that there's a role conflict.
-            this.m_session.write(errorResponse);
+            this.m_log.debug("Sending error response...");
+            ioSession.write(errorResponse);
             }
         else
             {
             // We now implement the remaining sections 7.2.1 following 7.2.1.1 
             // since we're returning a success response.
             final InetSocketAddress localAddress = 
-                (InetSocketAddress) m_session.getLocalAddress();
+                (InetSocketAddress) ioSession.getLocalAddress();
             final InetSocketAddress remoteAddress = 
-                (InetSocketAddress) m_session.getRemoteAddress();
+                (InetSocketAddress) ioSession.getRemoteAddress();
             
             // TODO: This should include other attributes!!
             final UUID transactionId = binding.getTransactionId();
@@ -90,31 +86,37 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                     remoteAddress);
             
             // We write the response as soon as possible.
-            this.m_session.write(response);
+            m_log.debug("Writing success response...");
+            ioSession.write(response);
             
             // Check to see if the remote address matches the address of
             // any remote candidates we know about.  If it does not, it's a
             // new peer reflexive address.  See ICE section 7.2.1.3
             final IceCandidate localCandidate;
+            final IceCandidate remoteCandidate;
             if (!this.m_iceMediaStream.hasRemoteCandidate(remoteAddress))
                 {
-                localCandidate = this.m_iceMediaStream.addPeerReflexive(
+                remoteCandidate = this.m_iceMediaStream.addPeerReflexive(
                     binding, localAddress, remoteAddress);
+                m_log.debug("Added peer reflexive remote candidate.");
                 }
             else
                 {
-                localCandidate = 
-                    this.m_iceMediaStream.getLocalCandidate(localAddress);
+                remoteCandidate = 
+                    this.m_iceMediaStream.getRemoteCandidate(remoteAddress);
                 }
+            
+            localCandidate = 
+                this.m_iceMediaStream.getLocalCandidate(localAddress);
+            
+            m_log.debug("Using existing local candidate: {}", 
+                    localCandidate);
             
             if (localCandidate == null)
                 {
                 m_log.warn("Could not create local candidate.");
-                return null;
+                return;
                 }
-            
-            final IceCandidate remoteCandidate = 
-                this.m_iceMediaStream.getRemoteCandidate(remoteAddress);
 
             if (remoteCandidate == null)
                 {
@@ -122,7 +124,7 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                 // because the peer reflexive check above should have added it
                 // if it wasn't already there.
                 m_log.warn("Could not find remote candidate.");
-                return null;
+                return;
                 }
             
             // Now we need to handle triggered checks.
@@ -131,6 +133,7 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
             final IceCandidatePair computedPair;
             if (existingPair != null)
                 {
+                m_log.debug("Found existing pair");
                 computedPair = existingPair;
                 
                 // This is the case where the new pair is already on the 
@@ -164,12 +167,18 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                 }
             else
                 {
+                m_log.debug("Creating new UDP pair.");
+                // TODO: Doesn't this need an existing connectivity checker?
+                // Or maybe it's always a new remote candidate here?
+                final IceStunChecker connectivityChecker = 
+                    createConnectivityChecker(localCandidate, remoteCandidate);
                 computedPair = 
-                    new UdpIceCandidatePair(localCandidate, remoteCandidate);
+                    new UdpIceCandidatePair(localCandidate, remoteCandidate,
+                        connectivityChecker);
                 // Continue with the rest of ICE section 7.2.1.4, 
                 // "Triggered Checks"
                 
-                // TODO: The remote candidate needs a username fragement and
+                // TODO: The remote candidate needs a username fragment and
                 // password.  We don't implement this yet.  This is the 
                 // description of what we need to do:
                 
@@ -181,6 +190,10 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                 // forking), and find this username fragment.  The
                 // corresponding password is then selected."
                 computedPair.setState(IceCandidatePairState.WAITING);
+                
+                // TODO: Is this definitely correct to have the pairs on both
+                // queues?  Doesn't this mean we'll often check this pair
+                // twice?
                 this.m_iceMediaStream.addPair(computedPair);
                 this.m_iceMediaStream.addTriggeredCheck(computedPair);
                 }
@@ -214,89 +227,15 @@ public class IceStunMessageVisitor extends StunMessageVisitorAdapter<Void>
                 }
             
             }
-        return null;
-        }
-
-    public Void visitBindingErrorResponse(final BindingErrorResponse response)
-        {
-        // This likey indicates a role-conflict.  
-        if (m_log.isDebugEnabled())
-            {
-            m_log.warn("Received binding error response: "+
-                response.getAttributes());
-            }
-        
-        return notifyTransaction(response);
+        return;
         }
     
-    public Void visitBindingSuccessResponse(
-        final BindingSuccessResponse response)
+    private IceStunChecker createConnectivityChecker(
+        final IceCandidate localCandidate, final IceCandidate remoteCandidate)
         {
-        if (m_log.isDebugEnabled())
-            {
-            m_log.debug("Received binding response: "+response + " from: " + 
-                this.m_session.getRemoteAddress());
-            }
-        
-        return notifyTransaction(response);
-        }
-    
-    private Void notifyTransaction(final StunMessage response)
-        {
-        final StunClientTransaction ct = 
-            this.m_transactionTracker.getClientTransaction(response);
-        m_log.debug("Accessed transaction: "+ct);
-        
-        if (ct == null)
-            {
-            // This will happen fairly frequently with UDP because messages
-            // are retransmitted in case any are lost.
-            m_log.debug("No matching transaction for response: "+response);
-            return null;
-            }
-
-        // Verify the addresses as specified in ICE section 7.1.2.2.
-        if (isFromExpectedHost(ct))
-            {
-            response.accept(ct);
-            }
-        else
-            {
-            m_log.debug("Received response from unexpected source...");
-            }
-
-        return null;
-        }
-
-    private boolean isFromExpectedHost(final StunClientTransaction ct)
-        {
-        final InetSocketAddress responseSource = 
-            (InetSocketAddress) this.m_session.getRemoteAddress();
-        final InetSocketAddress intendedDestination =
-            ct.getIntendedDestination();
-        
-        if (!responseSource.equals(intendedDestination))
-            {
-            return false;
-            }
-
-        final InetSocketAddress responseDestination = 
-            (InetSocketAddress) this.m_session.getRemoteAddress();
-        final InetSocketAddress intendedSource =
-            ct.getIntendedDestination();
-        
-        if (!responseDestination.equals(intendedSource))
-            {
-            return false;
-            }
-        
-        return true;
-        }
-
-    public Void visitAllocateErrorResponse(final AllocateErrorResponse response)
-        {
-        // TODO We need to handle this once we fully integrate STUN and TURN
-        // implementations.
-        return null;
+        m_log.debug("Creating ICE connectivity checker from "+
+            localCandidate+" to "+remoteCandidate);
+        return new IceUdpStunChecker(
+            localCandidate, remoteCandidate, this, m_agent);
         }
     }

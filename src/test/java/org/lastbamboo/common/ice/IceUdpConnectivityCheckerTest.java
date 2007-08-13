@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import junit.framework.TestCase;
 
-
+/**
+ * Test for ICE UDP connectivity checking. 
+ */
 public class IceUdpConnectivityCheckerTest extends TestCase
     {
 
@@ -43,8 +45,15 @@ public class IceUdpConnectivityCheckerTest extends TestCase
                 localCandidate, stunServer, true);
         
         m_log.debug("About to create pair");
+        final IceStunServerBindingRequestHandler bindingRequestHandler =
+            new IceStunServerBindingRequestHandlerImpl(iceAgent, 
+                iceMediaStream);
+        
+        final IceStunChecker stunChecker = 
+            new IceUdpStunChecker(localCandidate, remoteCandidate, 
+                bindingRequestHandler, iceAgent);
         final IceCandidatePair udpPair = 
-            new UdpIceCandidatePair(localCandidate, remoteCandidate);
+            new UdpIceCandidatePair(localCandidate, remoteCandidate, stunChecker);
         final IceUdpConnectivityChecker checker = 
             new IceUdpConnectivityChecker(iceAgent, iceMediaStream, udpPair);
         

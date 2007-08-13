@@ -6,6 +6,11 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.lastbamboo.common.ice.IceStunChecker;
+import org.lastbamboo.common.ice.IceStunServerBindingRequestHandler;
+import org.lastbamboo.common.ice.IceStunServerBindingRequestHandlerImpl;
+import org.lastbamboo.common.ice.IceUdpStunChecker;
+
 import junit.framework.TestCase;
 
 /**
@@ -40,8 +45,9 @@ public class AbstractIceCandidatePairTest extends TestCase
             new IceUdpHostCandidate(udpLocalAddress, true);
         final IceCandidate udpRemote =
             new IceUdpHostCandidate(udpRemoteAddress, false);
+        
         final UdpIceCandidatePair udpPair =
-            new UdpIceCandidatePair(udpLocal, udpRemote);
+            new UdpIceCandidatePair(udpLocal, udpRemote, null);
 
         final List<IceCandidatePair> pairs = new LinkedList<IceCandidatePair>();
         pairs.add(udpPair);

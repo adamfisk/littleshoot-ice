@@ -2,19 +2,30 @@ package org.lastbamboo.common.ice;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Queue;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 
 /**
- * A media stream for an ICE.
+ * A media stream for an ICE agent.
  */
 public interface IceMediaStream
     {
 
-    Collection<IceCandidatePair> getValidPairs();
+    /**
+     * Accessor for all valid pairs for this stream.
+     * 
+     * @return The {@link Queue} of all valid pairs for this stream.
+     */
+    Queue<IceCandidatePair> getValidPairs();
     
+    /**
+     * Adds a new valid pair.
+     * 
+     * @param pair The pair to add.
+     */
     void addValidPair(IceCandidatePair pair);
 
 
@@ -40,6 +51,15 @@ public interface IceMediaStream
 
     void addLocalCandidate(IceCandidate localCandidate);
     
+    /**
+     * Accesses the pair matching the specified local and remote addresses,
+     * if any.
+     * 
+     * @param localAddress The address for the local candidate.
+     * @param remoteAddress The address for the remote candidate.
+     * @return The pair matching both addresses, or <code>null</code> if no
+     * such pair exists.
+     */
     IceCandidatePair getPair(InetSocketAddress localAddress, 
         InetSocketAddress remoteAddress);
 
@@ -100,7 +120,7 @@ public interface IceMediaStream
      * reflexive candidate. 
      * @param remoteAddress The remote address of the peer that sent the 
      * Binding Request.
-     * @return The new peer reflexive candidate.
+     * @return The new peer reflexive remote candidate.
      */
     IceCandidate addPeerReflexive(BindingRequest request, 
         InetSocketAddress localAddress, InetSocketAddress remoteAddress);
@@ -118,5 +138,12 @@ public interface IceMediaStream
      * @param pair The pair to add.
      */
     void addPair(IceCandidatePair pair);
+
+    /**
+     * Gets the state of the check list.
+     * 
+     * @return The state of the check list.
+     */
+    IceCheckListState getCheckListState();
     
     }

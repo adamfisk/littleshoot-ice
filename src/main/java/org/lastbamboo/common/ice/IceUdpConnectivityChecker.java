@@ -1,8 +1,6 @@
 package org.lastbamboo.common.ice;
 
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.LinkedList;
 
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
@@ -19,6 +17,7 @@ import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
+import org.lastbamboo.common.stun.stack.message.IcmpErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
@@ -70,9 +69,6 @@ public class IceUdpConnectivityChecker
         
         // Now send a BindingRequest with PRIORITY, USE-CANDIDATE, 
         // ICE-CONTROLLING etc.
-        final Collection<StunAttribute> attributes = 
-            new LinkedList<StunAttribute>();
-        
         final long priority = 
             IcePriorityCalculator.calculatePriority(
                 IceCandidateType.PEER_REFLEXIVE, IceTransportProtocol.UDP);
@@ -103,11 +99,9 @@ public class IceUdpConnectivityChecker
             hasUseCandidate = false;
             }
         
-        attributes.add(priorityAttribute);
-        attributes.add(controlling);
-        
         // TODO: Add CREDENTIALS attribute.
-        final BindingRequest request = new BindingRequest(attributes);
+        final BindingRequest request = 
+            new BindingRequest(priorityAttribute, controlling);
         
         final IceStunChecker checker =
             this.m_pair.getConnectivityChecker();
@@ -115,7 +109,8 @@ public class IceUdpConnectivityChecker
         // TODO: Obtain RTO properly.
         final long rto = 20L;
         
-        m_log.debug("Writing Binding Request...");
+        m_log.debug("Writing Binding Request: {}", request);
+        m_log.debug("Transaction ID: {}", request.getTransactionId());
         final StunMessage response = checker.write(request, rto);
         
         final StunMessageVisitor<IceCandidate> visitor = 
@@ -204,6 +199,7 @@ public class IceUdpConnectivityChecker
             @Override
             public IceCandidate visitNullMessage(final NullStunMessage message)
                 {
+                // See section 7.1.2.1. Failure Cases
                 // This means we never received any response to our request,
                 // interpretted as a failure.
                 m_pair.setState(IceCandidatePairState.FAILED);
@@ -221,12 +217,21 @@ public class IceUdpConnectivityChecker
                 // added to the triggered check queue and will be re-checked.
                 return null;
                 }
+
+            public IceCandidate visitIcmpErrorMesssage(
+                final IcmpErrorStunMessage message)
+                {
+                // See section 7.1.2.1. Failure Cases.
+                m_log.debug("Got ICMP error -- setting pair state to failed.");
+                m_pair.setState(IceCandidatePairState.FAILED);
+                return null;
+                }
             };
             
         final IceCandidate newLocalCandidate = response.accept(visitor);
-        m_log.debug("Got response - new local: {}", newLocalCandidate);
         if (newLocalCandidate == null)
             {
+            m_log.debug("Check failed -- should happen quite often");
             return null;
             }
         else
