@@ -47,7 +47,7 @@ public class IceUdpStunChecker implements IceStunChecker,
      */
     private volatile boolean m_transactionCancelled = false;
 
-    private final IceBindingRequestHandler m_bindingRequestHandler;
+    private final IceStunServerConnectivityChecker m_bindingRequestHandler;
 
     private final IceAgent m_iceAgent;
     
@@ -78,7 +78,7 @@ public class IceUdpStunChecker implements IceStunChecker,
      */
     public IceUdpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final IceBindingRequestHandler bindingRequestHandler, 
+        final IceStunServerConnectivityChecker bindingRequestHandler, 
         final IceAgent iceAgent, final ProtocolCodecFactory codecFactory,
         final Class clazz, final IoHandler ioHandler)
         {

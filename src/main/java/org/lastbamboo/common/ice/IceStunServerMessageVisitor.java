@@ -37,7 +37,7 @@ public class IceStunServerMessageVisitor extends StunMessageVisitorAdapter<Void>
 
     private final IceMediaStream m_iceMediaStream;
 
-    private final IceBindingRequestHandler 
+    private final IceStunServerConnectivityChecker 
         m_serverBindingRequestHandler;
 
     /**
@@ -54,7 +54,7 @@ public class IceStunServerMessageVisitor extends StunMessageVisitorAdapter<Void>
     public IceStunServerMessageVisitor(final StunTransactionTracker tracker, 
         final IoSession session, final IceAgent agent, 
         final IceMediaStream iceMediaStream, 
-        final IceBindingRequestHandler serverBindingRequestHandler)
+        final IceStunServerConnectivityChecker serverBindingRequestHandler)
         {
         m_transactionTracker = tracker;
         m_session = session;

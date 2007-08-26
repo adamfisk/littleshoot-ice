@@ -80,7 +80,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             {
             final IceCandidate local = pair.getLocalCandidate();
             final IceCandidateVisitor<IoSession> visitor = 
-                new IceUdpConnectivityChecker(m_iceAgent, m_mediaStream, pair);
+                new IceStunClientConnectivityChecker(m_iceAgent, m_mediaStream, pair);
             local.accept(visitor);
             return null;
             }

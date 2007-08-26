@@ -43,8 +43,8 @@ public class IceStunServerMessageVisitorFactory
 
     public StunMessageVisitor createVisitor(final IoSession session)
         {
-        final IceBindingRequestHandler handler =
-            new IceBindingRequestHandlerImpl( 
+        final IceStunServerConnectivityChecker handler =
+            new IceStunServerConnectivityCheckerImpl( 
                 this.m_iceAgent, this.m_iceMediaStream, 
                     this.m_udpStunCheckerFactory);
         return new IceStunServerMessageVisitor(this.m_transactionTracker, session,

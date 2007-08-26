@@ -35,8 +35,8 @@ public class IceUdpStunCheckerFactoryImpl implements IceUdpStunCheckerFactory
     public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
-        final IceBindingRequestHandler bindingRequestHandler =
-            new IceBindingRequestHandlerImpl(m_iceAgent, 
+        final IceStunServerConnectivityChecker bindingRequestHandler =
+            new IceStunServerConnectivityCheckerImpl(m_iceAgent, 
                 m_iceMediaStream, this);
         
         final IoHandler demuxIoHandler;

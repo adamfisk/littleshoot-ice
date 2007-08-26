@@ -31,9 +31,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class that performs connectivity checks for a single UDP pair.
+ * Class that performs connectivity checks for a single UDP pair.  This 
+ * implements ICE section 7.1 from:<p>
+ * 
+ * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.1
  */
-public class IceUdpConnectivityChecker 
+public class IceStunClientConnectivityChecker 
     extends IceCandidateVisitorAdapter<IoSession>
     {
 
@@ -52,7 +55,7 @@ public class IceUdpConnectivityChecker
      * @param iceMediaStream The media stream this check is trying to establish.
      * @param udpPair The candidate pair.
      */
-    public IceUdpConnectivityChecker(final IceAgent iceAgent, 
+    public IceStunClientConnectivityChecker(final IceAgent iceAgent, 
         final IceMediaStream iceMediaStream, final IceCandidatePair udpPair)
         {
         m_iceAgent = iceAgent;

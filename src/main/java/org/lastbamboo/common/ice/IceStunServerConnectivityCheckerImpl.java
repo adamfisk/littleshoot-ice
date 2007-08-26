@@ -17,10 +17,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * STUN message visitor for ICE.  ICE STUN only needs to handle Binding 
- * Requests and Binding Responses as opposed to all STUN messages.
+ * Processes STUN connectivity checks for the server side of ICE.  See:<p>
+ * 
+ * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2
  */
-public class IceBindingRequestHandlerImpl implements IceBindingRequestHandler
+public class IceStunServerConnectivityCheckerImpl 
+    implements IceStunServerConnectivityChecker
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -40,7 +42,7 @@ public class IceBindingRequestHandlerImpl implements IceBindingRequestHandler
      * @param checkerFactory The factory for creating new classes for 
      * performing connectivity checks.
      */
-    public IceBindingRequestHandlerImpl(
+    public IceStunServerConnectivityCheckerImpl(
         final IceAgent agent, 
         final IceMediaStream iceMediaStream,
         final IceUdpStunCheckerFactory checkerFactory)

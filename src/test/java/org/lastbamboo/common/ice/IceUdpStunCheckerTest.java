@@ -47,8 +47,8 @@ public class IceUdpStunCheckerTest
             new InetSocketAddress("stun01.sipphone.com", 3478);
         final IceCandidate remoteCandidate =
             new IceUdpHostCandidate(remoteAddress, false);
-        final IceBindingRequestHandler brh = 
-            new IceBindingRequestHandler()
+        final IceStunServerConnectivityChecker brh = 
+            new IceStunServerConnectivityChecker()
             {
             public void handleBindingRequest(final IoSession ioSession, 
                 final BindingRequest binding)
