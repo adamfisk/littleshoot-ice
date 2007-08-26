@@ -12,12 +12,18 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final IceCandidate m_localCandidate;
     private final IceCandidate m_remoteCandidate;
     private long m_priority;
-    private IceCandidatePairState m_state;
+    private volatile IceCandidatePairState m_state;
     private final String m_foundation;
     private final int m_componentId;
     private boolean m_nominated = false;
-    private final IceStunChecker m_connectivityChecker;
+    protected final IceStunChecker m_connectivityChecker;
     private boolean m_nominateOnSuccess = false;
+    
+    /**
+     * Flag indicating whether or not this pair should include the 
+     * USE CANDIDATE attribute in its Binding Requests during checks.
+     */
+    private boolean m_useCandidate = false;
 
     /**
      * Creates a new pair.
@@ -57,6 +63,16 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         m_foundation = String.valueOf(localCandidate.getFoundation()) + 
             String.valueOf(remoteCandidate.getFoundation());
         this.m_connectivityChecker = connectivityChecker;
+        }
+    
+    public void useCandidate()
+        {
+        this.m_useCandidate = true;
+        }
+    
+    public boolean useCandidateSet()
+        {
+        return this.m_useCandidate;
         }
     
     public void nominateOnSuccess()
@@ -129,10 +145,9 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     public String toString()
         {
         return 
-            "priority:   "+this.m_priority+"\n"+
             "local:      "+this.m_localCandidate+"\n"+
             "remote:     "+this.m_remoteCandidate+"\n"+
-            "foundation: "+this.m_foundation;
+            "state:      "+this.m_state;
         }
 
     @Override

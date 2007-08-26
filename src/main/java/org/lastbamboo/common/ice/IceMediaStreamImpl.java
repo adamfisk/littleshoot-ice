@@ -11,6 +11,8 @@ import java.util.Queue;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.math.RandomUtils;
+import org.apache.mina.common.IoHandler;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
@@ -18,14 +20,14 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
+import org.lastbamboo.common.stun.client.BoundStunClient;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
 import org.lastbamboo.common.util.Closure;
-import org.lastbamboo.common.util.CollectionUtils;
-import org.lastbamboo.common.util.CollectionUtilsImpl;
+import org.lastbamboo.common.util.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,12 +43,19 @@ public class IceMediaStreamImpl implements IceMediaStream
     
     private final Queue<IceCandidatePair> m_validPairs =
         new PriorityQueue<IceCandidatePair>();
+    
+    /**
+     * {@link Queue} of nominated pairs for this check list.
+     */
+    private final Queue<IceCandidatePair> m_nominatedPairs = 
+        new PriorityQueue<IceCandidatePair>();
 
     private final Collection<IceCandidate> m_localCandidates;
     private final IceAgent m_iceAgent;
     private final IceMediaStreamDesc m_desc;
     private final Collection<IceCandidate> m_remoteCandidates = 
         new LinkedList<IceCandidate>();
+    private final BoundStunClient m_udpStunPeer;
     
     /**
      * Creates a new media stream for ICE.
@@ -57,9 +66,13 @@ public class IceMediaStreamImpl implements IceMediaStream
      * @param tcpTurnClient The TCP TURN client connection.   
      */
     public IceMediaStreamImpl(final IceAgent iceAgent, 
-        final IceMediaStreamDesc desc, final StunClient tcpTurnClient)
+        final IceMediaStreamDesc desc, final StunClient tcpTurnClient,
+        final ProtocolCodecFactory codecFactory, final Class mediaClass, 
+        final IoHandler clientMediaIoHandler, 
+        final IoHandler serverMediaIoHandler)
         {
-        this(iceAgent, desc, tcpTurnClient, null);
+        this(iceAgent, desc, tcpTurnClient, null, codecFactory, mediaClass,
+            clientMediaIoHandler, serverMediaIoHandler);
         }
     
     /**
@@ -73,26 +86,33 @@ public class IceMediaStreamImpl implements IceMediaStream
      */
     public IceMediaStreamImpl(final IceAgent iceAgent, 
         final IceMediaStreamDesc desc, final StunClient tcpTurnClient,
-        final StunClient udpStunClient)
+        final BoundStunClient udpStunClient, 
+        final ProtocolCodecFactory codecFactory,
+        final Class mediaClass, final IoHandler clientMediaIoHandler,
+        final IoHandler serverMediaIoHandler)
         {
         m_iceAgent = iceAgent;
         m_desc = desc;
-        final StunClient udpStunClientToUse;
+        final IceUdpStunCheckerFactory checkerFactory =
+            new IceUdpStunCheckerFactoryImpl(this.m_iceAgent, this, 
+                codecFactory, mediaClass, clientMediaIoHandler, 
+                serverMediaIoHandler);
+        
         if (udpStunClient == null && desc.isUdp())
             {
-            udpStunClientToUse = new IceStunUdpPeer(iceAgent, this);
+            this.m_udpStunPeer = 
+                new IceStunUdpPeer(iceAgent, this, checkerFactory);
             }
         else
             {
-            udpStunClientToUse = udpStunClient;
+            this.m_udpStunPeer = udpStunClient;
             }
-        
         final IceCandidateGatherer gatherer =
-            new IceCandidateGathererImpl(tcpTurnClient, udpStunClientToUse, 
+            new IceCandidateGathererImpl(tcpTurnClient, m_udpStunPeer, 
                 iceAgent.isControlling(), desc);
         this.m_localCandidates = gatherer.gatherCandidates();
         this.m_checkList = 
-            new IceCheckListImpl(iceAgent, this, this.m_localCandidates);
+            new IceCheckListImpl(checkerFactory, this.m_localCandidates);
         }
 
     public byte[] encodeCandidates()
@@ -116,10 +136,7 @@ public class IceMediaStreamImpl implements IceMediaStream
         
         m_checkList.formCheckList(remoteCandidates);
         
-        final Collection<IceCandidatePair> pairs = m_checkList.getPairs();
-        m_log.debug("Created pairs: \n{}", pairs);
-        
-        processPairGroups(pairs);
+        processPairGroups();
         
         final IceCheckScheduler scheduler = 
             new IceCheckSchedulerImpl(this.m_iceAgent, this, m_checkList);
@@ -171,31 +188,32 @@ public class IceMediaStreamImpl implements IceMediaStream
      * @param pairs The pairs to form into foundation-based groups for setting 
      * the state of the pair with the lowest component ID to waiting.
      */
-    private void processPairGroups(final Collection<IceCandidatePair> pairs)
+    private void processPairGroups()
         {
-        if (m_log.isDebugEnabled())
-            {
-            m_log.debug("Processing "+pairs.size()+" pairs...");
-            }
         final Map<String, List<IceCandidatePair>> groupsMap = 
             new HashMap<String, List<IceCandidatePair>>();
         
         // Group together pairs with the same foundation.
-        for (final IceCandidatePair pair : pairs)
+        final Closure<IceCandidatePair> groupClosure = 
+            new Closure<IceCandidatePair>()
             {
-            final String foundation = pair.getFoundation();
-            final List<IceCandidatePair> foundationPairs;
-            if (groupsMap.containsKey(foundation))
+            public void execute(final IceCandidatePair pair)
                 {
-                foundationPairs = groupsMap.get(foundation);
+                final String foundation = pair.getFoundation();
+                final List<IceCandidatePair> foundationPairs;
+                if (groupsMap.containsKey(foundation))
+                    {
+                    foundationPairs = groupsMap.get(foundation);
+                    }
+                else
+                    {
+                    foundationPairs = new LinkedList<IceCandidatePair>();
+                    groupsMap.put(foundation, foundationPairs);
+                    }
+                foundationPairs.add(pair);
                 }
-            else
-                {
-                foundationPairs = new LinkedList<IceCandidatePair>();
-                groupsMap.put(foundation, foundationPairs);
-                }
-            foundationPairs.add(pair);
-            }
+            };
+        this.m_checkList.executeOnPairs(groupClosure);
         
         final Collection<List<IceCandidatePair>> groups = 
             groupsMap.values();
@@ -313,6 +331,8 @@ public class IceMediaStreamImpl implements IceMediaStream
             {
             return null;
             }
+        
+        /*
         final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
         for (final IceCandidatePair pair : pairs)
             {
@@ -322,40 +342,39 @@ public class IceMediaStreamImpl implements IceMediaStream
                 return pair;
                 }
             }
-        return null;
+            */
+        
+        final Predicate<IceCandidatePair> pred = 
+            new Predicate<IceCandidatePair>()
+            {
+            public boolean evaluate(final IceCandidatePair pair)
+                {
+                if (pair.getLocalCandidate().getSocketAddress().equals(localAddress) &&
+                    pair.getRemoteCandidate().getSocketAddress().equals(remoteAddress))
+                    {
+                    return true;
+                    }
+                return false;
+                }
+            };
+        
+        return this.m_checkList.selectPair(pred);
         }
 
     public void updatePairStates(final IceCandidatePair validPair, 
         final IceCandidatePair generatingPair, final boolean useCandidate)
         {
-        
+        m_log.debug("Updating pair states...");
         // Set the state of the pair that *generated* the check to succeeded.
         generatingPair.setState(IceCandidatePairState.SUCCEEDED);
         
         // Now set FROZEN pairs with the same foundation as the pair that 
         // *generated* the check for this media stream to waiting.
         updateToWaiting(generatingPair);
-        
-        // We need to 
-        
-        if (this.m_iceAgent.isControlling())
-            {
-            if (useCandidate)
-                {
-                validPair.nominate();
-                }
-            }
-        else
-            {
-            // Controlled agents are handled differently.  
-            // See ICE Section 7.2.1.5 at:
-            // http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2.1.5
-            if (useCandidate)
-                {
-                validPair.nominate();
-                }
-            }
-        
+        }
+    
+    public void updateCheckListAndTimerStates()
+        {
         // Update check list and timer states.  See section 7.1.2.3.
         if (allFailedOrSucceeded())
             {
@@ -386,30 +405,42 @@ public class IceMediaStreamImpl implements IceMediaStream
         // and "active" check list is "a check list with at least one pair 
         // that is Waiting" from 5.7.4.  When computing the value of N, that's
         // the definition that's used, and the active state is determined
-        // dynamically at that time.
+        // dynamically at that time.        
         }
 
+    /**
+     * Checks to see if all pairs are in either the SUCCEEDED or the FIALED
+     * state.
+     * 
+     * @return <code>true</code> if all pairs are in either the SUCCEEDED or
+     * the FAILED state, otherwise <code>false</code>.
+     */
     private boolean allFailedOrSucceeded()
         {
-        final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
-        for (final IceCandidatePair pair : pairs)
+        final Predicate<IceCandidatePair> pred = 
+            new Predicate<IceCandidatePair>()
             {
-            if (pair.getState() == IceCandidatePairState.SUCCEEDED ||
-                pair.getState() == IceCandidatePairState.FAILED)
+
+            public boolean evaluate(final IceCandidatePair pair)
                 {
-                continue;
+                if (pair.getState() != IceCandidatePairState.SUCCEEDED &&
+                    pair.getState() != IceCandidatePairState.FAILED)
+                    {
+                    return false;
+                    }
+                return true;
                 }
-            else
-                {
-                return false;
-                }
-            }
-        return true;
+            };
+        
+        return this.m_checkList.matchesAny(pred);
         }
 
     public void addValidPair(final IceCandidatePair pair)
         {
-        this.m_validPairs.add(pair);
+        synchronized (this.m_validPairs)
+            {
+            this.m_validPairs.add(pair);
+            }
         }
     
     /**
@@ -438,15 +469,11 @@ public class IceMediaStreamImpl implements IceMediaStream
                     }
                 }
             };
+        this.m_checkList.executeOnPairs(closure);
         
-        final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
-        final CollectionUtils utils = new CollectionUtilsImpl();
-        utils.forAllDoSynchronized(pairs, closure);
-
         
         // TODO:  We only currently have a single component, so we call this
         // each time.  We need to implement ICE section 7.1.2.2.3, part 2.
-        this.m_iceAgent.onValidPairsForAllComponents(this);
         }
 
     public void addTriggeredCheck(final IceCandidatePair pair)
@@ -470,10 +497,42 @@ public class IceMediaStreamImpl implements IceMediaStream
         return this.m_checkList.getState();
         }
     
+    public void setCheckListState(final IceCheckListState state)
+        {
+        this.m_checkList.setState(state);
+        }
+    
+    public boolean hasHigherPriorityPendingPair(final IceCandidatePair pair)
+        {
+        return this.m_checkList.hasHigherPriorityPendingPair(pair);
+        }
+
+    public void onNominated(final IceCandidatePair pair)
+        {
+        // First, remove all Waiting and Frozen pairs on the check list and
+        // triggered check queue.
+        this.m_checkList.removeWaitingAndFrozenPairs(pair);
+        synchronized (this.m_nominatedPairs)
+            {
+            this.m_nominatedPairs.add(pair);
+            }
+        }
+
     @Override
     public String toString()
         {
         return ClassUtils.getShortClassName(getClass())+ " controlling: "+
             this.m_iceAgent.isControlling();
         }
+
+    public Queue<IceCandidatePair> getNominatedPairs()
+        {
+        return this.m_nominatedPairs;
+        }
+
+    public int getStunServerPort()
+        {
+        return this.m_udpStunPeer.getBoundAddress().getPort();
+        }
+
     }

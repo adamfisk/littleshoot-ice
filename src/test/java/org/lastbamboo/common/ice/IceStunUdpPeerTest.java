@@ -10,6 +10,7 @@ import junit.framework.TestCase;
 
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -19,6 +20,7 @@ import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
+import org.lastbamboo.common.ice.stubs.ProtocolCodecFactoryStub;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.decoder.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
@@ -42,10 +44,19 @@ public class IceStunUdpPeerTest extends TestCase
     
     public void testIceStunUdpPeers() throws Exception
         {
-        final IceAgent agent = new IceAgentStub();
-        final IceMediaStream mediaStream = new IceMediaStreamImplStub();
-        final IceStunUdpPeer peer1 = new IceStunUdpPeer(agent, mediaStream);
-        final IceStunUdpPeer peer2 = new IceStunUdpPeer(agent, mediaStream);
+        final IceAgent iceAgent = new IceAgentStub();
+        final IceMediaStream iceMediaStream = new IceMediaStreamImplStub();
+        final ProtocolCodecFactory codecFactory =
+            new ProtocolCodecFactoryStub();
+        final IoHandler clientIoHandler = new IoHandlerAdapter();
+        final IoHandler serverIoHandler = new IoHandlerAdapter();
+        final IceUdpStunCheckerFactory checkerFactory =
+            new IceUdpStunCheckerFactoryImpl(iceAgent, iceMediaStream, 
+                codecFactory, Object.class, clientIoHandler, serverIoHandler);
+        final IceStunUdpPeer peer1 = 
+            new IceStunUdpPeer(iceAgent, iceMediaStream, checkerFactory);
+        final IceStunUdpPeer peer2 = 
+            new IceStunUdpPeer(iceAgent, iceMediaStream, checkerFactory);
         
         final InetSocketAddress address1 = peer1.getHostAddress();
         final InetSocketAddress address2 = peer2.getHostAddress();

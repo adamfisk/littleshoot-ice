@@ -26,6 +26,7 @@ import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
+import org.lastbamboo.common.stun.stack.message.attributes.ice.IceUseCandidateAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,6 @@ public class IceUdpConnectivityChecker
         final IcePriorityAttribute priorityAttribute = 
             new IcePriorityAttribute(priority);
         
-        final boolean hasUseCandidate;
         final StunAttribute controlling;
         
         // The agent uses the same tie-breaker throughout the session.
@@ -89,28 +89,35 @@ public class IceUdpConnectivityChecker
         if (isControlling)
             {
             controlling = new IceControllingAttribute(tieBreaker);
-            // TODO: Use aggressive nomination?
-            //attributes.add(new IceUseCandidateAttribute());
-            hasUseCandidate = true;
             }
         else
             {
             controlling = new IceControlledAttribute(tieBreaker);
-            hasUseCandidate = false;
             }
         
         // TODO: Add CREDENTIALS attribute.
-        final BindingRequest request = 
-            new BindingRequest(priorityAttribute, controlling);
+        final BindingRequest request;
         
-        final IceStunChecker checker =
-            this.m_pair.getConnectivityChecker();
+        // This could be for either regular or aggressive nomination.
+        final boolean includedUseCandidate;
+        if (this.m_pair.useCandidateSet())
+            {
+            request = new BindingRequest(priorityAttribute, controlling, 
+                new IceUseCandidateAttribute());
+            includedUseCandidate = true;
+            }
+        else
+            {
+            request = new BindingRequest(priorityAttribute, controlling);
+            includedUseCandidate = false;
+            }
+        
+        final IceStunChecker checker = this.m_pair.getConnectivityChecker();
         
         // TODO: Obtain RTO properly.
         final long rto = 20L;
         
         m_log.debug("Writing Binding Request: {}", request);
-        m_log.debug("Transaction ID: {}", request.getTransactionId());
         final StunMessage response = checker.write(request, rto);
         
         final StunMessageVisitor<IceCandidate> visitor = 
@@ -210,6 +217,7 @@ public class IceUdpConnectivityChecker
             public IceCandidate visitCanceledMessage(
                 final CanceledStunMessage message)
                 {
+                m_log.debug("Transaction was cancelled...");
                 // The outgoing message was canceled.  This can happen when
                 // we received a pair that generated a triggered check on 
                 // a STUN server.  In this case, we don't treat it as a failure
@@ -231,13 +239,14 @@ public class IceUdpConnectivityChecker
         final IceCandidate newLocalCandidate = response.accept(visitor);
         if (newLocalCandidate == null)
             {
-            m_log.debug("Check failed -- should happen quite often");
+            m_log.debug("Check failed or was cancelled -- should happen " +
+                "quite often");
             return null;
             }
         else
             {
             return processSuccess(newLocalCandidate, remoteCandidate, 
-                hasUseCandidate, priority);
+                includedUseCandidate, priority);
             }
         
         }
@@ -288,6 +297,7 @@ public class IceUdpConnectivityChecker
         if (equalsOriginalPair(this.m_pair, newLocalAddress, remoteAddress))
             {
             // Just add the original pair;
+            m_log.debug("Using original pair...");
             pairToAdd = this.m_pair;
             }
         else
@@ -345,15 +355,83 @@ public class IceUdpConnectivityChecker
         // 7.1.2.2.3.  Updating Pair States
         
         // 1) Tell the media stream to update pair states as a result of 
-        // a valid pair.
-        m_mediaStream.updatePairStates(pairToAdd, this.m_pair, useCandidate);
+        // a valid pair.  
+        // This also handles nominated flag changes specified in 
+        // "7.1.2.2.4. Updating the Nominated Flag" and check list and timer
+        // state issues from "7.1.2.3. Check List and Timer State Updates"
+        this.m_mediaStream.updatePairStates(pairToAdd, this.m_pair, 
+            useCandidate);
     
         // 2) Tell the ICE agent to unfreeze check lists for other media 
         // streams.
-        m_iceAgent.onUnfreezeCheckLists(m_mediaStream);
+        this.m_iceAgent.onUnfreezeCheckLists(m_mediaStream);
+        
+        this.m_iceAgent.onValidPairsForAllComponents(m_mediaStream);
+        
+        // Tell the ICE agent to consider this valid pair if it was not just
+        // nominated.  Nominated pairs have already been considered as valid
+        // pairs -- that's how they had their nominated flag set.
+        if (!updateNominatedFlag(pairToAdd, useCandidate))
+            {
+            this.m_iceAgent.onValidPairs(m_mediaStream);
+            }
+        
+        // 7.1.2.3. Check List and Timer State Updates
+        m_mediaStream.updateCheckListAndTimerStates();
         return null;
         }
     
+    /**
+     * This implements:<p> 
+     * 
+     * 7.1.2.2.4.  Updating the Nominated Flag<p>
+     * 
+     * and part of:<p>
+     * 
+     * 7.2.1.5.  Updating the Nominated Flag<p>
+     * 
+     * @param validPair The valid pair to update.
+     * @param sentUseCandidateInRequest Whether or not the USE-CANDIDATE 
+     * attribute appeared in the original Binding Request.
+     * @retuen <code>true</code> if the valid pair was nominated, otherwise
+     * <code>false</code>.
+     */
+    private boolean updateNominatedFlag(final IceCandidatePair validPair, 
+        final boolean sentUseCandidateInRequest)
+        {
+        if (this.m_iceAgent.isControlling() && sentUseCandidateInRequest)
+            {
+            validPair.nominate();
+            this.m_iceAgent.onNominatedPair(validPair, this.m_mediaStream);
+            return true;
+            }
+        
+        // Second part of 7.2.15 -- the pair may have been previously 
+        // In-Progress and should possibly have its nominated flag set upon
+        // this successful response.
+        else if (!this.m_iceAgent.isControlling())
+            {
+            // We synchronize here to avoid a race condition with the setting
+            // of the flag for nominating pairs for controlling agents upon
+            // successful checks.
+            synchronized (validPair)
+                {
+                if (validPair.shouldNominateOnSuccess())
+                    {
+                    m_log.debug("Nominating new pair on controlled agent!!");
+                    // We just put the pair in the successful state, so we know
+                    // that's the state it's in (it has to be in the successful
+                    // state for use to nominate it).
+                    validPair.nominate();
+                    this.m_iceAgent.onNominatedPair(validPair, 
+                        this.m_mediaStream);
+                    return true;
+                    }
+                }
+            }
+        return false;
+        }
+
     /**
      * Checks if the new pair equals the original pair that generated
      * the check.

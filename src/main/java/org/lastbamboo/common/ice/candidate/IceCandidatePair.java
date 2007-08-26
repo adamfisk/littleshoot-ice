@@ -124,4 +124,21 @@ public interface IceCandidatePair extends Comparable
      */
     boolean shouldNominateOnSuccess();
 
+    /**
+     * Sets a flag indicating checks on this pair should include the 
+     * USE-CANDIDATE attribute in their Binding Requests.  See:
+     *
+     * 8.1.1.1. Regular Nomination.
+     */
+    void useCandidate();
+
+    /**
+     * Returns whether or not the USE-CANDIDATE attribute is set, i.e. whether
+     * or not this pair includes the USE-CANDIDATE attribute in its outgoing
+     * Binding Requests.
+     * 
+     * @return <code>true</code> if the USE-CANDIDATE attribute is in use. 
+     */
+    boolean useCandidateSet();
+
     }

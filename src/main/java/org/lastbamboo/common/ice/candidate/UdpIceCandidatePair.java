@@ -14,8 +14,6 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
     private final static Logger LOG = 
         LoggerFactory.getLogger(UdpIceCandidatePair.class);
     
-    private IoSession m_session;
-    
     /**
      * Pair of UDP ICE candidates.  This constructor uses an existing 
      * connectivity checker.
@@ -30,15 +28,10 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
         {
         super(localCandidate, remoteCandidate, connectivityChecker);
         }
-    
-    public void setIoSession(final IoSession session)
-        {
-        m_session = session;
-        }
 
     public IoSession getIoSession()
         {
-        return m_session;
+        return this.m_connectivityChecker.getIoSession();
         }
 
     public <T> T accept(final IceCandidatePairVisitor<T> visitor)

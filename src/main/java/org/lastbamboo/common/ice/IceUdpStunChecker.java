@@ -15,8 +15,8 @@ import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.stun.client.StunClientMessageVisitor;
+import org.lastbamboo.common.stun.stack.StunDemuxingIoHandler;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
-import org.lastbamboo.common.stun.stack.decoder.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.IcmpErrorStunMessage;
@@ -47,7 +47,7 @@ public class IceUdpStunChecker implements IceStunChecker,
      */
     private volatile boolean m_transactionCancelled = false;
 
-    private final IceStunServerBindingRequestHandler m_bindingRequestHandler;
+    private final IceBindingRequestHandler m_bindingRequestHandler;
 
     private final IceAgent m_iceAgent;
     
@@ -62,6 +62,12 @@ public class IceUdpStunChecker implements IceStunChecker,
     
     private final Object REQUEST_LOCK = new Object();
 
+    private final IoHandler m_protocolIoHandler;
+
+    private final Class m_clazz;
+
+    private final ProtocolCodecFactory m_codecFactory;
+
     /**
      * Creates a new ICE connectivity checker over UDP.
      * 
@@ -72,11 +78,15 @@ public class IceUdpStunChecker implements IceStunChecker,
      */
     public IceUdpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final IceStunServerBindingRequestHandler bindingRequestHandler, 
-        final IceAgent iceAgent)
+        final IceBindingRequestHandler bindingRequestHandler, 
+        final IceAgent iceAgent, final ProtocolCodecFactory codecFactory,
+        final Class clazz, final IoHandler ioHandler)
         {
         this.m_bindingRequestHandler = bindingRequestHandler;
         this.m_iceAgent = iceAgent;
+        this.m_codecFactory = codecFactory;
+        this.m_clazz = clazz;
+        this.m_protocolIoHandler = ioHandler;
         this.m_ioSession = createClientSession(
             localCandidate.getBaseCandidate().getSocketAddress(), 
             remoteCandidate.getSocketAddress());
@@ -105,10 +115,10 @@ public class IceUdpStunChecker implements IceStunChecker,
         cfg.setThreadModel(
             ExecutorThreadModel.getInstance(
                 "IceUdpStunChecker-"+controlling));
-        final ProtocolCodecFactory codecFactory = 
-            new StunProtocolCodecFactory();
+        //final ProtocolCodecFactory codecFactory = 
+          //  new StunProtocolCodecFactory();
         final ProtocolCodecFilter stunFilter = 
-            new ProtocolCodecFilter(codecFactory);
+            new ProtocolCodecFilter(this.m_codecFactory);
         
         connector.getFilterChain().addLast("stunFilter", stunFilter);
         
@@ -116,9 +126,12 @@ public class IceUdpStunChecker implements IceStunChecker,
             new IceConnectivityStunMessageVisitorFactory();
         final IoHandler ioHandler = 
             new StunIoHandler<StunMessage>(visitorFactory);
+        
+        final IoHandler demuxer = new StunDemuxingIoHandler(this.m_clazz, 
+            this.m_protocolIoHandler, ioHandler);
         m_log.debug("Connecting from "+localAddress+" to "+remoteAddress);
         final ConnectFuture cf = 
-            connector.connect(remoteAddress, localAddress, ioHandler);
+            connector.connect(remoteAddress, localAddress, demuxer);
         cf.join();
         final IoSession session = cf.getSession();
         
@@ -175,6 +188,7 @@ public class IceUdpStunChecker implements IceStunChecker,
             return null;
             }
         }
+    
     public StunMessage write(final BindingRequest bindingRequest, 
         final long rto)
         {
@@ -194,7 +208,11 @@ public class IceUdpStunChecker implements IceStunChecker,
     private StunMessage writeInternal(final BindingRequest bindingRequest, 
         final long rto)
         {
-
+        if (bindingRequest == null)
+            {
+            throw new NullPointerException("Null Binding Request");
+            }
+        
         // This method will retransmit the same request multiple times because
         // it's being sent unreliably.  All of these requests will be 
         // identical, using the same transaction ID.
@@ -209,7 +227,6 @@ public class IceUdpStunChecker implements IceStunChecker,
         
         synchronized (REQUEST_LOCK)
             {   
-            m_log.debug("Got request lock");
             this.m_transactionCancelled = false;
             this.m_icmpError = false;
             int requests = 0;
@@ -219,7 +236,6 @@ public class IceUdpStunChecker implements IceStunChecker,
             while (!m_idsToResponses.containsKey(id) && requests < 7 &&
                 !this.m_transactionCancelled && !this.m_icmpError)
                 {
-                m_log.debug("Waiting...");
                 waitIfNoResponse(bindingRequest, waitTime);
                 if (this.m_icmpError)
                     {
@@ -233,9 +249,6 @@ public class IceUdpStunChecker implements IceStunChecker,
                 // an expanding interval between requests based on the 
                 // estimated round-trip-time to the server.  This is because
                 // some requests can be lost with UDP.
-                m_log.debug("Writing Binding Request number "+requests+
-                    " on: "+this.m_ioSession);
-
                 this.m_ioSession.write(bindingRequest);
                 
                 // Wait a little longer with each send.
@@ -258,6 +271,12 @@ public class IceUdpStunChecker implements IceStunChecker,
                 return new IcmpErrorStunMessage();
                 }
             
+            if (this.m_transactionCancelled)
+                {
+                m_log.debug("The transaction was cancelled!");
+                return new CanceledStunMessage();
+                }
+            
             if (m_idsToResponses.containsKey(id))
                 {
                 final StunMessage response = this.m_idsToResponses.get(id);
@@ -265,11 +284,6 @@ public class IceUdpStunChecker implements IceStunChecker,
                 return response;
                 }
             
-            if (this.m_transactionCancelled)
-                {
-                m_log.debug("The transaction was canceled!");
-                return new CanceledStunMessage();
-                }
             else
                 {
                 m_log.warn("Did not get response!!");
@@ -287,7 +301,6 @@ public class IceUdpStunChecker implements IceStunChecker,
     private void waitIfNoResponse(final BindingRequest request, 
         final long waitTime)
         {
-        m_log.debug("Waiting "+waitTime+" milliseconds...");
         if (waitTime == 0L) return;
         if (!m_idsToResponses.containsKey(request.getTransactionId()))
             {
@@ -324,5 +337,10 @@ public class IceUdpStunChecker implements IceStunChecker,
             REQUEST_LOCK.notify();
             }
         return null;
+        }
+
+    public IoSession getIoSession()
+        {
+        return this.m_ioSession;
         }
     }

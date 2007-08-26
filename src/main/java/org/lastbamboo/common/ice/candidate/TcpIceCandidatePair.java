@@ -2,6 +2,7 @@ package org.lastbamboo.common.ice.candidate;
 
 import java.net.Socket;
 
+import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
@@ -41,6 +42,12 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
                 {
                 // TODO Auto-generated method stub
                 
+                }
+
+            public IoSession getIoSession()
+                {
+                // TODO Auto-generated method stub
+                return null;
                 }
             };
         }

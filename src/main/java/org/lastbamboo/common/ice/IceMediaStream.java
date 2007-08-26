@@ -49,6 +49,11 @@ public interface IceMediaStream
      */
     IceCandidate getLocalCandidate(InetSocketAddress localAddress);
 
+    /**
+     * Adds a local candidate.
+     * 
+     * @param localCandidate The local candidate to add.
+     */
     void addLocalCandidate(IceCandidate localCandidate);
     
     /**
@@ -145,5 +150,54 @@ public interface IceMediaStream
      * @return The state of the check list.
      */
     IceCheckListState getCheckListState();
+
+    /**
+     * Implements ICE section 7.1.2.3. Check List and Timer State Updates.
+     */
+    void updateCheckListAndTimerStates();
+
+    /**
+     * Checks whether or not there are existing pairs on either the triggered
+     * check list or the normal check list.  For the normal check list, the
+     * pair must be in the FROZEN, WAITING, or IN PROGRESS states.
+     * 
+     * @param pair The pair to check.
+     * @return <code>true</code> if there's a higher priority pair that could
+     * still complete its check, otherwise <code>false</code>.
+     */
+    boolean hasHigherPriorityPendingPair(IceCandidatePair pair);
+
+    /**
+     * Notifies the media stream that there's been a nominated pair.  The 
+     * media stream follows the process in section 8.1.2, removing all 
+     * Waiting and Frozen pairs in the check list and the triggered check queue
+     * and ceasing retransmissions for pairs that are In-Progress if their
+     * priorities are lower than the nominated pair.
+     * 
+     * @param pair The nominated pair.
+     */
+    void onNominated(IceCandidatePair pair);
+
+    /**
+     * Sets the state of the check list.
+     * 
+     * @param state The state of the check list.
+     */
+    void setCheckListState(IceCheckListState state);
+
+    /**
+     * Accessor for all nominated pairs for this stream.
+     * 
+     * @return The {@link Queue} of all nominated pairs for this stream.
+     */
+    Queue<IceCandidatePair> getNominatedPairs();
+
+    /**
+     * Accessor for the port this media stream is listening on locally for STUN
+     * messages.
+     * 
+     * @return The port this media stream is listening on for STUN messages.
+     */
+    int getStunServerPort();
     
     }

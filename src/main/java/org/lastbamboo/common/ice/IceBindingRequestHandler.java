@@ -6,7 +6,7 @@ import org.lastbamboo.common.stun.stack.message.BindingRequest;
 /**
  * Interface for ICE STUN server classes for processing Binding Requests.
  */
-public interface IceStunServerBindingRequestHandler
+public interface IceBindingRequestHandler
     {
 
     /**

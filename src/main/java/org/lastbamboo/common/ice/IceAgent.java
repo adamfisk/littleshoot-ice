@@ -1,15 +1,25 @@
 package org.lastbamboo.common.ice;
 
 import java.util.Collection;
+import java.util.Queue;
 
+import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
+import org.lastbamboo.common.offer.answer.SocketOfferAnswer;
 
 /**
  * Interface for ICE agents. 
  */
-public interface IceAgent extends OfferAnswer
+public interface IceAgent extends SocketOfferAnswer
     {
 
+    /**
+     * Accessor for the overall state of ICE processing.
+     * 
+     * @return The overall state of ICE processing for all media streams.
+     */
+    IceState getIceState();
+    
     /**
      * Sets whether or not this agent is the controlling agent.
      * 
@@ -72,5 +82,31 @@ public interface IceAgent extends OfferAnswer
      * @return The media streams for the agent.
      */
     Collection<IceMediaStream> getMediaStreams();
+
+    /**
+     * Indicates a pair has been nominated.  The agent needs to update checks
+     * and pair states accordingly and likely to begin transmitting media.
+     * 
+     * @param pair The nominated pair.
+     * @param iceMediaStream The ICE media stream the pair is a part of.
+     */
+    void onNominatedPair(IceCandidatePair pair, IceMediaStream iceMediaStream);
+
+    /**
+     * Accessor for the nominated pairs.
+     * 
+     * TODO: We only currently support the single media stream.  This method
+     * would have to change for multiple streams.
+     * @return The {@link Queue} of nominated {@link IceCandidatePair}s.
+     */
+    Queue<IceCandidatePair> getNominatedPairs();
+
+    /**
+     * Tells the agent to consider the valid pairs for this media stream for 
+     * nomination.
+     * 
+     * @param mediaStream The media stream the pair is valid for.
+     */
+    void onValidPairs(IceMediaStream mediaStream);
 
     }

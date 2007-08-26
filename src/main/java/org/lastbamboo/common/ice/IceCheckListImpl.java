@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairPriorityCalculator;
+import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
@@ -27,8 +29,12 @@ import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
+import org.lastbamboo.common.util.Closure;
+import org.lastbamboo.common.util.CollectionUtils;
+import org.lastbamboo.common.util.CollectionUtilsImpl;
 import org.lastbamboo.common.util.Pair;
 import org.lastbamboo.common.util.PairImpl;
+import org.lastbamboo.common.util.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,52 +53,48 @@ public class IceCheckListImpl implements IceCheckList
      * course of the connectivity check process "triggers", typically through
      * the discovery of new peer reflexive candidates.  
      */
-    private final Queue<IceCandidatePair> m_triggered = 
+    private final Queue<IceCandidatePair> m_triggeredQueue = 
         new ConcurrentLinkedQueue<IceCandidatePair>();
     
     private final List<IceCandidatePair> m_pairs =
         new LinkedList<IceCandidatePair>();
 
     private volatile IceCheckListState m_state = IceCheckListState.RUNNING;
-    private volatile boolean m_active;
 
     private final Collection<IceCandidate> m_localCandidates;
 
-    private final IceAgent m_iceAgent;
-
-    private final IceMediaStream m_iceMediaStream;
+    private final IceUdpStunCheckerFactory m_checkerFactory;
 
     /**
      * Creates a new check list, starting with only local candidates.
      * 
+     * @param checkerFactory The factory for generating connectivity checker
+     * classes. 
      * @param localCandidates The local candidates to use in the check list.
      */
-    public IceCheckListImpl(final IceAgent iceAgent, 
-        final IceMediaStream iceMediaStream,
+    public IceCheckListImpl(
+        final IceUdpStunCheckerFactory checkerFactory,
         final Collection<IceCandidate> localCandidates)
         {
-        m_iceAgent = iceAgent;
-        m_iceMediaStream = iceMediaStream;
+        m_checkerFactory = checkerFactory;
         m_localCandidates = localCandidates;
-        }
-
-    public Collection<IceCandidatePair> getPairs()
-        {
-        return m_pairs;
         }
     
     public IceCandidatePair removeTopTriggeredPair()
         {
-        return this.m_triggered.poll();
+        return this.m_triggeredQueue.poll();
         }
 
     public void setState(final IceCheckListState state)
         {
-        this.m_state = state;
-        synchronized (this)
+        if (this.m_state != IceCheckListState.COMPLETED)
             {
-            m_log.debug("State changed to: {}", state);
-            this.notify();
+            this.m_state = state;
+            synchronized (this)
+                {
+                m_log.debug("State changed to: {}", state);
+                this.notify();
+                }
             }
         }
 
@@ -117,39 +119,43 @@ public class IceCheckListImpl implements IceCheckList
                     }
                 }
             }
-        }
-
-    public void setActive(final boolean active)
-        {
-        this.m_active = active;
+        m_log.debug("Returning from check");
         }
 
     public boolean isActive()
         {
-        return m_active;
+        // TODO: I believe this should depend on the state of the check list.  
+        // The active state is used in determing the value of N in timer
+        // computations.
+        return false;
         }
 
     public void addTriggeredPair(final IceCandidatePair pair)
         {
-        synchronized (this.m_triggered)
+        m_log.debug("Adding triggered pair...");
+        synchronized (this)
             {
-            this.m_triggered.add(pair);
+            this.m_triggeredQueue.add(pair);
             }
         }
 
     public void recomputePairPriorities(final boolean controlling)
         {
-        recompute(this.m_triggered, controlling);
-        recompute(this.m_pairs, controlling);
-        sortPairs(this.m_pairs);
+        synchronized (this)
+            {
+            recompute(this.m_triggeredQueue, controlling);
+            recompute(this.m_pairs, controlling);
+            sortPairs(this.m_pairs);
+            }
         }
 
-    private static void recompute(final Collection<IceCandidatePair> pairs, 
+    private void recompute(final Collection<IceCandidatePair> pairs, 
         final boolean controlling)
         {
-        synchronized (pairs)
+        final Closure<IceCandidatePair> closure = 
+            new Closure<IceCandidatePair>()
             {
-            for (final IceCandidatePair pair : pairs)
+            public void execute(final IceCandidatePair pair)
                 {
                 final IceCandidate local = pair.getLocalCandidate();
                 final IceCandidate remote = pair.getRemoteCandidate();
@@ -163,12 +169,13 @@ public class IceCheckListImpl implements IceCheckList
                 remote.setControlling(!controlling);
                 pair.recomputePriority();
                 }
-            }
+            };
+        executeOnPairs(pairs, closure);
         }
 
     public void addPair(final IceCandidatePair pair)
         {
-        synchronized (this.m_pairs)
+        synchronized (this)
             {
             this.m_pairs.add(pair);
             Collections.sort(this.m_pairs);
@@ -234,7 +241,7 @@ public class IceCheckListImpl implements IceCheckList
         final List<IceCandidatePair> pruned = prunePairs(convertedPairs);
         m_log.debug(pruned.size()+" after pruned");
         final List<IceCandidatePair> sorted = sortPairs(pruned);
-        synchronized (this.m_pairs)
+        synchronized (this)
             {
             this.m_pairs.addAll(sorted);
             }
@@ -244,7 +251,7 @@ public class IceCheckListImpl implements IceCheckList
     private List<IceCandidatePair> sortPairs(
         final List<IceCandidatePair> pairs)
         {
-        synchronized (pairs)
+        synchronized (this)
             {
             Collections.sort(pairs);
             }
@@ -260,7 +267,7 @@ public class IceCheckListImpl implements IceCheckList
      * server reflexive local candidates converted to their bases.  See
      * ICE section 5.7.3.
      */
-    private List<Pair<IceCandidate, IceCandidate>> convertPairs(
+    private static List<Pair<IceCandidate, IceCandidate>> convertPairs(
         final Collection<Pair<IceCandidate, IceCandidate>> pairs)
         {
         final List<Pair<IceCandidate, IceCandidate>> convertedPairs = 
@@ -278,7 +285,7 @@ public class IceCheckListImpl implements IceCheckList
         return convertedPairs;
         }
         
-    private Pair<IceCandidate, IceCandidate> convertPair(
+    private static Pair<IceCandidate, IceCandidate> convertPair(
         final Pair<IceCandidate, IceCandidate> pair)
         {
         final IceCandidate localCandidate = pair.getFirst();
@@ -411,21 +418,20 @@ public class IceCheckListImpl implements IceCheckList
             public IceCandidatePair visitUdpHostCandidate(
                 final IceUdpHostCandidate candidate)
                 {
-                final IceStunServerBindingRequestHandler bindingRequestHandler =
-                    new IceStunServerBindingRequestHandlerImpl(m_iceAgent, 
-                        m_iceMediaStream);
-                
+                m_log.debug("Creating STUN checker...");
                 final IceStunChecker checker = 
-                    new IceUdpStunChecker(candidate, remoteCandidate, 
-                        bindingRequestHandler, m_iceAgent);
-                return new UdpIceCandidatePair(candidate, remoteCandidate, checker);
+                    m_checkerFactory.createStunChecker(candidate, 
+                        remoteCandidate);
+
+                return new UdpIceCandidatePair(candidate, remoteCandidate, 
+                    checker);
                 }
             };
         
         return localCandidate.accept(visitor);
         }
 
-    private boolean shouldPair(final IceCandidate localCandidate, 
+    private static boolean shouldPair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
         // This is specified in ICE section 5.7.1
@@ -436,7 +442,7 @@ public class IceCheckListImpl implements IceCheckList
             transportTypesMatch(localCandidate, remoteCandidate));
         }
 
-    private boolean addressTypesMatch(final IceCandidate localCandidate, 
+    private static boolean addressTypesMatch(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
         final InetAddress localAddress = 
@@ -457,8 +463,8 @@ public class IceCheckListImpl implements IceCheckList
             }
         }
     
-    private boolean transportTypesMatch(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate)
+    private static boolean transportTypesMatch(
+        final IceCandidate localCandidate, final IceCandidate remoteCandidate)
         {
         final IceTransportProtocol localTransport = 
             localCandidate.getTransport();
@@ -478,4 +484,145 @@ public class IceCheckListImpl implements IceCheckList
         return false;
         }
 
+    public boolean hasHigherPriorityPendingPair(final IceCandidatePair pair)
+        {
+        final long priority = pair.getPriority();
+        final Predicate<IceCandidatePair> triggeredPred =
+            new Predicate<IceCandidatePair>()
+            {
+            public boolean evaluate(final IceCandidatePair curPair)
+                {
+                if (curPair.getPriority() > priority) return true;
+                return false;
+                }
+            };
+        
+        if (matchesAny(this.m_triggeredQueue, triggeredPred))
+            {
+            return true;
+            }
+        
+        final Predicate<IceCandidatePair> pred =
+            new Predicate<IceCandidatePair>()
+            {
+
+            public boolean evaluate(final IceCandidatePair curPair)
+                {
+                if (curPair.getPriority() > priority)
+                    {
+                    final IceCandidatePairState state = curPair.getState();
+                    
+                    switch (state)
+                        {
+                        case FROZEN:
+                            // Fall through.
+                        case WAITING:
+                            // Fall through.
+                        case IN_PROGRESS:
+                            return true;
+                        case SUCCEEDED:
+                            // Fall through.
+                        case FAILED:
+                            return false;
+                        }
+                    }
+                return false;
+                }
+            };
+        
+        return matchesAny(pred);
+        }
+
+    public void removeWaitingAndFrozenPairs(final IceCandidatePair pair)
+        {
+        // Lock the whole check list.
+        synchronized (this)
+            {
+            for (final Iterator<IceCandidatePair> iter = m_pairs.iterator(); 
+                iter.hasNext();)
+                {
+                final IceCandidatePair curPair = iter.next();
+                final IceCandidatePairState state = curPair.getState();
+                switch (state)
+                    {
+                    case FROZEN:
+                        // Fall through.
+                    case WAITING:
+                        iter.remove();
+                        break;
+                    case IN_PROGRESS:
+                        // The following is at SHOULD strength in 8.1.2
+                        if (curPair.getPriority() < pair.getPriority())
+                            {
+                            pair.cancelStunTransaction();
+                            }
+                        break;
+                    case SUCCEEDED:
+                        // Do nothing.
+                    case FAILED:
+                        // Do nothing.
+                    }
+                }
+
+            for (final Iterator<IceCandidatePair> iter = m_triggeredQueue.iterator();
+                iter.hasNext();)
+                {
+                final IceCandidatePair curPair = iter.next();
+                final IceCandidatePairState state = curPair.getState();
+                switch (state)
+                    {
+                    case FROZEN:
+                        // Fall through.
+                    case WAITING:
+                        iter.remove();
+                        break;
+                    case IN_PROGRESS:
+                        // Do nothing in the case of triggered checks.
+                    case SUCCEEDED:
+                        // Do nothing.
+                    case FAILED:
+                        // Do nothing.
+                    }
+                }
+            }
+        }
+
+    public void executeOnPairs(final Closure<IceCandidatePair> closure)
+        {
+        executeOnPairs(this.m_pairs, closure);
+        }
+
+    public IceCandidatePair selectPair(final Predicate<IceCandidatePair> pred)
+        {
+        synchronized (this)
+            {
+            final CollectionUtils utils = new CollectionUtilsImpl();
+            return utils.selectFirst(this.m_pairs, pred);
+            }
+        }
+
+    public boolean matchesAny(final Predicate<IceCandidatePair> pred)
+        {
+        return matchesAny(this.m_pairs, pred);
+        }
+
+    private boolean matchesAny(final Collection<IceCandidatePair> pairs,
+        final Predicate<IceCandidatePair> pred)
+        {
+        synchronized (this)
+            {
+            final CollectionUtils utils = new CollectionUtilsImpl();
+            return utils.matchesAny(pairs, pred);
+            }
+        }
+    
+    private void executeOnPairs(final Collection<IceCandidatePair> pairs, 
+        final Closure<IceCandidatePair> closure)
+        {
+        synchronized (this)
+            {
+            final CollectionUtils utils = new CollectionUtilsImpl();
+            utils.forAllDo(pairs, closure);
+            }
+        }
     }

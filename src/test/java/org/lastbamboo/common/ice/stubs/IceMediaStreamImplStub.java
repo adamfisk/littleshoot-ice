@@ -106,4 +106,40 @@ public class IceMediaStreamImplStub implements IceMediaStream
         return null;
         }
 
+    public boolean hasHigherPriorityPendingPair(IceCandidatePair pair)
+        {
+        // TODO Auto-generated method stub
+        return false;
+        }
+
+    public void onNominated(IceCandidatePair pair)
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void setCheckListState(IceCheckListState state)
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void updateCheckListAndTimerStates()
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public Queue<IceCandidatePair> getNominatedPairs()
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
+    public int getStunServerPort()
+        {
+        // TODO Auto-generated method stub
+        return 0;
+        }
+
     }

@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice.candidate;
 
+import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -8,15 +9,29 @@ import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
+import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoHandlerAdapter;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.IceAgent;
 import org.lastbamboo.common.ice.IceCheckList;
 import org.lastbamboo.common.ice.IceCheckListImpl;
 import org.lastbamboo.common.ice.IceMediaStream;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
+import org.lastbamboo.common.ice.IceUdpStunCheckerFactory;
+import org.lastbamboo.common.ice.IceUdpStunCheckerFactoryImpl;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
+import org.lastbamboo.common.ice.stubs.ProtocolCodecFactoryStub;
+import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
+import org.lastbamboo.common.stun.stack.encoder.StunMessageEncoder;
 import org.lastbamboo.common.util.NetworkUtils;
+import org.lastbamboo.common.util.Pair;
+import org.lastbamboo.common.util.PairImpl;
+import org.lastbamboo.common.util.mina.DemuxableDecoderFactory;
+import org.lastbamboo.common.util.mina.DemuxableEncoderFactory;
+import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
+import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 
 /**
  * Test for check list creation.
@@ -36,11 +51,27 @@ public class IceCheckListImplTest extends TestCase
         
         final IceAgent agent = new IceAgentStub();
         final IceMediaStream mediaStream = new IceMediaStreamImplStub();
+        
+        //final Pair<DemuxableEncoderFactory, DemuxableDecoderFactory> pair =
+          //  new PairImpl<DemuxableEncoderFactory, DemuxableDecoderFactory>(new StunMessageEncoder(), stunMessageDecoder)
+        final DemuxableProtocolCodecFactory stunCodecFactory =
+            new StunDemuxableProtocolCodecFactory();
+        
+        final ProtocolCodecFactory codecFactory = 
+            new ProtocolCodecFactoryStub();
+        IoHandler clientIoHandlerStub = new IoHandlerAdapter();
+        IoHandler serverIoHandlerStub = new IoHandlerAdapter();
+        final IceUdpStunCheckerFactory checkerFactory =
+            new IceUdpStunCheckerFactoryImpl(agent, mediaStream, codecFactory, 
+                Object.class, clientIoHandlerStub, serverIoHandlerStub);
         final IceCheckList checkList = 
-            new IceCheckListImpl(agent, mediaStream, localCandidates);
+            new IceCheckListImpl(checkerFactory, localCandidates);
         checkList.formCheckList(remoteCandidates);
         
-        final Collection<IceCandidatePair> pairs = checkList.getPairs();
+        final Field pairsField = checkList.getClass().getDeclaredField("m_pairs");
+        pairsField.setAccessible(true);
+        final Collection<IceCandidatePair> pairs = 
+            (Collection<IceCandidatePair>) pairsField.get(checkList);
         
         // The pruning process should prune down to 2 pairs since the local
         // host candidate and the local server reflexive candidate become the

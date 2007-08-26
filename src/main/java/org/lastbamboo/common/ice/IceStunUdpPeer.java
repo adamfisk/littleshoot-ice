@@ -3,7 +3,7 @@ package org.lastbamboo.common.ice;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.client.BoundStunClient;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.server.StunServer;
 import org.lastbamboo.common.stun.server.StunServerImpl;
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * other hosts seems to simply go to the accepting channel.  A little squirrely
  * all the way around, but it seems to work.
  */
-public class IceStunUdpPeer implements StunClient, StunServer
+public class IceStunUdpPeer implements BoundStunClient, StunServer
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -41,9 +41,12 @@ public class IceStunUdpPeer implements StunClient, StunServer
      * 
      * @param agent The ICE agent.
      * @param iceMediaStream The media stream this ICE UDP peer is working for.
+     * @param checkerFactory The factory for creating classes to perform STUN
+     * connectivity checks.
      */
     public IceStunUdpPeer(final IceAgent agent, 
-        final IceMediaStream iceMediaStream)
+        final IceMediaStream iceMediaStream, 
+        final IceUdpStunCheckerFactory checkerFactory)
         {
         
         final StunTransactionTracker tracker = new StunTransactionTrackerImpl();
@@ -54,7 +57,8 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // Binding Responses, so we use a special visitor that handles only 
         // those but that handles both.
         final StunMessageVisitorFactory messageVisitorFactory =
-            new IceStunServerMessageVisitorFactory(tracker, agent, iceMediaStream);
+            new IceStunServerMessageVisitorFactory(tracker, agent, 
+                iceMediaStream, checkerFactory);
         
         // We generate a random port for the server. We use that as both the
         // acceptor port and the local port for the connector, as both

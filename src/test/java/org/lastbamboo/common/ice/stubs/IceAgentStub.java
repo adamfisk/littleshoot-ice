@@ -4,12 +4,16 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.util.Collection;
+import java.util.Queue;
 import java.util.Random;
 
 import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.IceAgent;
 import org.lastbamboo.common.ice.IceMediaStream;
+import org.lastbamboo.common.ice.IceState;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.ice.candidate.IceCandidatePair;
+import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 
 /**
  * Stun class for an ICE agent.
@@ -98,6 +102,54 @@ public class IceAgentStub implements IceAgent
         }
 
     public void processOffer(ByteBuffer offer) throws IOException
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public IceState getIceState()
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
+    public void onNominatedPair(IceCandidatePair pair, IceMediaStream iceMediaStream)
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public Queue<IceCandidatePair> getNominatedPairs()
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
+    public void processAnswer(ByteBuffer answer) throws IOException
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void onValidPairs(IceMediaStream mediaStream)
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public Socket createSocket()
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
+    public void processAnswer(ByteBuffer answer, OfferAnswerListener offerAnswerListener) throws IOException
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void processOffer(ByteBuffer offer, OfferAnswerListener offerAnswerListener) throws IOException
         {
         // TODO Auto-generated method stub
         

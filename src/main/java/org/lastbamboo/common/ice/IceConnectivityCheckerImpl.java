@@ -15,7 +15,6 @@ import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
-import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +57,6 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
         final Object obj = m_pair.accept(visitor);
         if (obj != null)
             {
-            this.m_mediaStream.addValidPair(this.m_pair);
             return true;
             }
         return false;
@@ -83,9 +81,8 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             final IceCandidate local = pair.getLocalCandidate();
             final IceCandidateVisitor<IoSession> visitor = 
                 new IceUdpConnectivityChecker(m_iceAgent, m_mediaStream, pair);
-            final IoSession session = local.accept(visitor);
-            pair.setIoSession(session);
-            return session;
+            local.accept(visitor);
+            return null;
             }
     
         }
@@ -118,7 +115,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
             
             final int connectTimeout;
             final int icmpTimeout;
-            if (NetworkUtils.isPrivateAddress(remote.getAddress()))
+            if (address.isSiteLocalAddress())
                 {
                 // We should be able to connect to local, private addresses 
                 // really, really quickly.  So don't wait around too long.

@@ -1,11 +1,11 @@
 package org.lastbamboo.common.ice;
 
-import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
+import org.lastbamboo.common.util.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,16 +42,15 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         final String offererOrAnswerer;
         if (this.m_agent.isControlling())
             {
-            offererOrAnswerer = "STUN-Offerer-Timer";
+            offererOrAnswerer = "ICE-Offerer-Timer";
             }
         else
             {
-            offererOrAnswerer = "STUN-Answerer-Timer";
+            offererOrAnswerer = "ICE-Answerer-Timer";
             }
         final Timer timer = new Timer(offererOrAnswerer, true);
         final TimerTask task = createTimerTask(timer);
         
-        //final int Ta = 1;
         timer.schedule(task, 0L);
         }
 
@@ -77,7 +76,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             };
         }
 
-    protected void checkPair(final Timer timer)
+    private void checkPair(final Timer timer)
         {
         final IceCandidatePair activePair = getNextPair();
         if (activePair == null)
@@ -89,46 +88,42 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             }
         else
             {
-            m_log.debug("About to perform check on: {}", activePair);
-            if (performCheck(activePair))
-                {
-                this.m_checkList.setState(IceCheckListState.COMPLETED);
-                timer.cancel();
-                }
-            else
-                {
-                m_log.debug("Scheduling new timer task...");
-                final TimerTask task = createTimerTask(timer);
-                final int Ta_i = 20;
-                
-                // TODO: The recommended formula for this is:
-                // (stunPacketSize / rtpPacketSize) * rtpPtime;
-                // We'd have to allow this to be configurable for an arbitrary
-                // protocol in use, not just RTP.  For now, we just use the 
-                // relatively safe value of 20ms supported in most NATs.
-                //
-                // Note also that our goal isn't necessarily to keep the 
-                // bandwidth in line with the ultimate protocol, as the folmula
-                // above intends, but rather to make sure the NAT can handle
-                // the number of mappings we're requesting.
-                timer.schedule(task, this.m_agent.calculateDelay(Ta_i));
-                }
+            m_log.debug("About to perform check on:\n{}", activePair);
+            performCheck(activePair);
+            m_log.debug("Scheduling new timer task...");
+            final TimerTask task = createTimerTask(timer);
+            final int Ta_i = 20;
+            
+            // TODO: The recommended formula for this is:
+            // (stunPacketSize / rtpPacketSize) * rtpPtime;
+            // We'd have to allow this to be configurable for an arbitrary
+            // protocol in use, not just RTP.  For now, we just use the 
+            // relatively safe value of 20ms supported in most NATs.
+            //
+            // Note also that our goal isn't necessarily to keep the 
+            // bandwidth in line with the ultimate protocol, as the folmula
+            // above intends, but rather to make sure the NAT can handle
+            // the number of mappings we're requesting.
+            timer.schedule(task, this.m_agent.calculateDelay(Ta_i));
             }
         }
 
-    private boolean performCheck(final IceCandidatePair pair)
+    private void performCheck(final IceCandidatePair pair)
         {
         final IceConnectivityChecker checker = 
-            new IceConnectivityCheckerImpl(this.m_agent, this.m_mediaStream, pair);
+            new IceConnectivityCheckerImpl(this.m_agent, this.m_mediaStream, 
+                pair);
         pair.setState(IceCandidatePairState.IN_PROGRESS);
-        return checker.check();
+        checker.check();
         }
 
     private IceCandidatePair getNextPair()
         {
-        final IceCandidatePair triggeredPair = removeTopTriggeredPair();
+        final IceCandidatePair triggeredPair = 
+            this.m_checkList.removeTopTriggeredPair();
         if (triggeredPair != null)
             {
+            m_log.debug("Using triggered pair...");
             return triggeredPair;
             }
         else
@@ -141,6 +136,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
                     getPairInState(IceCandidatePairState.FROZEN);
                 if (frozen != null) 
                     {
+                    m_log.debug("Scheduler using frozen pair...");
                     frozen.setState(IceCandidatePairState.WAITING);
                     return frozen;
                     }
@@ -148,14 +144,10 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
                 }
             else
                 {
+                m_log.debug("Scheduler using waiting pair...");
                 return waitingPair;
                 }
             }
-        }
-
-    private IceCandidatePair removeTopTriggeredPair()
-        {
-        return this.m_checkList.removeTopTriggeredPair();
         }
 
     /**
@@ -167,20 +159,14 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
      */
     private IceCandidatePair getPairInState(final IceCandidatePairState state)
         {
-        // The pairs are already ordered.
-        final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
-        synchronized (pairs)
+        final Predicate<IceCandidatePair> pred = 
+            new Predicate<IceCandidatePair>()
             {
-            for (final IceCandidatePair pair : pairs)
+            public boolean evaluate(final IceCandidatePair pair)
                 {
-                if (pair.getState() == state)
-                    {
-                    return pair;
-                    }
+                return pair.getState() == state;
                 }
-            }
-            
-        return null;
+            };
+        return this.m_checkList.selectPair(pred);
         }
-
     }

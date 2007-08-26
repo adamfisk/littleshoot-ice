@@ -20,6 +20,7 @@ public class IceStunServerMessageVisitorFactory
     private final StunTransactionTracker m_transactionTracker;
     private final IceAgent m_iceAgent;
     private final IceMediaStream m_iceMediaStream;
+    private final IceUdpStunCheckerFactory m_udpStunCheckerFactory;
 
     /**
      * Creates a new STUN message visitor factory for ICE.
@@ -31,25 +32,23 @@ public class IceStunServerMessageVisitorFactory
      */
     public IceStunServerMessageVisitorFactory(
         final StunTransactionTracker transactionTracker, 
-        final IceAgent agent, final IceMediaStream iceMediaStream)
+        final IceAgent agent, final IceMediaStream iceMediaStream,
+        final IceUdpStunCheckerFactory udpStunCheckerFactory)
         {
         m_transactionTracker = transactionTracker;
         m_iceAgent = agent;
         m_iceMediaStream = iceMediaStream;
+        m_udpStunCheckerFactory = udpStunCheckerFactory;
         }
 
     public StunMessageVisitor createVisitor(final IoSession session)
         {
-        final IceStunServerBindingRequestHandler handler =
-            new IceStunServerBindingRequestHandlerImpl( 
-                this.m_iceAgent, this.m_iceMediaStream);
+        final IceBindingRequestHandler handler =
+            new IceBindingRequestHandlerImpl( 
+                this.m_iceAgent, this.m_iceMediaStream, 
+                    this.m_udpStunCheckerFactory);
         return new IceStunServerMessageVisitor(this.m_transactionTracker, session,
             this.m_iceAgent, this.m_iceMediaStream, handler);
-        }
-
-    public void onIcmpError()
-        {
-        m_log.warn("ICMP error on STUN 'server' side");
         }
 
     }

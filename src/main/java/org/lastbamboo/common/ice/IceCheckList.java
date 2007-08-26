@@ -4,19 +4,14 @@ import java.util.Collection;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
+import org.lastbamboo.common.util.Closure;
+import org.lastbamboo.common.util.Predicate;
 
 /**
  * Interface for ICE check lists. 
  */
 public interface IceCheckList
     {
-
-    /**
-     * Accessor for the candidate pairs in the check list.
-     * 
-     * @return The check list.
-     */
-    Collection<IceCandidatePair> getPairs();
 
     /**
      * Sets the state of the check list.
@@ -33,14 +28,6 @@ public interface IceCheckList
     IceCheckListState getState();
 
     void check();
-
-    /** 
-     * Sets whether or not the check list is "active" and should count towards
-     * the value of N in timer computation from section 5.8.
-     * 
-     * @param active Whether or not the check list is active.
-     */
-    void setActive(boolean active);
     
     /**
      * Returns whether or not this check list is considered "active" and should 
@@ -91,4 +78,52 @@ public interface IceCheckList
      * check list.
      */
     void formCheckList(Collection<IceCandidate> remoteCandidates);
+
+    /**
+     * Checks whether or not there are existing pairs on either the triggered
+     * check list or the normal check list.  For the normal check list, the
+     * pair must be in the FROZEN, WAITING, or IN PROGRESS states.
+     * 
+     * @param pair The pair to check.
+     * @return <code>true</code> if there's a higher priority pair that could
+     * still complete its check, otherwise <code>false</code>.
+     */
+    boolean hasHigherPriorityPendingPair(IceCandidatePair pair);
+
+    /**
+     * Notifies the media stream that there's been a nominated pair.  The 
+     * media stream follows the process in section 8.1.2, removing all 
+     * Waiting and Frozen pairs in the check list and the triggered check queue
+     * and ceasing retransmissions for pairs that are In-Progress if their
+     * priorities are lower than the nominated pair.
+     * 
+     * @param pair The nominated pair.
+     */
+    void removeWaitingAndFrozenPairs(IceCandidatePair pair);
+
+    /**
+     * Executes the specified {@link Closure} on candidate pairs in the 
+     * check list.
+     * 
+     * @param closure The {@link Closure} to execute.
+     */
+    void executeOnPairs(Closure<IceCandidatePair> closure);
+
+    /**
+     * Selects the first pair matching the predicate.
+     * 
+     * @param pred The {@link Predicate} to check with.
+     * @return The first matching pair, or <code>null</code> if no such pair
+     * exists.
+     */
+    IceCandidatePair selectPair(Predicate<IceCandidatePair> pred);
+
+    /**
+     * Returns whether or not any pairs match the specified criteria.
+     * 
+     * @param pred The {@link Predicate} to match against.
+     * @return <code>true</code> if any pairs match the specified criteria,
+     * otherwise <code>false</code>.
+     */
+    boolean matchesAny(Predicate<IceCandidatePair> pred);
     }
