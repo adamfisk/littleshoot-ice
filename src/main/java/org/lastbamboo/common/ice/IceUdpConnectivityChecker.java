@@ -70,12 +70,12 @@ public class IceUdpConnectivityChecker
         
         // Now send a BindingRequest with PRIORITY, USE-CANDIDATE, 
         // ICE-CONTROLLING etc.
-        final long priority = 
+        final long requestPriority = 
             IcePriorityCalculator.calculatePriority(
                 IceCandidateType.PEER_REFLEXIVE, IceTransportProtocol.UDP);
 
         final IcePriorityAttribute priorityAttribute = 
-            new IcePriorityAttribute(priority);
+            new IcePriorityAttribute(requestPriority);
         
         final StunAttribute controlling;
         
@@ -129,10 +129,7 @@ public class IceUdpConnectivityChecker
                 {
                 // Now check the mapped address and see if it matches
                 // any of the local candidates we know about.  If it 
-                // does not, it's a new peer reflexive candidate.  If it 
-                // does, it's an existing candidate that will be added to
-                // the valid list.
-                
+                // does not, it's a new peer reflexive candidate. 
                 final InetSocketAddress mappedAddress = 
                     sbr.getMappedAddress();
                 final IceCandidate matchingCandidate = 
@@ -149,16 +146,18 @@ public class IceUdpConnectivityChecker
                     // from the pair, i.e. the candidate we're visiting.
                     
                     // We use the PRIORITY from the Binding Request, as
-                    // specified in section 7.1.2.2.1.
+                    // specified in section 7.1.2.2.1. and 7.1.2.2.2.
                     final IceCandidate prc = 
                         new IceUdpPeerReflexiveCandidate(mappedAddress, 
                             candidate, m_iceAgent.isControlling(), 
-                            priority);
+                            requestPriority);
                     m_mediaStream.addLocalCandidate(prc);
                     return prc;
                     }
                 else
                     {
+                    // This will have the priority signalled in the original
+                    // SDP, as specified in 7.1.2.2.2.
                     return matchingCandidate;
                     }
                 }
@@ -246,7 +245,7 @@ public class IceUdpConnectivityChecker
         else
             {
             return processSuccess(newLocalCandidate, remoteCandidate, 
-                includedUseCandidate, priority);
+                includedUseCandidate, requestPriority);
             }
         
         }
@@ -332,7 +331,8 @@ public class IceUdpConnectivityChecker
                 else
                     {
                     // It's a triggered check, so we use the priority
-                    // from the Binding Request we just sent.
+                    // from the Binding Request we just sent, as specified in
+                    // section 7.1.2.2.2.
                     
                     // TODO: Review this a little bit.  Is it OK to just use
                     // the remote candidate we started with and change the
