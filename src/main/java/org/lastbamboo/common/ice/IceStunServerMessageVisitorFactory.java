@@ -47,8 +47,8 @@ public class IceStunServerMessageVisitorFactory
             new IceStunServerConnectivityCheckerImpl( 
                 this.m_iceAgent, this.m_iceMediaStream, 
                     this.m_udpStunCheckerFactory);
-        return new IceStunServerMessageVisitor(this.m_transactionTracker, session,
-            this.m_iceAgent, this.m_iceMediaStream, handler);
+        return new IceStunServerMessageVisitor(this.m_transactionTracker, 
+            session, handler);
         }
 
     }
