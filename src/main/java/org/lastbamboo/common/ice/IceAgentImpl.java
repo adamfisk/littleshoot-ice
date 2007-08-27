@@ -84,7 +84,7 @@ public class IceAgentImpl implements IceAgent
     private void setIceState(final IceState state)
         {
         this.m_iceState.set(state);
-        this.m_offerAnswerListener.onOfferAnswerComplete();
+        this.m_offerAnswerListener.onOfferAnswerComplete(this);
         }
     
     public void onValidPairsForAllComponents(final IceMediaStream mediaStream)

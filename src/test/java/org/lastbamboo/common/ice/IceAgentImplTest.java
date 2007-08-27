@@ -2,7 +2,6 @@ package org.lastbamboo.common.ice;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -20,6 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.stubs.StunClientStub;
+import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 import org.lastbamboo.common.stun.client.StunClient;
@@ -142,7 +142,7 @@ public class IceAgentImplTest
         final OfferAnswerListener offererStateListener =
             new OfferAnswerListener()
             {
-            public void onOfferAnswerComplete()
+            public void onOfferAnswerComplete(final MediaOfferAnswer offerAnswer)
                 {
                 offererCompleted.set(true);
                 }
@@ -150,7 +150,7 @@ public class IceAgentImplTest
         final OfferAnswerListener answererStateListener =
             new OfferAnswerListener()
             {
-            public void onOfferAnswerComplete()
+            public void onOfferAnswerComplete(final MediaOfferAnswer offerAnswer)
                 {
                 answererCompleted.set(true);
                 }
