@@ -37,7 +37,7 @@ public class IceStunServerMessageVisitorFactory
 
     public StunMessageVisitor createVisitor(final IoSession session)
         {
-        return new IceStunServerConnectivityCheckerImpl( 
+        return new IceStunServerConnectivityChecker( 
             this.m_iceAgent, this.m_iceMediaStream, 
                 this.m_udpStunCheckerFactory, session);
         }
