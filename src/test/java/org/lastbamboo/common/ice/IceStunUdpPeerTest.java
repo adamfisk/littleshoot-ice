@@ -21,7 +21,7 @@ import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
-import org.lastbamboo.common.stun.stack.decoder.StunProtocolCodecFactory;
+import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;

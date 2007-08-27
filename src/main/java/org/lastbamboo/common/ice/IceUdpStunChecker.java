@@ -56,7 +56,7 @@ public class IceUdpStunChecker implements IceStunChecker,
 
     private final StunTransactionTracker m_transactionTracker;
 
-    private boolean m_icmpError;
+    private volatile boolean m_icmpError;
     
     private final Object m_requestLock = new Object();
 
