@@ -19,7 +19,7 @@ public class IceMediaStreamImplStub implements IceMediaStream
 
         }
 
-    public IceCandidate addPeerReflexive(BindingRequest request,
+    public IceCandidate addRemotePeerReflexive(BindingRequest request,
             InetSocketAddress localAddress, InetSocketAddress remoteAddress)
         {
         // TODO Auto-generated method stub

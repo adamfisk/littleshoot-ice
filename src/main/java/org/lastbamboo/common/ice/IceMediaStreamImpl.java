@@ -148,7 +148,7 @@ public class IceMediaStreamImpl implements IceMediaStream
         m_checkList.check();
         }
     
-    public IceCandidate addPeerReflexive(final BindingRequest request,
+    public IceCandidate addRemotePeerReflexive(final BindingRequest request,
         final InetSocketAddress localAddress, 
         final InetSocketAddress remoteAddress)
         {

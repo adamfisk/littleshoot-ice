@@ -127,7 +127,7 @@ public interface IceMediaStream
      * Binding Request.
      * @return The new peer reflexive remote candidate.
      */
-    IceCandidate addPeerReflexive(BindingRequest request, 
+    IceCandidate addRemotePeerReflexive(BindingRequest request, 
         InetSocketAddress localAddress, InetSocketAddress remoteAddress);
     
     /**
