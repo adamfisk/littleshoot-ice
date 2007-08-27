@@ -6,11 +6,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import junit.framework.TestCase;
-
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -18,9 +15,11 @@ import org.apache.mina.transport.socket.nio.DatagramAcceptor;
 import org.apache.mina.transport.socket.nio.DatagramAcceptorConfig;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
+import org.junit.Assert;
+import org.junit.Test;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
-import org.lastbamboo.common.ice.stubs.ProtocolCodecFactoryStub;
+import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.decoder.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
@@ -37,32 +36,35 @@ import org.slf4j.LoggerFactory;
 /**
  * Test sending of STUN messages between ICE STUN UDP peers.
  */
-public class IceStunUdpPeerTest extends TestCase
+public class IceStunUdpPeerTest 
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
+    /**
+     * Tests BOTH the client and server side of STUN UDP peers.
+     * 
+     * @throws Exception If any unexpected error occurs.
+     */
+    @Test
     public void testIceStunUdpPeers() throws Exception
         {
         final IceAgent iceAgent = new IceAgentStub();
         final IceMediaStream iceMediaStream = new IceMediaStreamImplStub();
-        final ProtocolCodecFactory codecFactory =
-            new ProtocolCodecFactoryStub();
-        final IoHandler clientIoHandler = new IoHandlerAdapter();
-        final IoHandler serverIoHandler = new IoHandlerAdapter();
-        final IceUdpStunCheckerFactory checkerFactory =
-            new IceUdpStunCheckerFactoryImpl(iceAgent, iceMediaStream, 
-                codecFactory, Object.class, clientIoHandler, serverIoHandler);
+
+        final StunMessageVisitorFactory messageVisitorFactory =
+            new IceStunServerMessageVisitorFactory(iceAgent, 
+                iceMediaStream, null);
+            
         final IceStunUdpPeer peer1 = 
-            new IceStunUdpPeer(iceAgent, iceMediaStream, checkerFactory);
+            new IceStunUdpPeer(messageVisitorFactory, true);
         final IceStunUdpPeer peer2 = 
-            new IceStunUdpPeer(iceAgent, iceMediaStream, checkerFactory);
+            new IceStunUdpPeer(messageVisitorFactory, true);
         
         final InetSocketAddress address1 = peer1.getHostAddress();
         final InetSocketAddress address2 = peer2.getHostAddress();
         
-        assertFalse(address1.equals(address2));
-        
+        Assert.assertFalse(address1.equals(address2));
         m_log.debug("Sending STUN request to: "+address2);
         
         final StunMessageVisitor<InetSocketAddress> visitor = 
@@ -83,17 +85,25 @@ public class IceStunUdpPeerTest extends TestCase
                 }
             };
 
-        for (int i = 0; i < 10; i++)
+        // We use separate clients here because the ICE STUN peers aren't 
+        // designed to receive incoming Binding Requests on their connected
+        // ports -- the separate connectivity checkers take care of that.
+        final UdpStunClient stunClient1 = new UdpStunClient();
+        final UdpStunClient stunClient2 = new UdpStunClient();
+        final InetSocketAddress localAddress1 = stunClient1.getHostAddress();
+        final InetSocketAddress localAddress2 = stunClient2.getHostAddress();
+        
+        for (int i = 0; i < 4; i++)
             {
-            final StunMessage msg1 = peer1.write(new BindingRequest(), address2);
+            final StunMessage msg1 = stunClient1.write(new BindingRequest(), address2);
             final InetSocketAddress mappedAddress1 = msg1.accept(visitor);
-            assertEquals("Mapped address should equal the local address", 
-                address1, mappedAddress1);
+            Assert.assertEquals("Mapped address should equal the local address", 
+                localAddress1, mappedAddress1);
             
-            final StunMessage msg2 = peer2.write(new BindingRequest(), address1);
+            final StunMessage msg2 = stunClient2.write(new BindingRequest(), address1);
             final InetSocketAddress mappedAddress2 = msg2.accept(visitor);
-            assertEquals("Mapped address should equal the local address", 
-                address2, mappedAddress2);
+            Assert.assertEquals("Mapped address should equal the local address", 
+                localAddress2, mappedAddress2);
             }
         }
     
@@ -111,6 +121,7 @@ public class IceStunUdpPeerTest extends TestCase
      *  
      * @throws Exception If any unexpected error occurs.
      */
+    @Test
     public void testUdpConnectingAndBinding() throws Exception
         {
         final AtomicInteger serverRequestsReceived = new AtomicInteger(0);
@@ -144,7 +155,7 @@ public class IceStunUdpPeerTest extends TestCase
 
             public void onIcmpError()
                 {
-                fail("ICMP error!!");
+                Assert.fail("ICMP error!!");
                 }
             };
         
@@ -176,7 +187,7 @@ public class IceStunUdpPeerTest extends TestCase
 
             public void onIcmpError()
                 {
-                fail("ICMP error!!");
+                Assert.fail("ICMP error!!");
                 }
             };
 
@@ -217,12 +228,12 @@ public class IceStunUdpPeerTest extends TestCase
                 }
             }
         
-        assertEquals("Client did not receive expected messages", 
+        Assert.assertEquals("Client did not receive expected messages", 
             clientRequestsReceived.get(), expectedClientMessages);
         
         // Now make sure that out of all the messages we just sent, none went
         // to the acceptor.
-        assertTrue("Server received the message!!", 
+        Assert.assertTrue("Server received the message!!", 
             serverRequestsReceived.get() == 0);
         
 
@@ -249,11 +260,11 @@ public class IceStunUdpPeerTest extends TestCase
                 }
             }
         // Now make sure the server **DID** receive the message.
-        assertEquals("ERROR: server DID NOT receive the expected messages!!", 
+        Assert.assertEquals("ERROR: server DID NOT receive the expected messages!!", 
             expectedServerMessages, serverRequestsReceived.get());
         
         // Make sure the number of client messages hasn't changed.
-        assertEquals("Client did not receive expected messages", 
+        Assert.assertEquals("Client did not receive expected messages", 
             clientRequestsReceived.get(), expectedClientMessages);
         }
     

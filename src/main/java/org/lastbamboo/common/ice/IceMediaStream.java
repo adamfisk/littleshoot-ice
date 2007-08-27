@@ -191,13 +191,5 @@ public interface IceMediaStream
      * @return The {@link Queue} of all nominated pairs for this stream.
      */
     Queue<IceCandidatePair> getNominatedPairs();
-
-    /**
-     * Accessor for the port this media stream is listening on locally for STUN
-     * messages.
-     * 
-     * @return The port this media stream is listening on for STUN messages.
-     */
-    int getStunServerPort();
     
     }

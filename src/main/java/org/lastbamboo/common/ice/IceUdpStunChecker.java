@@ -47,8 +47,6 @@ public class IceUdpStunChecker implements IceStunChecker,
      */
     private volatile boolean m_transactionCancelled = false;
 
-    private final IceStunServerConnectivityChecker m_bindingRequestHandler;
-
     private final IceAgent m_iceAgent;
     
     private volatile int m_writeCallsForPair = 0;
@@ -56,11 +54,11 @@ public class IceUdpStunChecker implements IceStunChecker,
     private final Map<UUID, StunMessage> m_idsToResponses =
         new ConcurrentHashMap<UUID, StunMessage>();
 
-    private final StunTransactionTrackerImpl m_transactionTracker;
+    private final StunTransactionTracker m_transactionTracker;
 
     private boolean m_icmpError;
     
-    private final Object REQUEST_LOCK = new Object();
+    private final Object m_requestLock = new Object();
 
     private final IoHandler m_protocolIoHandler;
 
@@ -68,21 +66,22 @@ public class IceUdpStunChecker implements IceStunChecker,
 
     private final ProtocolCodecFactory m_codecFactory;
 
+    private final StunMessageVisitorFactory m_stunServerCheckerFactory;
+
     /**
      * Creates a new ICE connectivity checker over UDP.
      * 
      * @param localCandidate The local address.
      * @param remoteCandidate The remote address.
-     * @param bindingRequestHandler Visitor for Binding Requests.
      * @param iceAgent The top-level ICE agent.
      */
     public IceUdpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final IceStunServerConnectivityChecker bindingRequestHandler, 
+        final StunMessageVisitorFactory messageVisitorFactory,
         final IceAgent iceAgent, final ProtocolCodecFactory codecFactory,
         final Class clazz, final IoHandler ioHandler)
         {
-        this.m_bindingRequestHandler = bindingRequestHandler;
+        this.m_stunServerCheckerFactory = messageVisitorFactory;
         this.m_iceAgent = iceAgent;
         this.m_codecFactory = codecFactory;
         this.m_clazz = clazz;
@@ -115,8 +114,6 @@ public class IceUdpStunChecker implements IceStunChecker,
         cfg.setThreadModel(
             ExecutorThreadModel.getInstance(
                 "IceUdpStunChecker-"+controlling));
-        //final ProtocolCodecFactory codecFactory = 
-          //  new StunProtocolCodecFactory();
         final ProtocolCodecFilter stunFilter = 
             new ProtocolCodecFilter(this.m_codecFactory);
         
@@ -151,7 +148,10 @@ public class IceUdpStunChecker implements IceStunChecker,
         public StunMessageVisitor<StunMessage> createVisitor(
             final IoSession session)
             {
-            return new IceConnectivityStunMessageVisitor(m_transactionTracker);
+            final StunMessageVisitor serverChecker = 
+                m_stunServerCheckerFactory.createVisitor(session);
+            return new IceConnectivityStunMessageVisitor(m_transactionTracker,
+                serverChecker);
             }
         }
     
@@ -159,16 +159,21 @@ public class IceUdpStunChecker implements IceStunChecker,
         extends StunClientMessageVisitor<StunMessage>
         {
         
+        private final StunMessageVisitor m_serverVisitor;
+
+
         private IceConnectivityStunMessageVisitor(
-            final StunTransactionTracker transactionTracker)
+            final StunTransactionTracker transactionTracker, 
+            final StunMessageVisitor serverVisitor)
             {
             super(transactionTracker);
+            m_serverVisitor = serverVisitor;
             }
 
         public StunMessage visitBindingRequest(final BindingRequest binding)
             {
             m_log.debug("Handling Binding Request on: {}", m_ioSession);
-            m_bindingRequestHandler.handleBindingRequest(m_ioSession, binding);
+            this.m_serverVisitor.visitBindingRequest(binding);
             return null;
             }
         
@@ -181,9 +186,9 @@ public class IceUdpStunChecker implements IceStunChecker,
                 m_log.debug("Received ICMP error: "+message);
                 }
             m_icmpError = true;
-            synchronized (REQUEST_LOCK)
+            synchronized (m_requestLock)
                 {
-                REQUEST_LOCK.notify();
+                m_requestLock.notify();
                 }
             return null;
             }
@@ -225,7 +230,7 @@ public class IceUdpStunChecker implements IceStunChecker,
         this.m_transactionTracker.addTransaction(bindingRequest, this, 
             localAddress, remoteAddress);
         
-        synchronized (REQUEST_LOCK)
+        synchronized (m_requestLock)
             {   
             this.m_transactionCancelled = false;
             this.m_icmpError = false;
@@ -309,7 +314,7 @@ public class IceUdpStunChecker implements IceStunChecker,
             {
             try
                 {
-                REQUEST_LOCK.wait(waitTime);
+                m_requestLock.wait(waitTime);
                 }
             catch (final InterruptedException e)
                 {
@@ -334,10 +339,10 @@ public class IceUdpStunChecker implements IceStunChecker,
     private Object notifyWaiters(final StunMessage request, 
         final StunMessage response)
         {
-        synchronized (REQUEST_LOCK)
+        synchronized (m_requestLock)
             {
             this.m_idsToResponses.put(request.getTransactionId(), response);
-            REQUEST_LOCK.notify();
+            m_requestLock.notify();
             }
         return null;
         }

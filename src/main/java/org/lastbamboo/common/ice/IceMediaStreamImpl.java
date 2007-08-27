@@ -20,9 +20,9 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
-import org.lastbamboo.common.stun.client.BoundStunClient;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
@@ -55,7 +55,7 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final IceMediaStreamDesc m_desc;
     private final Collection<IceCandidate> m_remoteCandidates = 
         new LinkedList<IceCandidate>();
-    private final BoundStunClient m_udpStunPeer;
+    private final StunClient m_udpStunPeer;
     
     /**
      * Creates a new media stream for ICE.
@@ -86,7 +86,7 @@ public class IceMediaStreamImpl implements IceMediaStream
      */
     public IceMediaStreamImpl(final IceAgent iceAgent, 
         final IceMediaStreamDesc desc, final StunClient tcpTurnClient,
-        final BoundStunClient udpStunClient, 
+        final StunClient udpStunClient, 
         final ProtocolCodecFactory codecFactory,
         final Class mediaClass, final IoHandler clientMediaIoHandler,
         final IoHandler serverMediaIoHandler)
@@ -97,11 +97,14 @@ public class IceMediaStreamImpl implements IceMediaStream
             new IceUdpStunCheckerFactoryImpl(this.m_iceAgent, this, 
                 codecFactory, mediaClass, clientMediaIoHandler, 
                 serverMediaIoHandler);
-        
+        final StunMessageVisitorFactory messageVisitorFactory =
+            new IceStunServerMessageVisitorFactory(this.m_iceAgent, 
+                this, checkerFactory);
         if (udpStunClient == null && desc.isUdp())
             {
             this.m_udpStunPeer = 
-                new IceStunUdpPeer(iceAgent, this, checkerFactory);
+                new IceStunUdpPeer(messageVisitorFactory, 
+                    iceAgent.isControlling());
             }
         else
             {
@@ -529,10 +532,4 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         return this.m_nominatedPairs;
         }
-
-    public int getStunServerPort()
-        {
-        return this.m_udpStunPeer.getBoundAddress().getPort();
-        }
-
     }

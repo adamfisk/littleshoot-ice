@@ -12,6 +12,7 @@ import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ import org.slf4j.LoggerFactory;
  * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2
  */
 public class IceStunServerConnectivityCheckerImpl 
-    implements IceStunServerConnectivityChecker
+    extends StunMessageVisitorAdapter<Void> 
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -33,6 +34,8 @@ public class IceStunServerConnectivityCheckerImpl
 
     private final IceUdpStunCheckerFactory m_checkerFactory;
 
+    private final IoSession m_ioSession;
+
     /**
      * Creates a new message visitor for the specified session.
      * 
@@ -41,62 +44,56 @@ public class IceStunServerConnectivityCheckerImpl
      * for. 
      * @param checkerFactory The factory for creating new classes for 
      * performing connectivity checks.
+     * @param session 
      */
     public IceStunServerConnectivityCheckerImpl(
-        final IceAgent agent, 
-        final IceMediaStream iceMediaStream,
-        final IceUdpStunCheckerFactory checkerFactory)
+        final IceAgent agent, final IceMediaStream iceMediaStream,
+        final IceUdpStunCheckerFactory checkerFactory, final IoSession session)
         {
         m_agent = agent;
         m_iceMediaStream = iceMediaStream;
         m_checkerFactory = checkerFactory;
+        m_ioSession = session;
         }
-
-    public void handleBindingRequest(final IoSession ioSession,
-        final BindingRequest binding)
+    
+    public Void visitBindingRequest(final BindingRequest request)
         {
-        m_log.debug("Visiting Binding Request...");
-        if (ioSession == null)
-            {
-            throw new NullPointerException("Null session!?!?");
-            }
-        
+        m_log.debug("Visiting Binding Request message: {}", request);
         // We need to check ICE controlling and controlled roles for conflicts.
         // This implements:
         // 7.2.1.1.  Detecting and Repairing Role Conflicts
         final IceRoleChecker checker = new IceRoleCheckerImpl();
         final BindingErrorResponse errorResponse = 
-            checker.checkAndRepairRoles(binding, this.m_agent);
+            checker.checkAndRepairRoles(request, this.m_agent);
         
         if (errorResponse != null)
             {
             // This can happen in the rare case that there's a role conflict.
             this.m_log.debug("Sending error response...");
-            ioSession.write(errorResponse);
+            this.m_ioSession.write(errorResponse);
             }
         else
             {
             // We now implement the remaining sections 7.2.1 following 7.2.1.1 
             // since we're returning a success response.
-            processNoRoleConflict(ioSession, binding);
+            processNoRoleConflict(request);
             }
+        return null;
         }
 
     /**
      * Process the typical case where the {@link BindingRequest} did not 
      * create a role conflict.
      * 
-     * @param ioSession The {@link IoSession} the request arrived on.
      * @param binding The {@link BindingRequest}.
      */
-    private void processNoRoleConflict(final IoSession ioSession, 
-        final BindingRequest binding)
+    private void processNoRoleConflict(final BindingRequest binding)
         {
 
         final InetSocketAddress localAddress = 
-            (InetSocketAddress) ioSession.getLocalAddress();
+            (InetSocketAddress) this.m_ioSession.getLocalAddress();
         final InetSocketAddress remoteAddress = 
-            (InetSocketAddress) ioSession.getRemoteAddress();
+            (InetSocketAddress) this.m_ioSession.getRemoteAddress();
         
         // TODO: This should include other attributes!!
         final UUID transactionId = binding.getTransactionId();
@@ -106,7 +103,7 @@ public class IceStunServerConnectivityCheckerImpl
         
         // We write the response as soon as possible.
         m_log.debug("Writing success response...");
-        ioSession.write(response);
+        this.m_ioSession.write(response);
         
         // Check to see if the remote address matches the address of
         // any remote candidates we know about.  If it does not, it's a

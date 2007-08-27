@@ -18,10 +18,8 @@ import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.junit.Assert;
 import org.junit.Test;
-import org.lastbamboo.common.ice.stubs.BoundStunClientStub;
 import org.lastbamboo.common.ice.stubs.StunClientStub;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
-import org.lastbamboo.common.stun.client.BoundStunClient;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
@@ -68,8 +66,8 @@ public class IceAgentImplTest
                 final int hostPort = 65044;
                 final InetSocketAddress serverReflexive =
                     new InetSocketAddress("53.43.90.1", 2452);
-                final BoundStunClient udpStunClient = 
-                    new BoundStunClientStub(serverReflexive, hostPort);
+                final StunClient udpStunClient = 
+                    new StunClientStub(serverReflexive, hostPort);
                 final DemuxableProtocolCodecFactory stunCodecFactory =
                     new StunDemuxableProtocolCodecFactory();
                 final DemuxableProtocolCodecFactory otherCodecFactory =
@@ -94,8 +92,8 @@ public class IceAgentImplTest
                 final int hostPort = 48290;
                 final InetSocketAddress serverReflexive =
                     new InetSocketAddress("21.9.90.1", 9852);
-                final BoundStunClient udpStunClient = 
-                    new BoundStunClientStub(serverReflexive, hostPort);
+                final StunClient udpStunClient = 
+                    new StunClientStub(serverReflexive, hostPort);
                 final DemuxableProtocolCodecFactory stunCodecFactory =
                     new StunDemuxableProtocolCodecFactory();
                 final DemuxableProtocolCodecFactory otherCodecFactory =

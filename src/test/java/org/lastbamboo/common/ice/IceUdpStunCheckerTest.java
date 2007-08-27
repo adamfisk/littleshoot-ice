@@ -15,6 +15,9 @@ import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 
@@ -47,17 +50,26 @@ public class IceUdpStunCheckerTest
             new InetSocketAddress("stun01.sipphone.com", 3478);
         final IceCandidate remoteCandidate =
             new IceUdpHostCandidate(remoteAddress, false);
-        final IceStunServerConnectivityChecker brh = 
-            new IceStunServerConnectivityChecker()
-            {
-            public void handleBindingRequest(final IoSession ioSession, 
-                final BindingRequest binding)
-                {
-                }
-            };
         final IceAgent iceAgent = new IceAgentStub();
+        
+        
+        // Dummy since we're only testing client-side messages here.
+        final StunMessageVisitorFactory visitorFactory = 
+            new StunMessageVisitorFactory<Void>()
+            {
+
+            public StunMessageVisitor<Void> createVisitor(IoSession session)
+                {
+                return new StunMessageVisitorAdapter<Void>()
+                    {
+                
+                    };
+                }
+        
+            };
         final IceUdpStunChecker checker = 
-            new IceUdpStunChecker(localCandidate, remoteCandidate, brh, 
+            new IceUdpStunChecker(localCandidate, remoteCandidate, 
+                visitorFactory, 
                 iceAgent, codecFactory, Object.class, clientIoHandler);
         
         final BindingRequest bindingRequest = new BindingRequest();

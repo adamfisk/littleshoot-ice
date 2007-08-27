@@ -83,6 +83,12 @@ public class IceCandidateGathererImplTest extends TestCase
             // TODO Auto-generated method stub
             return null;
             }
+
+        public InetSocketAddress getLocalAddress()
+            {
+            // TODO Auto-generated method stub
+            return null;
+            }
     
         }
     }

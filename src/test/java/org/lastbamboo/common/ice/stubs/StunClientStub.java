@@ -98,4 +98,10 @@ public class StunClientStub implements StunClient
         return null;
         }
 
+    public InetSocketAddress getLocalAddress()
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
     }

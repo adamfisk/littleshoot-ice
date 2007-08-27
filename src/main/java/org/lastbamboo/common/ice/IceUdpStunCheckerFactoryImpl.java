@@ -3,6 +3,7 @@ package org.lastbamboo.common.ice;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 
 public class IceUdpStunCheckerFactoryImpl implements IceUdpStunCheckerFactory
     {
@@ -35,9 +36,9 @@ public class IceUdpStunCheckerFactoryImpl implements IceUdpStunCheckerFactory
     public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
-        final IceStunServerConnectivityChecker bindingRequestHandler =
-            new IceStunServerConnectivityCheckerImpl(m_iceAgent, 
-                m_iceMediaStream, this);
+        final StunMessageVisitorFactory messageVisitorFactory =
+            new IceStunServerMessageVisitorFactory(this.m_iceAgent, 
+                this.m_iceMediaStream, this);
         
         final IoHandler demuxIoHandler;
         
@@ -51,8 +52,9 @@ public class IceUdpStunCheckerFactoryImpl implements IceUdpStunCheckerFactory
             demuxIoHandler = this.m_serverDemuxIoHandler;
             }
 
-        return new IceUdpStunChecker(localCandidate, remoteCandidate, 
-            bindingRequestHandler, m_iceAgent, this.m_codecFactory, 
+        return new IceUdpStunChecker(localCandidate, remoteCandidate,
+            messageVisitorFactory,
+            m_iceAgent, this.m_codecFactory, 
             this.m_demuxClass, demuxIoHandler);
         }
     }
