@@ -14,6 +14,7 @@ import org.lastbamboo.common.ice.IceState;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
+import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 
 /**
  * Stun class for an ICE agent.
@@ -150,6 +151,18 @@ public class IceAgentStub implements IceAgent
         }
 
     public void processOffer(ByteBuffer offer, OfferAnswerListener offerAnswerListener) throws IOException
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void listen()
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void startMedia(OfferAnswerMediaListener mediaListener)
         {
         // TODO Auto-generated method stub
         

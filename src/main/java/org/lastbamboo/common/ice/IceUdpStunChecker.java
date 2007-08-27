@@ -294,7 +294,7 @@ public class IceUdpStunChecker implements IceStunChecker,
             
             else
                 {
-                m_log.warn("Did not get response!!");
+                m_log.warn("Did not get response on: {}", this.m_ioSession);
                 return new NullStunMessage();
                 }
             }

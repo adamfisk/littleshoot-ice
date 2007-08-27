@@ -2,7 +2,6 @@ package org.lastbamboo.common.ice;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.Socket;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -16,6 +15,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
+import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +65,8 @@ public class IceAgentImpl implements IceAgent
      * using ICE to establish.
      * @param controlling Whether or not the agent will start out as 
      * controlling.
-     * @param offerAnswerListener Listener for events in the offer/answer
-     * exchange.
+     * @param iceMediaFactory The factory for creating media that needs to 
+     * know about ICE.
      */
     public IceAgentImpl(final StunClient tcpTurnClient, 
         final IceMediaStreamFactory mediaStreamFactory, 
@@ -303,8 +303,22 @@ public class IceAgentImpl implements IceAgent
             }
         }
 
-    public Socket createSocket()
+    public void startMedia(final OfferAnswerMediaListener mediaListener)
         {
-        return this.m_iceMediaFactory.newSocket(this);
+        final IceCandidatePair pair = getNominatedPair();
+        this.m_iceMediaFactory.newMedia(pair, isControlling(), mediaListener);
+        }
+
+    private IceCandidatePair getNominatedPair()
+        {
+        final Queue<IceCandidatePair> pairs = getNominatedPairs();
+        
+        final IceCandidatePair topPriorityPair = pairs.peek();
+        if (topPriorityPair == null)
+            {
+            m_log.warn("No nominated pairs");
+            return null;
+            }
+        return topPriorityPair;
         }
     }

@@ -1,6 +1,7 @@
 package org.lastbamboo.common.ice;
 
-import java.net.Socket;
+import org.lastbamboo.common.ice.candidate.IceCandidatePair;
+import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 
 
 /**
@@ -9,6 +10,15 @@ import java.net.Socket;
 public interface IceMediaFactory
     {
 
-    Socket newSocket(IceAgent iceAgent);
+    /**
+     * Starts an ICE media session.
+     * 
+     * @param nominatedPair The nominated ICE candidate pair to use for media.
+     * @param client Whether or not this agent is the client -- useful for
+     * media that are handled differently on the client and server sides.
+     * @param mediaListener The class to notify of media events.
+     */
+    void newMedia(IceCandidatePair nominatedPair, boolean client, 
+        OfferAnswerMediaListener mediaListener);
 
     }

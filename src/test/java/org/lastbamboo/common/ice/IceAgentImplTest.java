@@ -18,8 +18,10 @@ import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.junit.Assert;
 import org.junit.Test;
+import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.stubs.StunClientStub;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
+import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
@@ -111,10 +113,10 @@ public class IceAgentImplTest
         final IceMediaFactory iceMediaFactory = new IceMediaFactory()
             {
 
-            public Socket newSocket(IceAgent iceAgent)
+            public void newMedia(IceCandidatePair pair, boolean client, OfferAnswerMediaListener mediaListener)
                 {
                 // TODO Auto-generated method stub
-                return null;
+                
                 }
             
             };

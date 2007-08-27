@@ -4,13 +4,12 @@ import java.util.Collection;
 import java.util.Queue;
 
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.offer.answer.OfferAnswer;
-import org.lastbamboo.common.offer.answer.SocketOfferAnswer;
+import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
 
 /**
  * Interface for ICE agents. 
  */
-public interface IceAgent extends SocketOfferAnswer
+public interface IceAgent extends MediaOfferAnswer
     {
 
     /**
