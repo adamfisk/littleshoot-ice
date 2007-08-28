@@ -110,8 +110,8 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
 
     private void performCheck(final IceCandidatePair pair)
         {
-        final IceConnectivityChecker checker = 
-            new IceConnectivityCheckerImpl(this.m_agent, this.m_mediaStream, 
+        final IceClientConnectivityChecker checker = 
+            new IceClientConnectivityCheckerImpl(this.m_agent, this.m_mediaStream, 
                 pair);
         pair.setState(IceCandidatePairState.IN_PROGRESS);
         checker.check();

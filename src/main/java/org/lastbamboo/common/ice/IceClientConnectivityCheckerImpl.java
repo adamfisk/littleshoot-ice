@@ -22,7 +22,8 @@ import org.slf4j.LoggerFactory;
  * Class that performs ICE connectivity checks for a single pair of ICE 
  * candidates. 
  */
-public class IceConnectivityCheckerImpl implements IceConnectivityChecker
+public class IceClientConnectivityCheckerImpl 
+    implements IceClientConnectivityChecker
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -40,7 +41,7 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
      * @param mediaStream The high level media stream. 
      * @param pair The pair to check
      */
-    public IceConnectivityCheckerImpl(final IceAgent iceAgent,
+    public IceClientConnectivityCheckerImpl(final IceAgent iceAgent,
         final IceMediaStream mediaStream, 
         final IceCandidatePair pair)
         {
@@ -49,17 +50,12 @@ public class IceConnectivityCheckerImpl implements IceConnectivityChecker
         this.m_mediaStream = mediaStream;
         }
 
-    public boolean check()
+    public void check()
         {
         m_log.debug("Checking pair...");
         final IceCandidatePairVisitor<Object> visitor = 
             new ConnectPairVisitor();
-        final Object obj = m_pair.accept(visitor);
-        if (obj != null)
-            {
-            return true;
-            }
-        return false;
+        m_pair.accept(visitor);
         }
     
     private final class ConnectPairVisitor 
