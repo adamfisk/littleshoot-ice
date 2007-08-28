@@ -64,26 +64,33 @@ public class IceUdpStunChecker implements IceStunChecker,
 
     private final Class m_clazz;
 
-    private final ProtocolCodecFactory m_codecFactory;
+    private final ProtocolCodecFactory m_demuxingCodecFactory;
 
-    private final StunMessageVisitorFactory m_stunServerCheckerFactory;
+    private final StunMessageVisitorFactory m_messageVisitorFactory;
 
     /**
      * Creates a new ICE connectivity checker over UDP.
      * 
      * @param localCandidate The local address.
      * @param remoteCandidate The remote address.
+     * @param messageVisitorFactory The factory for creating visitors for 
+     * incoming messages.
      * @param iceAgent The top-level ICE agent.
+     * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
+     * demultiplexing between STUN and another protocol.
+     * @param clazz The top-level message class the protocol other than STUN.
+     * @param ioHandler The {@link IoHandler} to use for the other protocol.
      */
     public IceUdpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory messageVisitorFactory,
-        final IceAgent iceAgent, final ProtocolCodecFactory codecFactory,
+        final StunMessageVisitorFactory messageVisitorFactory, 
+        final IceAgent iceAgent, 
+        final ProtocolCodecFactory demuxingCodecFactory,
         final Class clazz, final IoHandler ioHandler)
         {
-        this.m_stunServerCheckerFactory = messageVisitorFactory;
+        this.m_messageVisitorFactory = messageVisitorFactory;
         this.m_iceAgent = iceAgent;
-        this.m_codecFactory = codecFactory;
+        this.m_demuxingCodecFactory = demuxingCodecFactory;
         this.m_clazz = clazz;
         this.m_protocolIoHandler = ioHandler;
         this.m_ioSession = createClientSession(
@@ -115,7 +122,7 @@ public class IceUdpStunChecker implements IceStunChecker,
             ExecutorThreadModel.getInstance(
                 "IceUdpStunChecker-"+controlling));
         final ProtocolCodecFilter stunFilter = 
-            new ProtocolCodecFilter(this.m_codecFactory);
+            new ProtocolCodecFilter(this.m_demuxingCodecFactory);
         
         connector.getFilterChain().addLast("stunFilter", stunFilter);
         
@@ -149,7 +156,7 @@ public class IceUdpStunChecker implements IceStunChecker,
             final IoSession session)
             {
             final StunMessageVisitor serverChecker = 
-                m_stunServerCheckerFactory.createVisitor(session);
+                m_messageVisitorFactory.createVisitor(session);
             return new IceConnectivityStunMessageVisitor(m_transactionTracker,
                 serverChecker);
             }
@@ -294,7 +301,9 @@ public class IceUdpStunChecker implements IceStunChecker,
             
             else
                 {
-                m_log.warn("Did not get response on: {}", this.m_ioSession);
+                // This will happen quite often, such as when we haven't
+                // yet successfully punched a hole in the firewall.
+                m_log.debug("Did not get response on: {}", this.m_ioSession);
                 return new NullStunMessage();
                 }
             }
