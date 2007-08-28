@@ -244,6 +244,7 @@ public class IceCheckListImpl implements IceCheckList
         synchronized (this)
             {
             this.m_pairs.addAll(sorted);
+            m_log.debug("Created pairs:\n"+this.m_pairs);
             }
         }
     

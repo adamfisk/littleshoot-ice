@@ -334,19 +334,7 @@ public class IceMediaStreamImpl implements IceMediaStream
             {
             return null;
             }
-        
-        /*
-        final Collection<IceCandidatePair> pairs = this.m_checkList.getPairs();
-        for (final IceCandidatePair pair : pairs)
-            {
-            if (pair.getLocalCandidate().getSocketAddress().equals(localAddress) &&
-                pair.getRemoteCandidate().getSocketAddress().equals(remoteAddress))
-                {
-                return pair;
-                }
-            }
-            */
-        
+
         final Predicate<IceCandidatePair> pred = 
             new Predicate<IceCandidatePair>()
             {
