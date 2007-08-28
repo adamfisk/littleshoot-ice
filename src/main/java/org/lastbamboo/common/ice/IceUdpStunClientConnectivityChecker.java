@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * 
  * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.1
  */
-public class IceStunClientConnectivityChecker 
+public class IceUdpStunClientConnectivityChecker 
     extends IceCandidateVisitorAdapter<IoSession>
     {
 
@@ -55,7 +55,7 @@ public class IceStunClientConnectivityChecker
      * @param iceMediaStream The media stream this check is trying to establish.
      * @param udpPair The candidate pair.
      */
-    public IceStunClientConnectivityChecker(final IceAgent iceAgent, 
+    public IceUdpStunClientConnectivityChecker(final IceAgent iceAgent, 
         final IceMediaStream iceMediaStream, final IceCandidatePair udpPair)
         {
         m_iceAgent = iceAgent;

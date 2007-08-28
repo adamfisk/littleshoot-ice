@@ -76,7 +76,7 @@ public class IceClientConnectivityCheckerImpl
             {
             final IceCandidate local = pair.getLocalCandidate();
             final IceCandidateVisitor<IoSession> visitor = 
-                new IceStunClientConnectivityChecker(m_iceAgent, m_mediaStream, pair);
+                new IceUdpStunClientConnectivityChecker(m_iceAgent, m_mediaStream, pair);
             local.accept(visitor);
             return null;
             }
