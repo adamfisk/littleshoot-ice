@@ -68,7 +68,12 @@ public class IceClientConnectivityCheckerImpl
             final TcpConnectCandidateVisitor visitor = 
                 new TcpConnectCandidateVisitor(pair);
             final Socket sock = local.accept(visitor);
-            pair.setSocket(sock);
+            if (sock != null)
+                {
+                pair.setSocket(sock);
+                pair.nominate();
+                m_iceAgent.onNominatedPair(pair, m_mediaStream);
+                }
             return sock;
             }
 
