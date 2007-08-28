@@ -86,8 +86,9 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
 
     /**
      * Creates a new encoder for encoder ICE candidates into SDP.
-     * @param mimeContentType 
-     * @param mimeContentSubtype 
+     * 
+     * @param mimeContentType The MIME content type for the SDP. 
+     * @param mimeContentSubtype The MIME content subtype for the SDP.
      */
     public IceCandidateSdpEncoder(final String mimeContentType, 
         final String mimeContentSubtype)
@@ -115,7 +116,6 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
                 new Vector<TimeDescription>();
             timeDescriptions.add(t);
             
-            //this.m_mediaDescriptions = new Vector<MediaDescription>();
             this.m_sessionDescription = createSessionDescription(); 
             this.m_sessionDescription.setVersion(
                 this.m_sdpFactory.createVersion(0));

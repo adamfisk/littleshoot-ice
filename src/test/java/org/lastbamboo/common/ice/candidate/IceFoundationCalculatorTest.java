@@ -8,9 +8,6 @@ import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
-import org.lastbamboo.common.ice.stubs.StunClientStub;
-import org.lastbamboo.common.stun.client.StunClient;
-
 /**
  * Tests calculating foundations for ICE candidates. 
  */
@@ -26,10 +23,6 @@ public class IceFoundationCalculatorTest extends TestCase
             new InetSocketAddress("192.168.1.1", 33454);
         final InetSocketAddress hostAddress3 = 
             new InetSocketAddress("192.168.1.100", 33454);
-        
-        //final StunClient udpStunClient1 = new UdpStunClient();
-        //final StunClient udpStunClient2 = new UdpStunClient();
-        //final StunClient udpStunClient3 = new UdpStunClient();
         
         final IceCandidate tcpBaseCandidate1 = 
             new IceTcpHostPassiveCandidate(hostAddress1, false); 
@@ -50,10 +43,6 @@ public class IceFoundationCalculatorTest extends TestCase
         // Create the STUN server addresses.
         final InetAddress stun1 = InetAddress.getByName("47.54.23.2");
         final InetAddress stun2 = InetAddress.getByName("4.4.23.2");
-        final InetAddress stun3 = InetAddress.getByName("7.5.23.2");
-        final StunClient stunClient1 = new StunClientStub(stun1, hostAddress1);
-        final StunClient stunClient2 = new StunClientStub(stun2, hostAddress2);
-        final StunClient stunClient3 = new StunClientStub(stun3, hostAddress3);
         
         final IceCandidate udpBaseCandidate1 =
             new IceUdpHostCandidate(hostAddress1, false);

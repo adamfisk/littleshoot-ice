@@ -60,8 +60,8 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         final InetSocketAddress sa3 = 
             new InetSocketAddress("192.168.1.3", 7652);
         
-        final InetAddress relatedAddress = InetAddress.getByName("42.12.32.1");
-        final int relatedPort = 4728;
+        //final InetAddress relatedAddress = InetAddress.getByName("42.12.32.1");
+        //final int relatedPort = 4728;
         final InetAddress relayRelatedAddress = 
             InetAddress.getByName("97.12.82.13");
         final int relayRelatedPort = 8768;
