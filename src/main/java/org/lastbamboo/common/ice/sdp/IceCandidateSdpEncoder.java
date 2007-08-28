@@ -84,6 +84,8 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
 
     private final String m_mimeContentSubtype;
 
+    private IceUdpHostCandidate m_udpHostCandidate;
+
     /**
      * Creates a new encoder for encoder ICE candidates into SDP.
      * 
@@ -180,8 +182,18 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
             // Use the UDP server reflexive address as the top level address.
             // This is slightly hacky because it relies on the UDP server
             // reflexive candidate being there.
+            final IceCandidate defaultCandidate;
+            if (this.m_udpServerReflexiveCandidate == null)
+                {
+                // This can happen if we're not firewalled, for example.
+                defaultCandidate = this.m_udpHostCandidate;
+                }
+            else
+                {
+                defaultCandidate = this.m_udpServerReflexiveCandidate;
+                }
             final MediaDescription md = 
-                createMessageMediaDesc(this.m_udpServerReflexiveCandidate);
+                createMessageMediaDesc(defaultCandidate);
             md.setAttributes(m_candidates);
             
             LOG.debug("Adding media description");
@@ -230,6 +242,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
     public Null visitUdpHostCandidate(final IceUdpHostCandidate candidate)
         {
         addAttribute(candidate);
+        m_udpHostCandidate = candidate;
         return ObjectUtils.NULL;
         }
 
