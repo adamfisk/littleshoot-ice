@@ -68,7 +68,7 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
             final SessionDescription sdp = 
                 this.m_sdpFactory.createSessionDescription(responseBodyString);
             final Collection mediaDescriptions = sdp.getMediaDescriptions(true);
-            LOG.debug("Creating candidates from media descs: " + 
+            LOG.debug("Creating candidates from media descs:\n" + 
                 mediaDescriptions);
             return createCandidates(mediaDescriptions, controlling);
             }

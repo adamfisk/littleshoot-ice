@@ -139,7 +139,7 @@ public class IceMediaStreamImpl implements IceMediaStream
         
         m_checkList.formCheckList(remoteCandidates);
         
-        processPairGroups();
+        //processPairGroups();
         
         final IceCheckScheduler scheduler = 
             new IceCheckSchedulerImpl(this.m_iceAgent, this, m_checkList);
