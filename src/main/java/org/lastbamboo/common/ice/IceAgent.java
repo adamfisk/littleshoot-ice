@@ -62,7 +62,7 @@ public interface IceAgent extends MediaOfferAnswer
     void onValidPairsForAllComponents(IceMediaStream mediaStream);
 
     /**
-     * Tels the listener to unfreeze any other check lists.
+     * Tells the listener to unfreeze any other check lists.
      * 
      * @param mediaStream The media stream initiating the unfreeze operation.
      */

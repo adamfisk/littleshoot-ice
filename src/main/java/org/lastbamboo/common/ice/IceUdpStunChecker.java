@@ -283,13 +283,13 @@ public class IceUdpStunChecker implements IceStunChecker,
                 return new IcmpErrorStunMessage();
                 }
 
-            // Even if the transaction was cancelled, we still may have 
+            // Even if the transaction was canceled, we still may have 
             // received a successful response.  If we did, we process it as
             // usual.  This is specified in 7.2.1.4.
             if (m_idsToResponses.containsKey(id))
                 {
-                final StunMessage response = this.m_idsToResponses.get(id);
-                m_log.debug("Returning some sort of response...");
+                final StunMessage response = this.m_idsToResponses.remove(id);
+                m_log.debug("Returning response: {}", response);
                 return response;
                 }
             
