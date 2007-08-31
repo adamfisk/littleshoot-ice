@@ -289,7 +289,7 @@ public class IceUdpStunChecker implements IceStunChecker,
             if (m_idsToResponses.containsKey(id))
                 {
                 final StunMessage response = this.m_idsToResponses.remove(id);
-                m_log.debug("Returning response: {}", response);
+                m_log.debug("Returning STUN response: {}", response);
                 return response;
                 }
             
