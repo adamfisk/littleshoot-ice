@@ -42,8 +42,7 @@ public class IceClientConnectivityCheckerImpl
      * @param pair The pair to check
      */
     public IceClientConnectivityCheckerImpl(final IceAgent iceAgent,
-        final IceMediaStream mediaStream, 
-        final IceCandidatePair pair)
+        final IceMediaStream mediaStream, final IceCandidatePair pair)
         {
         this.m_iceAgent = iceAgent;
         this.m_pair = pair;
@@ -53,16 +52,15 @@ public class IceClientConnectivityCheckerImpl
     public void check()
         {
         m_log.debug("Checking pair...");
-        final IceCandidatePairVisitor<Object> visitor = 
-            new ConnectPairVisitor();
+        final IceCandidatePairVisitor<Void> visitor = new ConnectPairVisitor();
         m_pair.accept(visitor);
         }
     
     private final class ConnectPairVisitor 
-        implements IceCandidatePairVisitor<Object>
+        implements IceCandidatePairVisitor<Void>
         {
 
-        public Object visitTcpIceCandidatePair(final TcpIceCandidatePair pair)
+        public Void visitTcpIceCandidatePair(final TcpIceCandidatePair pair)
             {
             final IceCandidate local = pair.getLocalCandidate();
             final TcpConnectCandidateVisitor visitor = 
@@ -74,14 +72,15 @@ public class IceClientConnectivityCheckerImpl
                 pair.nominate();
                 m_iceAgent.onNominatedPair(pair, m_mediaStream);
                 }
-            return sock;
+            return null;
             }
 
-        public Object visitUdpIceCandidatePair(final UdpIceCandidatePair pair)
+        public Void visitUdpIceCandidatePair(final UdpIceCandidatePair pair)
             {
             final IceCandidate local = pair.getLocalCandidate();
             final IceCandidateVisitor<IoSession> visitor = 
-                new IceUdpStunClientConnectivityChecker(m_iceAgent, m_mediaStream, pair);
+                new IceUdpStunClientConnectivityChecker(m_iceAgent, 
+                    m_mediaStream, pair);
             local.accept(visitor);
             return null;
             }
