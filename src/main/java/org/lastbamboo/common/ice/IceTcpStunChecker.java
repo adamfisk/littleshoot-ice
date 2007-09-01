@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.RuntimeIOException;
 import org.apache.mina.common.ThreadModel;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -115,13 +116,23 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
         final ConnectFuture cf = 
             m_connector.connect(this.m_remoteAddress, this.m_demuxer);
         cf.join(connectTimeout);
-        final IoSession session = cf.getSession();
-        
-        if (session == null)
+        try
             {
+            final IoSession session = cf.getSession();
+            if (session == null)
+                {
+                return false;
+                }
+            this.m_ioSession = session;
+            return true;
+            }
+        catch (final RuntimeIOException e)
+            {
+            // This happens when we can't connect.
+            m_log.debug("Could not connect to host: {}", this.m_remoteAddress);
             return false;
             }
-        this.m_ioSession = session;
-        return true;
+        
+
         }
     }
