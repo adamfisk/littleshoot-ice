@@ -18,8 +18,8 @@ import org.lastbamboo.common.ice.IceCheckListImpl;
 import org.lastbamboo.common.ice.IceMediaStream;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.ice.IceUdpStunCheckerFactory;
-import org.lastbamboo.common.ice.IceUdpStunCheckerFactoryImpl;
+import org.lastbamboo.common.ice.IceStunCheckerFactory;
+import org.lastbamboo.common.ice.IceStunCheckerFactoryImpl;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
 import org.lastbamboo.common.ice.stubs.ProtocolCodecFactoryStub;
@@ -61,8 +61,8 @@ public class IceCheckListImplTest extends TestCase
             new ProtocolCodecFactoryStub();
         IoHandler clientIoHandlerStub = new IoHandlerAdapter();
         IoHandler serverIoHandlerStub = new IoHandlerAdapter();
-        final IceUdpStunCheckerFactory checkerFactory =
-            new IceUdpStunCheckerFactoryImpl(agent, mediaStream, codecFactory, 
+        final IceStunCheckerFactory checkerFactory =
+            new IceStunCheckerFactoryImpl(agent, mediaStream, codecFactory, 
                 Object.class, clientIoHandlerStub, serverIoHandlerStub);
         final IceCheckList checkList = 
             new IceCheckListImpl(checkerFactory, localCandidates);

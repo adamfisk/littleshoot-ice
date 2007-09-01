@@ -8,10 +8,9 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceCandidateType;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
+import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
@@ -31,12 +30,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class that performs connectivity checks for a single UDP pair.  This 
+ * Class that performs connectivity checks for a single UDP or TCP pair.  This 
  * implements ICE section 7.1 from:<p>
  * 
  * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.1
  */
-public class IceUdpStunClientConnectivityChecker 
+public class IceStunClientConnectivityChecker 
     extends IceCandidateVisitorAdapter<IoSession>
     {
 
@@ -55,7 +54,7 @@ public class IceUdpStunClientConnectivityChecker
      * @param iceMediaStream The media stream this check is trying to establish.
      * @param udpPair The candidate pair.
      */
-    public IceUdpStunClientConnectivityChecker(final IceAgent iceAgent, 
+    public IceStunClientConnectivityChecker(final IceAgent iceAgent, 
         final IceMediaStream iceMediaStream, final IceCandidatePair udpPair)
         {
         m_iceAgent = iceAgent;
@@ -63,11 +62,8 @@ public class IceUdpStunClientConnectivityChecker
         m_pair = udpPair;
         }
     
-    public IoSession visitUdpHostCandidate(
-        final IceUdpHostCandidate candidate)
+    private IoSession visitLocalCandidate(final IceCandidate candidate)
         {
-        m_log.debug("Checking UDP host candidate...");
-        
         // See ICE section 7 "Performing Connectivity Checks".
         final IceCandidate remoteCandidate = this.m_pair.getRemoteCandidate();
         
@@ -250,27 +246,21 @@ public class IceUdpStunClientConnectivityChecker
             return processSuccess(newLocalCandidate, remoteCandidate, 
                 includedUseCandidate, requestPriority);
             }
+        }
+    
+    public IoSession visitUdpHostCandidate(
+        final IceUdpHostCandidate candidate)
+        {
+        m_log.debug("Checking UDP host candidate...");
         
+        return visitLocalCandidate(candidate);
         }
-
-    public IoSession visitUdpPeerReflexiveCandidate(
-        final IceUdpPeerReflexiveCandidate candidate)
+    
+    public IoSession visitTcpActiveCandidate(
+        final IceTcpActiveCandidate candidate)
         {
-        // TODO Auto-generated method stub
-        return null;
-        }
-
-    public IoSession visitUdpRelayCandidate(
-        final IceUdpRelayCandidate candidate)
-        {
-        // TODO Auto-generated method stub
-        return null;
-        }
-
-    public IoSession visitUdpServerReflexiveCandidate(
-        final IceUdpServerReflexiveCandidate candidate)
-        {
-        return null;
+        m_log.debug("Visiting TCP active candidate: {}", candidate);
+        return visitLocalCandidate(candidate);
         }
     
     /**

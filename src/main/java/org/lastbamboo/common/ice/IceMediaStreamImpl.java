@@ -55,7 +55,6 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final IceMediaStreamDesc m_desc;
     private final Collection<IceCandidate> m_remoteCandidates = 
         new LinkedList<IceCandidate>();
-    private final StunClient m_udpStunPeer;
     
     /**
      * Creates a new media stream for ICE.
@@ -93,25 +92,29 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         m_iceAgent = iceAgent;
         m_desc = desc;
-        final IceUdpStunCheckerFactory checkerFactory =
-            new IceUdpStunCheckerFactoryImpl(this.m_iceAgent, this, 
+        final IceStunCheckerFactory checkerFactory =
+            new IceStunCheckerFactoryImpl(this.m_iceAgent, this, 
                 codecFactory, mediaClass, clientMediaIoHandler, 
                 serverMediaIoHandler);
         final StunMessageVisitorFactory messageVisitorFactory =
             new IceStunServerMessageVisitorFactory(this.m_iceAgent, 
                 this, checkerFactory);
+        final StunClient udpStunPeer;
         if (udpStunClient == null && desc.isUdp())
             {
-            this.m_udpStunPeer = 
+            udpStunPeer = 
                 new IceStunUdpPeer(messageVisitorFactory, 
                     iceAgent.isControlling());
             }
         else
             {
-            this.m_udpStunPeer = udpStunClient;
+            udpStunPeer = udpStunClient;
             }
+        final StunClient tcpIceClient = 
+            new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 
+                iceAgent.isControlling());
         final IceCandidateGatherer gatherer =
-            new IceCandidateGathererImpl(tcpTurnClient, m_udpStunPeer, 
+            new IceCandidateGathererImpl(tcpIceClient, udpStunPeer, 
                 iceAgent.isControlling(), desc);
         this.m_localCandidates = gatherer.gatherCandidates();
         this.m_checkList = 

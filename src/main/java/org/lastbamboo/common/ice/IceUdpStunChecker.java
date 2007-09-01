@@ -3,17 +3,14 @@ package org.lastbamboo.common.ice;
 import java.net.InetSocketAddress;
 
 import org.apache.mina.common.ConnectFuture;
-import org.apache.mina.common.ExecutorThreadModel;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.ThreadModel;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.stun.stack.StunDemuxingIoHandler;
-import org.lastbamboo.common.stun.stack.StunIoHandler;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,45 +48,22 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
         super(localCandidate, remoteCandidate, messageVisitorFactory, 
             iceAgent, demuxingCodecFactory, clazz, ioHandler);
         }
-    
-    protected IoSession createClientSession(
-        final IceCandidate localCandidate, final IceCandidate remoteCandidate, 
-        final boolean controlling,
-        final StunMessageVisitorFactory<StunMessage> visitorFactory, 
-        final ProtocolCodecFactory demuxingCodecFactory, final Class clazz, 
-        final IoHandler protocolIoHandler)
+
+    @Override
+    protected void createConnector(
+        final InetSocketAddress localAddress, 
+        final InetSocketAddress remoteAddress, 
+        final ThreadModel threadModel, 
+        final ProtocolCodecFilter stunFilter, 
+        final IoHandler demuxer)
         {
-        final InetSocketAddress localAddress = localCandidate.getSocketAddress();
-        final InetSocketAddress remoteAddress = 
-            remoteCandidate.getSocketAddress();
         final DatagramConnector connector = new DatagramConnector();
         
         final DatagramConnectorConfig cfg = connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
-
-        final String controllingString;
-        if (controlling)
-            {
-            controllingString = "Controlling";
-            }
-        else
-            {
-            controllingString = "Not-Controlling";
-            }
-        
-        cfg.setThreadModel(
-            ExecutorThreadModel.getInstance(
-                "IceUdpStunChecker-"+controllingString));
-        final ProtocolCodecFilter stunFilter = 
-            new ProtocolCodecFilter(demuxingCodecFactory);
+        cfg.setThreadModel(threadModel);
         
         connector.getFilterChain().addLast("stunFilter", stunFilter);
-        
-        final IoHandler ioHandler = 
-            new StunIoHandler<StunMessage>(visitorFactory);
-        
-        final IoHandler demuxer = new StunDemuxingIoHandler(clazz, 
-            protocolIoHandler, ioHandler);
         LOG.debug("Connecting from "+localAddress+" to "+remoteAddress);
         final ConnectFuture cf = 
             connector.connect(remoteAddress, localAddress, demuxer);
@@ -100,8 +74,14 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
             {
             LOG.error("Could not create session from "+
                 localAddress +" to "+remoteAddress);
-            throw new NullPointerException("Could not create session!!");
             }
-        return session;
+        this.m_ioSession = session;
+        }
+
+    @Override
+    protected boolean connect()
+        {
+        // This should never happen, but you never know.
+        return this.m_ioSession != null;
         }
     }

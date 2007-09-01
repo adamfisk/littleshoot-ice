@@ -5,10 +5,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.id.uuid.UUID;
+import org.apache.mina.common.ExecutorThreadModel;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.ThreadModel;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
+import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.stun.stack.StunDemuxingIoHandler;
+import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
@@ -30,7 +35,7 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
-    private final IoSession m_ioSession;
+    protected IoSession m_ioSession;
 
     /**
      * TODO: Review if this works!!
@@ -48,7 +53,12 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
     
     private final Object m_requestLock = new Object();
 
-    private StunMessageVisitorFactory<StunMessage> m_checkerVisitorFactory;
+    private final StunMessageVisitorFactory<StunMessage> 
+        m_checkerVisitorFactory;
+
+    protected final StunDemuxingIoHandler m_demuxer;
+
+    protected final InetSocketAddress m_remoteAddress;
 
     /**
      * Creates a new ICE connectivity checker over any transport.
@@ -61,7 +71,8 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
      * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
      * demultiplexing between STUN and another protocol.
      * @param clazz The top-level message class the protocol other than STUN.
-     * @param ioHandler The {@link IoHandler} to use for the other protocol.
+     * @param protocolIoHandler The {@link IoHandler} to use for the other 
+     * protocol.
      */
     public AbstractIceStunChecker(
         final IceCandidate localCandidate, 
@@ -69,30 +80,61 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         final StunMessageVisitorFactory messageVisitorFactory, 
         final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
-        final Class clazz, final IoHandler ioHandler)
+        final Class clazz, final IoHandler protocolIoHandler)
         {
         this.m_transactionTracker = new StunTransactionTrackerImpl();
         this.m_checkerVisitorFactory = 
             new IceStunCheckerMessageVisitorFactory(messageVisitorFactory, 
                 this.m_transactionTracker);
-        this.m_ioSession = createClientSession(localCandidate, remoteCandidate, 
-            iceAgent.isControlling(), 
-            this.m_checkerVisitorFactory,
-            demuxingCodecFactory, clazz, ioHandler);
+        final IoHandler ioHandler = 
+            new StunIoHandler<StunMessage>(this.m_checkerVisitorFactory);
+        
+        this.m_demuxer = new StunDemuxingIoHandler(clazz, 
+            protocolIoHandler, ioHandler);
+        
+
+        final String controllingString;
+        if (iceAgent.isControlling())
+            {
+            controllingString = "Controlling";
+            }
+        else
+            {
+            controllingString = "Not-Controlling";
+            }
+        
+        final ThreadModel threadModel = ExecutorThreadModel.getInstance(
+            getClass().getSimpleName()+"-"+controllingString);
+        final ProtocolCodecFilter stunFilter = 
+            new ProtocolCodecFilter(demuxingCodecFactory);
+        this.m_remoteAddress = remoteCandidate.getSocketAddress();
+        createConnector(
+            localCandidate.getSocketAddress(), 
+            remoteCandidate.getSocketAddress(), 
+            threadModel, stunFilter, m_demuxer);
 
         }
     
-    protected abstract IoSession createClientSession(
-        IceCandidate localCandidate, IceCandidate remoteCandidate, 
-        boolean controlling, 
-        StunMessageVisitorFactory<StunMessage> visitorFactory,
-        ProtocolCodecFactory demuxingCodecFactory, Class clazz, 
-        IoHandler ioHandler);
+    protected abstract void createConnector(
+        InetSocketAddress localAddress, InetSocketAddress remoteAddress, 
+        ThreadModel threadModel, ProtocolCodecFilter stunFilter, 
+        IoHandler demuxer);
+    
+    protected abstract boolean connect();
     
     public StunMessage write(final BindingRequest bindingRequest, 
         final long rto)
         {
         m_log.debug("Writing Binding Request...");
+        
+        // TCP implementations, for example, need to establish a connection
+        // before performing sending STUN.  If we can't connect, it's a 
+        // failure.
+        if (!connect())
+            {
+            return new NullStunMessage();
+            }
+        
         this.m_writeCallsForPair++;
         try
             {

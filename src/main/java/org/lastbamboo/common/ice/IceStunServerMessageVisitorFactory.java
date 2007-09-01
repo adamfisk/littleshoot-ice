@@ -18,7 +18,7 @@ public class IceStunServerMessageVisitorFactory
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final IceAgent m_iceAgent;
     private final IceMediaStream m_iceMediaStream;
-    private final IceUdpStunCheckerFactory m_udpStunCheckerFactory;
+    private final IceStunCheckerFactory m_udpStunCheckerFactory;
 
     /**
      * Creates a new STUN message visitor factory for ICE.
@@ -28,7 +28,7 @@ public class IceStunServerMessageVisitorFactory
      */
     public IceStunServerMessageVisitorFactory(
         final IceAgent agent, final IceMediaStream iceMediaStream,
-        final IceUdpStunCheckerFactory udpStunCheckerFactory)
+        final IceStunCheckerFactory udpStunCheckerFactory)
         {
         m_iceAgent = agent;
         m_iceMediaStream = iceMediaStream;

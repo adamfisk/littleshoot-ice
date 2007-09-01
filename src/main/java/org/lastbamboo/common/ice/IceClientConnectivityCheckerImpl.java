@@ -52,8 +52,14 @@ public class IceClientConnectivityCheckerImpl
     public void check()
         {
         m_log.debug("Checking pair...");
-        final IceCandidatePairVisitor<Void> visitor = new ConnectPairVisitor();
-        m_pair.accept(visitor);
+        //final IceCandidatePairVisitor<Void> visitor = new ConnectPairVisitor();
+        //m_pair.accept(visitor);
+        
+        final IceCandidate local = m_pair.getLocalCandidate();
+        final IceCandidateVisitor<IoSession> visitor = 
+            new IceStunClientConnectivityChecker(m_iceAgent, 
+                m_mediaStream, m_pair);
+        local.accept(visitor);
         }
     
     private final class ConnectPairVisitor 
@@ -62,6 +68,7 @@ public class IceClientConnectivityCheckerImpl
 
         public Void visitTcpIceCandidatePair(final TcpIceCandidatePair pair)
             {
+            /*
             final IceCandidate local = pair.getLocalCandidate();
             final TcpConnectCandidateVisitor visitor = 
                 new TcpConnectCandidateVisitor(pair);
@@ -73,13 +80,20 @@ public class IceClientConnectivityCheckerImpl
                 m_iceAgent.onNominatedPair(pair, m_mediaStream);
                 }
             return null;
+            */
+            final IceCandidate local = pair.getLocalCandidate();
+            final IceCandidateVisitor<IoSession> visitor = 
+                new IceStunClientConnectivityChecker(m_iceAgent, 
+                    m_mediaStream, pair);
+            local.accept(visitor);
+            return null;
             }
 
         public Void visitUdpIceCandidatePair(final UdpIceCandidatePair pair)
             {
             final IceCandidate local = pair.getLocalCandidate();
             final IceCandidateVisitor<IoSession> visitor = 
-                new IceUdpStunClientConnectivityChecker(m_iceAgent, 
+                new IceStunClientConnectivityChecker(m_iceAgent, 
                     m_mediaStream, pair);
             local.accept(visitor);
             return null;

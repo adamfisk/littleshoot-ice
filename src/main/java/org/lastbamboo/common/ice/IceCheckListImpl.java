@@ -63,7 +63,7 @@ public class IceCheckListImpl implements IceCheckList
 
     private final Collection<IceCandidate> m_localCandidates;
 
-    private final IceUdpStunCheckerFactory m_checkerFactory;
+    private final IceStunCheckerFactory m_checkerFactory;
 
     /**
      * Creates a new check list, starting with only local candidates.
@@ -73,7 +73,7 @@ public class IceCheckListImpl implements IceCheckList
      * @param localCandidates The local candidates to use in the check list.
      */
     public IceCheckListImpl(
-        final IceUdpStunCheckerFactory checkerFactory,
+        final IceStunCheckerFactory checkerFactory,
         final Collection<IceCandidate> localCandidates)
         {
         m_checkerFactory = checkerFactory;
@@ -413,7 +413,11 @@ public class IceCheckListImpl implements IceCheckList
             public IceCandidatePair visitTcpActiveCandidate(
                 final IceTcpActiveCandidate candidate)
                 {
-                return new TcpIceCandidatePair(candidate, remoteCandidate);
+                final IceStunChecker checker = 
+                    m_checkerFactory.createStunChecker(candidate, 
+                        remoteCandidate);
+                return new TcpIceCandidatePair(candidate, remoteCandidate,
+                    checker);
                 }
             
             public IceCandidatePair visitUdpHostCandidate(

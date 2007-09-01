@@ -7,6 +7,11 @@ import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
+import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
+import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
+import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
+import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
@@ -32,7 +37,7 @@ public class IceStunServerConnectivityChecker
 
     private final IceMediaStream m_iceMediaStream;
 
-    private final IceUdpStunCheckerFactory m_checkerFactory;
+    private final IceStunCheckerFactory m_checkerFactory;
 
     private final IoSession m_ioSession;
 
@@ -48,7 +53,7 @@ public class IceStunServerConnectivityChecker
      */
     public IceStunServerConnectivityChecker(
         final IceAgent agent, final IceMediaStream iceMediaStream,
-        final IceUdpStunCheckerFactory checkerFactory, final IoSession session)
+        final IceStunCheckerFactory checkerFactory, final IoSession session)
         {
         m_agent = agent;
         m_iceMediaStream = iceMediaStream;
@@ -188,9 +193,29 @@ public class IceStunServerConnectivityChecker
             final IceStunChecker connectivityChecker = 
                 this.m_checkerFactory.createStunChecker(localCandidate, 
                     remoteCandidate);
-            computedPair = 
-                new UdpIceCandidatePair(localCandidate, remoteCandidate,
-                    connectivityChecker);
+            
+            // Dynamically create a TCP or a UDP pair depending on the type
+            // of the local candidate.
+            final IceCandidateVisitor<IceCandidatePair> pairFactory =
+                new IceCandidateVisitorAdapter<IceCandidatePair>()
+                {
+                public IceCandidatePair visitTcpActiveCandidate(
+                    final IceTcpActiveCandidate candidate)
+                    {
+                    return new TcpIceCandidatePair(localCandidate, 
+                        remoteCandidate, connectivityChecker);
+                    }
+
+                public IceCandidatePair visitUdpHostCandidate(
+                    final IceUdpHostCandidate candidate)
+                    {
+                    return new UdpIceCandidatePair(localCandidate, 
+                        remoteCandidate, connectivityChecker);
+                    }
+                };
+                
+            computedPair = localCandidate.accept(pairFactory);
+                
             // Continue with the rest of ICE section 7.2.1.4, 
             // "Triggered Checks"
             

@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.server.StunServer;
 import org.lastbamboo.common.stun.server.UdpStunServer;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
@@ -29,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * connected to.  Since we also bind to that port with an accepting channel,
  * though, so incoming data from other hosts goes to the accepting channel.  
  */
-public class IceStunUdpPeer implements StunClient, StunServer
+public class IceStunTcpPeer implements StunClient, StunServer
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -43,9 +42,12 @@ public class IceStunUdpPeer implements StunClient, StunServer
      * on the server. 
      * @param controlling Whether or not this agent is controlling.
      */
-    public IceStunUdpPeer(final StunMessageVisitorFactory messageVisitorFactory,
+    public IceStunTcpPeer(final StunClient tcpStunClient, 
+        final StunMessageVisitorFactory messageVisitorFactory,
         final boolean controlling)
         {
+        
+        m_stunClient = tcpStunClient;
         // We also add whether we're the offerer or answerer for thread
         // naming here just to make log reading easier.
         final String offererOrAnswerer;
@@ -60,18 +62,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
         this.m_stunServer = 
             new UdpStunServer(messageVisitorFactory, offererOrAnswerer);
         
-        // We pass null here so the server binds to any available port.
-        // We use that as both the acceptor port and the local port for the 
-        // connector, as both need to be the same for ICE to function.  
-        // Note this only works because both the client and server are using 
-        // the SO_REUSEADDRESS option.
-        this.m_stunServer.start(null);
-        
-        final InetSocketAddress boundAddress = 
-            this.m_stunServer.getBoundAddress();
-        
-        m_log.debug("Starting STUN client on local address: "+boundAddress);
-        this.m_stunClient = new UdpStunClient(boundAddress);
+        this.m_stunServer.start(tcpStunClient.getHostAddress());
         }
 
     public InetSocketAddress getHostAddress()
