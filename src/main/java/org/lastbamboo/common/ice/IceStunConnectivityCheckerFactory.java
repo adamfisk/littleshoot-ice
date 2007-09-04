@@ -5,7 +5,6 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,8 +13,8 @@ import org.slf4j.LoggerFactory;
  * are somewhat unique in that each client must handle both "client" and 
  * "server" side messages in ICE.
  */
-public class IceStunServerMessageVisitorFactory 
-    implements StunMessageVisitorFactory
+public class IceStunConnectivityCheckerFactory 
+    implements StunMessageVisitorFactory<StunMessage>
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -30,19 +29,21 @@ public class IceStunServerMessageVisitorFactory
      * @param agent The top-level agent. 
      * @param iceMediaStream The media stream this factory is working for.
      */
-    public IceStunServerMessageVisitorFactory(
+    public IceStunConnectivityCheckerFactory(
         final IceAgent agent, final IceMediaStream iceMediaStream,
-        final IceStunCheckerFactory stunCheckerFactory)
+        final IceStunCheckerFactory stunCheckerFactory, 
+        final StunTransactionTracker<StunMessage> transactionTracker)
         {
         m_iceAgent = agent;
         m_iceMediaStream = iceMediaStream;
         m_stunCheckerFactory = stunCheckerFactory;
-        m_transactionTracker = new StunTransactionTrackerImpl();
+        m_transactionTracker = transactionTracker;
         }
 
-    public StunMessageVisitor createVisitor(final IoSession session)
+    public StunMessageVisitor<StunMessage> createVisitor(
+        final IoSession session)
         {
-        return new IceStunServerConnectivityChecker( 
+        return new IceStunConnectivityChecker( 
             this.m_iceAgent, this.m_iceMediaStream, 
                 this.m_stunCheckerFactory, session, this.m_transactionTracker);
         }

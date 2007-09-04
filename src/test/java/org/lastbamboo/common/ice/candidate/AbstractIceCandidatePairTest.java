@@ -7,8 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.lastbamboo.common.ice.IceStunChecker;
-import org.lastbamboo.common.ice.IceStunServerConnectivityChecker;
-import org.lastbamboo.common.ice.IceStunServerConnectivityChecker;
+import org.lastbamboo.common.ice.IceStunConnectivityChecker;
+import org.lastbamboo.common.ice.IceStunConnectivityChecker;
 import org.lastbamboo.common.ice.IceUdpStunChecker;
 
 import junit.framework.TestCase;

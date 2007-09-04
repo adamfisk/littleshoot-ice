@@ -8,13 +8,6 @@ import org.apache.mina.common.TransportType;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
-import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
-import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
-import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.stun.client.StunClientMessageVisitor;
@@ -24,18 +17,16 @@ import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Processes STUN connectivity checks for the server side of ICE.  See:<p>
+ * Processes STUN connectivity checks for ICE.  See:<p>
  * 
  * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2
  */
-public class IceStunServerConnectivityChecker 
+public class IceStunConnectivityChecker 
     extends StunClientMessageVisitor<StunMessage>
-    //extends StunMessageVisitorAdapter<Void> 
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -57,7 +48,7 @@ public class IceStunServerConnectivityChecker
      * @param checkerFactory The factory for creating new classes for 
      * performing connectivity checks.
      */
-    public IceStunServerConnectivityChecker(
+    public IceStunConnectivityChecker(
         final IceAgent agent, final IceMediaStream iceMediaStream,
         final IceStunCheckerFactory checkerFactory, final IoSession session, 
         final StunTransactionTracker<StunMessage> transactionTracker)
@@ -223,8 +214,7 @@ public class IceStunServerConnectivityChecker
                 // the existing connection.
                 connectivityChecker = 
                     this.m_checkerFactory.createStunChecker(localCandidate, 
-                        remoteCandidate, this.m_ioSession, 
-                        this.m_transactionTracker);
+                        remoteCandidate, this.m_ioSession);
                 computedPair = new TcpIceCandidatePair(localCandidate,
                     remoteCandidate, connectivityChecker);
                 }

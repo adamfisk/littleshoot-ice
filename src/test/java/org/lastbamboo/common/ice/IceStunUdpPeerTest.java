@@ -29,6 +29,8 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,9 +54,11 @@ public class IceStunUdpPeerTest
         final IceAgent iceAgent = new IceAgentStub();
         final IceMediaStream iceMediaStream = new IceMediaStreamImplStub();
 
+        final StunTransactionTracker<StunMessage> tracker = 
+            new StunTransactionTrackerImpl();
         final StunMessageVisitorFactory messageVisitorFactory =
-            new IceStunServerMessageVisitorFactory(iceAgent, 
-                iceMediaStream, null);
+            new IceStunConnectivityCheckerFactory(iceAgent, 
+                iceMediaStream, null, tracker);
             
         final IceStunUdpPeer peer1 = 
             new IceStunUdpPeer(messageVisitorFactory, true);

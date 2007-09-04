@@ -18,6 +18,8 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 
@@ -67,10 +69,12 @@ public class IceUdpStunCheckerTest
                 }
         
             };
+        final StunTransactionTracker<StunMessage> tracker = 
+            new StunTransactionTrackerImpl();
         final IceUdpStunChecker checker = 
             new IceUdpStunChecker(localCandidate, remoteCandidate, 
                 visitorFactory, 
-                iceAgent, codecFactory, Object.class, clientIoHandler);
+                iceAgent, codecFactory, Object.class, clientIoHandler, tracker);
         
         final BindingRequest bindingRequest = new BindingRequest();
         final long rto = 20;

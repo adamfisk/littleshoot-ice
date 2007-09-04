@@ -25,6 +25,9 @@ import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
 import org.lastbamboo.common.ice.stubs.ProtocolCodecFactoryStub;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.encoder.StunMessageEncoder;
+import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.Pair;
 import org.lastbamboo.common.util.PairImpl;
@@ -61,9 +64,11 @@ public class IceCheckListImplTest extends TestCase
             new ProtocolCodecFactoryStub();
         IoHandler clientIoHandlerStub = new IoHandlerAdapter();
         IoHandler serverIoHandlerStub = new IoHandlerAdapter();
+        final StunTransactionTracker<StunMessage> tracker = 
+        new StunTransactionTrackerImpl();
         final IceStunCheckerFactory checkerFactory =
             new IceStunCheckerFactoryImpl(agent, mediaStream, codecFactory, 
-                Object.class, clientIoHandlerStub, serverIoHandlerStub);
+                Object.class, clientIoHandlerStub, serverIoHandlerStub, tracker);
         final IceCheckList checkList = 
             new IceCheckListImpl(checkerFactory, localCandidates);
         checkList.formCheckList(remoteCandidates);

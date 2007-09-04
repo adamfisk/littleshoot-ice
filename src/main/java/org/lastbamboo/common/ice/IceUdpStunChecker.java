@@ -18,6 +18,7 @@ import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
         LoggerFactory.getLogger(IceUdpStunChecker.class);
     
     private volatile boolean m_icmpError;
-
+    
     /**
      * Creates a new ICE connectivity checker over UDP.
      * 
@@ -45,16 +46,20 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
      * demultiplexing between STUN and another protocol.
      * @param clazz The top-level message class the protocol other than STUN.
      * @param ioHandler The {@link IoHandler} to use for the other protocol.
+     * @param transactionTracker The class that keeps track of STUN 
+     * transactions.
      */
     public IceUdpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory messageVisitorFactory, 
+        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory, 
         final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
-        final Class clazz, final IoHandler ioHandler)
+        final Class clazz, final IoHandler ioHandler, 
+        final StunTransactionTracker<StunMessage> transactionTracker)
         {
-        super(localCandidate, remoteCandidate, messageVisitorFactory, 
-            iceAgent, demuxingCodecFactory, clazz, ioHandler);
+        super(localCandidate, remoteCandidate, transactionTracker, 
+            messageVisitorFactory, iceAgent, demuxingCodecFactory, clazz, 
+            ioHandler);
         }
 
     @Override

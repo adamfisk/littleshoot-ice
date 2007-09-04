@@ -116,7 +116,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         pair.setState(IceCandidatePairState.IN_PROGRESS);
         final IceCandidate local = pair.getLocalCandidate();
         final IceCandidateVisitor<IoSession> visitor = 
-            new IceStunClientConnectivityChecker(m_agent, 
+            new IceStunClientCandidateProcessor(m_agent, 
                 m_mediaStream, pair);
         local.accept(visitor);
         }

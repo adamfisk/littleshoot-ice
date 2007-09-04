@@ -21,7 +21,6 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionListener;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,41 +55,15 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
     protected final InetSocketAddress m_remoteAddress;
     
     protected final IoConnector m_connector;
-    
-    /**
-     * Creates a new ICE connectivity checker over any transport.
-     * 
-     * @param localCandidate The local address.
-     * @param remoteCandidate The remote address.
-     * @param serverMessageVisitorFactory The factory for creating visitors for 
-     * incoming messages.
-     * @param iceAgent The top-level ICE agent.
-     * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
-     * demultiplexing between STUN and another protocol.
-     * @param clazz The top-level message class for the protocol other than 
-     * STUN.
-     * @param protocolIoHandler The {@link IoHandler} to use for the other 
-     * protocol.
-     */
-    public AbstractIceStunChecker(
-        final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory serverMessageVisitorFactory, 
-        final IceAgent iceAgent, 
-        final ProtocolCodecFactory demuxingCodecFactory,
-        final Class clazz, final IoHandler protocolIoHandler)
-        {
-        this(localCandidate, remoteCandidate, new StunTransactionTrackerImpl(),
-            serverMessageVisitorFactory, iceAgent, demuxingCodecFactory,
-            clazz, protocolIoHandler);
-        }
 
     /**
      * Creates a new ICE connectivity checker over any transport.
      * 
      * @param localCandidate The local address.
      * @param remoteCandidate The remote address.
-     * @param serverMessageVisitorFactory The factory for creating visitors for 
+     * @param transactionTracker The class that keeps track of STUN 
+     * transactions.
+     * @param messageVisitorFactory The factory for creating visitors for 
      * incoming messages.
      * @param iceAgent The top-level ICE agent.
      * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
@@ -104,17 +77,14 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
         final StunTransactionTracker<StunMessage> transactionTracker,
-        final StunMessageVisitorFactory serverMessageVisitorFactory, 
+        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory, 
         final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
         final Class clazz, final IoHandler protocolIoHandler)
         {
         this.m_transactionTracker = transactionTracker;
-        final StunMessageVisitorFactory<StunMessage> checkerVisitorFactory = 
-            new IceStunCheckerMessageVisitorFactory(serverMessageVisitorFactory, 
-                this.m_transactionTracker);
         final IoHandler ioHandler = 
-            new StunIoHandler<StunMessage>(checkerVisitorFactory);
+            new StunIoHandler<StunMessage>(messageVisitorFactory);
         
         this.m_demuxer = new StunDemuxingIoHandler(clazz, 
             protocolIoHandler, ioHandler);

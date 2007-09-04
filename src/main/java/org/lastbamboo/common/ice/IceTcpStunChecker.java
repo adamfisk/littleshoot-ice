@@ -16,12 +16,17 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.SocketConnector;
 import org.apache.mina.transport.socket.nio.SocketConnectorConfig;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.tcp.frame.TcpFrame;
+import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
+import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
+import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,54 +41,42 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
         LoggerFactory.getLogger(IceTcpStunChecker.class);
 
     /**
-     * Creates a new ICE connectivity checker over TCP.
+     * Creates a new ICE connectivity checker over TCP.  If the 
+     * {@link IoSession} is <code>null</code>, this will connect to create a
+     * new session.
      * 
      * @param localCandidate The local address.
      * @param remoteCandidate The remote address.
      * @param messageVisitorFactory The factory for creating visitors for 
      * incoming messages.
      * @param iceAgent The top-level ICE agent.
-     * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
-     * demultiplexing between STUN and another protocol.
-     * @param clazz The top-level message class the protocol other than STUN.
      * @param ioHandler The {@link IoHandler} to use for the other protocol.
      */
     public IceTcpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory messageVisitorFactory, 
+        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory, 
         final IceAgent iceAgent, 
-        final ProtocolCodecFactory demuxingCodecFactory,
-        final Class clazz, final IoHandler ioHandler)
-        {
-        super(localCandidate, remoteCandidate, messageVisitorFactory, 
-            iceAgent, demuxingCodecFactory, clazz, ioHandler);
-        }
-    
-    /**
-     * Creates a new ICE connectivity checker over TCP.
-     * 
-     * @param localCandidate The local address.
-     * @param remoteCandidate The remote address.
-     * @param serverMessageVisitorFactory The factory for creating visitors for 
-     * incoming messages.
-     * @param iceAgent The top-level ICE agent.
-     * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
-     * demultiplexing between STUN and another protocol.
-     * @param clazz The top-level message class the protocol other than STUN.
-     * @param ioHandler The {@link IoHandler} to use for the other protocol.
-     */
-    public IceTcpStunChecker(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory serverMessageVisitorFactory, 
-        final IceAgent iceAgent, 
-        final ProtocolCodecFactory demuxingCodecFactory,
-        final Class clazz, final IoHandler ioHandler, final IoSession session,
+        final IoHandler ioHandler, 
+        final IoSession session,
         final StunTransactionTracker<StunMessage> transactionTracker)
         {
         super(localCandidate, remoteCandidate, transactionTracker, 
-            serverMessageVisitorFactory, 
-            iceAgent, demuxingCodecFactory, clazz, ioHandler);
+            messageVisitorFactory, 
+            iceAgent, createCodecFactory(), TcpFrame.class, ioHandler);
         this.m_ioSession = session;
+        }
+    
+    
+    private static ProtocolCodecFactory createCodecFactory()
+        {
+        final DemuxableProtocolCodecFactory stunCodecFactory =
+            new StunDemuxableProtocolCodecFactory();
+        final DemuxableProtocolCodecFactory tcpFramingCodecFactory =
+            new TcpFrameCodecFactory();
+        final ProtocolCodecFactory codecFactory = 
+            new DemuxingProtocolCodecFactory(stunCodecFactory, 
+                tcpFramingCodecFactory);
+        return codecFactory;
         }
     
     @Override

@@ -23,10 +23,13 @@ import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.Predicate;
 import org.slf4j.Logger;
@@ -93,13 +96,15 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         m_iceAgent = iceAgent;
         m_desc = desc;
+        final StunTransactionTracker<StunMessage> transactionTracker =
+            new StunTransactionTrackerImpl();
         final IceStunCheckerFactory checkerFactory =
             new IceStunCheckerFactoryImpl(this.m_iceAgent, this, 
                 codecFactory, mediaClass, clientMediaIoHandler, 
-                serverMediaIoHandler);
+                serverMediaIoHandler, transactionTracker);
         final StunMessageVisitorFactory messageVisitorFactory =
-            new IceStunServerMessageVisitorFactory(this.m_iceAgent, 
-                this, checkerFactory);
+            new IceStunConnectivityCheckerFactory(this.m_iceAgent, 
+                this, checkerFactory, transactionTracker);
         final StunClient udpStunPeer;
         if (udpStunClient == null && desc.isUdp())
             {
