@@ -57,7 +57,8 @@ public class IceAgentImplTest
         final IceMediaStreamDesc desc = 
             new IceMediaStreamDesc(false, true, "message", "http", 1);
 
-        final StunClient turnClient = new StunClientStub();
+        final StunClient turnClient1 = new StunClientStub();
+        final StunClient turnClient2 = new StunClientStub();
         
         final IceMediaStreamFactory mediaStreamFactory1 = 
             new IceMediaStreamFactory()
@@ -120,14 +121,14 @@ public class IceAgentImplTest
                 }
             
             };
-        final IceAgent offerer = new IceAgentImpl(turnClient, 
+        final IceAgent offerer = new IceAgentImpl(turnClient1, 
             mediaStreamFactory1, true, iceMediaFactory);
         final byte[] offer = offerer.generateOffer();
 
         m_log.debug("Telling answerer to process offer: {}", new String(offer));
         
         
-        final IceAgent answerer = new IceAgentImpl(turnClient, 
+        final IceAgent answerer = new IceAgentImpl(turnClient2, 
             mediaStreamFactory2, false, iceMediaFactory);
         
         Assert.assertFalse(answerer.isControlling());
