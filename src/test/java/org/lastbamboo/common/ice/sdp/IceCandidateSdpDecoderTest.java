@@ -15,6 +15,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidateType;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
@@ -199,6 +200,12 @@ public class IceCandidateSdpDecoderTest extends TestCase
             }
 
         public Object visitUdpServerReflexiveCandidate(IceUdpServerReflexiveCandidate candidate)
+            {
+            // TODO Auto-generated method stub
+            return null;
+            }
+
+        public Object visitTcpPeerReflexiveCandidate(IceTcpPeerReflexiveCandidate candidate)
             {
             // TODO Auto-generated method stub
             return null;

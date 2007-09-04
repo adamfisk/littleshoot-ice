@@ -5,29 +5,13 @@ import java.net.InetSocketAddress;
 
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.server.StunServer;
-import org.lastbamboo.common.stun.server.UdpStunServer;
+import org.lastbamboo.common.stun.server.TcpStunServer;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * ICE STUN peer class for UDP.  This is basically just a STUN client for 
- * candidate gathering and a STUN server for processing incoming requests
- * from peer reflexive candidates.  The incoming requests are generally 
- * peer reflexive because the other "connected" UDP connectivity classes take
- * care of processing requests from any candidates we know about.
- * 
- * NOTE: This class takes a little work to wrap one's head around as far as
- * the socket SO_REUSEADDRESS option goes.  Basically, we run both a client
- * and a server on the same port.  We're using MINA as the underlying IO
- * framework, though, and MINA has connectors and acceptors.  MINA calls 
- * connect on the underlying DatagramChannel for the connector.  When that call
- * is made, the channel will only accept incoming data from the host it's
- * connected to.  Since we also bind to that port with an accepting channel,
- * though, so incoming data from other hosts goes to the accepting channel.  
- */
 public class IceStunTcpPeer implements StunClient, StunServer
     {
     
@@ -48,19 +32,20 @@ public class IceStunTcpPeer implements StunClient, StunServer
         {
         
         m_stunClient = tcpStunClient;
-        // We also add whether we're the offerer or answerer for thread
+        
+        // We also add whether we're the controlling agent for thread
         // naming here just to make log reading easier.
-        final String offererOrAnswerer;
+        final String controllingString;
         if (controlling)
             {
-            offererOrAnswerer = "Offerer";
+            controllingString = "Controlling";
             }
         else
             {
-            offererOrAnswerer = "Answerer";
+            controllingString = "Not-Controlling";
             }
         this.m_stunServer = 
-            new UdpStunServer(messageVisitorFactory, offererOrAnswerer);
+            new TcpStunServer(messageVisitorFactory, controllingString);
         
         this.m_stunServer.start(tcpStunClient.getHostAddress());
         }

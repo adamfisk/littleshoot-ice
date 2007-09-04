@@ -63,13 +63,13 @@ public class IceAgentImplTest
             new IceMediaStreamFactory()
             {
             public IceMediaStream newStream(final IceAgent iceAgent, 
-                final StunClient tcpTurnClient)
+                final StunClient tcpTurnClient) 
                 {
                 final int hostPort = 65044;
                 final InetSocketAddress serverReflexive =
                     new InetSocketAddress("53.43.90.1", 2452);
                 final StunClient udpStunClient = 
-                    new StunClientStub(serverReflexive, hostPort);
+                    StunClientStub.newClient(serverReflexive, hostPort);
                 final DemuxableProtocolCodecFactory stunCodecFactory =
                     new StunDemuxableProtocolCodecFactory();
                 final DemuxableProtocolCodecFactory otherCodecFactory =
@@ -95,7 +95,7 @@ public class IceAgentImplTest
                 final InetSocketAddress serverReflexive =
                     new InetSocketAddress("21.9.90.1", 9852);
                 final StunClient udpStunClient = 
-                    new StunClientStub(serverReflexive, hostPort);
+                    StunClientStub.newClient(serverReflexive, hostPort);
                 final DemuxableProtocolCodecFactory stunCodecFactory =
                     new StunDemuxableProtocolCodecFactory();
                 final DemuxableProtocolCodecFactory otherCodecFactory =

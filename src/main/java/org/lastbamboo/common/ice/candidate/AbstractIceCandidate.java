@@ -40,6 +40,8 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
      */
     protected final static int DEFAULT_COMPONENT_ID = 1;
     
+    private final boolean m_isUdp;
+    
     /**
      * Creates a new ICE candidate.
      * 
@@ -99,6 +101,20 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         
         m_relatedAddress = relatedAddress;
         m_relatedPort = relatedPort;
+        
+        boolean udp = true;
+        switch (transport)
+            {
+            case TCP_ACT:
+            case TCP_PASS:
+            case TCP_SO:
+                udp = false;
+                break;
+            case UDP:
+                udp = true;
+                break;
+            }
+        this.m_isUdp = udp;
         }
     
     public void setPriority(final long priority)
@@ -170,7 +186,11 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         {
         return m_relatedPort;
         }
-    
+
+    public boolean isUdp()
+        {
+        return m_isUdp;
+        }
 
     @Override
     public int hashCode()
@@ -271,6 +291,8 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         sb.append(m_controlling);
         sb.append(" ");
         sb.append(m_address);
+        sb.append(" UDP: ");
+        sb.append(this.m_isUdp);
         return sb.toString();
         }
     }

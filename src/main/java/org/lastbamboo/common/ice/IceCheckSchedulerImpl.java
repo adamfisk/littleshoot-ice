@@ -3,8 +3,11 @@ package org.lastbamboo.common.ice;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.mina.common.IoSession;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
+import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.util.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +45,11 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         final String offererOrAnswerer;
         if (this.m_agent.isControlling())
             {
-            offererOrAnswerer = "ICE-Offerer-Timer";
+            offererOrAnswerer = "ICE-Controlling-Timer";
             }
         else
             {
-            offererOrAnswerer = "ICE-Answerer-Timer";
+            offererOrAnswerer = "ICE-Not-Controlling-Timer";
             }
         final Timer timer = new Timer(offererOrAnswerer, true);
         final TimerTask task = createTimerTask(timer);
@@ -110,11 +113,12 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
 
     private void performCheck(final IceCandidatePair pair)
         {
-        final IceClientConnectivityChecker checker = 
-            new IceClientConnectivityCheckerImpl(this.m_agent, this.m_mediaStream, 
-                pair);
         pair.setState(IceCandidatePairState.IN_PROGRESS);
-        checker.check();
+        final IceCandidate local = pair.getLocalCandidate();
+        final IceCandidateVisitor<IoSession> visitor = 
+            new IceStunClientConnectivityChecker(m_agent, 
+                m_mediaStream, pair);
+        local.accept(visitor);
         }
 
     private IceCandidatePair getNextPair()
@@ -123,7 +127,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             this.m_checkList.removeTopTriggeredPair();
         if (triggeredPair != null)
             {
-            m_log.debug("Using triggered pair...");
+            m_log.debug("Scheduler using TRIGGERED pair...");
             return triggeredPair;
             }
         else
@@ -136,7 +140,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
                     getPairInState(IceCandidatePairState.FROZEN);
                 if (frozen != null) 
                     {
-                    m_log.debug("Scheduler using frozen pair...");
+                    m_log.debug("Scheduler using FROZEN pair...");
                     frozen.setState(IceCandidatePairState.WAITING);
                     return frozen;
                     }
@@ -144,7 +148,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
                 }
             else
                 {
-                m_log.debug("Scheduler using waiting pair...");
+                m_log.debug("Scheduler using WAITING pair...");
                 return waitingPair;
                 }
             }

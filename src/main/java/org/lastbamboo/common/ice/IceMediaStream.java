@@ -34,10 +34,12 @@ public interface IceMediaStream
      * address.
      * 
      * @param remoteAddress The remote address to look for.
+     * @param isUdp Whether to search for UDP candidates.
      * @return The candidate associated with the specified remote address,
      * or <code>null</code> if there's no associated candidate.
      */
-    IceCandidate getRemoteCandidate(InetSocketAddress remoteAddress);
+    IceCandidate getRemoteCandidate(InetSocketAddress remoteAddress, 
+        boolean isUdp);
  
     /**
      * Accessor for the local candidate associate with the specified local
@@ -47,7 +49,8 @@ public interface IceMediaStream
      * @return The candidate associated with the specified local address,
      * or <code>null</code> if there's no associated candidate.
      */
-    IceCandidate getLocalCandidate(InetSocketAddress localAddress);
+    IceCandidate getLocalCandidate(InetSocketAddress localAddress, 
+        boolean isUdp);
 
     /**
      * Adds a local candidate.
@@ -112,7 +115,7 @@ public interface IceMediaStream
      * @return <code>true</code> if the address matches the address of a 
      * remote candidate we already know about, otherwise <code>false</code>.
      */
-    boolean hasRemoteCandidate(InetSocketAddress remoteAddress);
+    boolean hasRemoteCandidate(InetSocketAddress remoteAddress, boolean isUdp);
 
     /**
      * Adds a peer reflexive candidate to the list of remote candidates.
@@ -125,10 +128,12 @@ public interface IceMediaStream
      * reflexive candidate. 
      * @param remoteAddress The remote address of the peer that sent the 
      * Binding Request.
+     * @param isUdp Whether the candidate should be a UDP candidate or not.
      * @return The new peer reflexive remote candidate.
      */
     IceCandidate addRemotePeerReflexive(BindingRequest request, 
-        InetSocketAddress localAddress, InetSocketAddress remoteAddress);
+        InetSocketAddress localAddress, InetSocketAddress remoteAddress, 
+        boolean isUdp);
     
     /**
      * Encodes this media stream in SDP.

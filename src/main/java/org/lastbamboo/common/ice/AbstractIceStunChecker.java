@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.id.uuid.UUID;
 import org.apache.mina.common.ExecutorThreadModel;
+import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.ThreadModel;
@@ -15,7 +16,6 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.stun.stack.StunDemuxingIoHandler;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
@@ -37,57 +37,84 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
     
     protected IoSession m_ioSession;
 
+    private volatile int m_writeCallsForPair = 0;
+    
+    protected final Map<UUID, StunMessage> m_idsToResponses =
+        new ConcurrentHashMap<UUID, StunMessage>();
+
+    protected final StunTransactionTracker<StunMessage> m_transactionTracker;
+
+    protected final Object m_requestLock = new Object();
+    
     /**
      * TODO: Review if this works!!
      */
-    private volatile boolean m_transactionCancelled = false;
-
-    private volatile int m_writeCallsForPair = 0;
-    
-    private final Map<UUID, StunMessage> m_idsToResponses =
-        new ConcurrentHashMap<UUID, StunMessage>();
-
-    private final StunTransactionTracker<StunMessage> m_transactionTracker;
-
-    private volatile boolean m_icmpError;
-    
-    private final Object m_requestLock = new Object();
-
-    private final StunMessageVisitorFactory<StunMessage> 
-        m_checkerVisitorFactory;
+    protected volatile boolean m_transactionCancelled = false;
 
     protected final StunDemuxingIoHandler m_demuxer;
 
     protected final InetSocketAddress m_remoteAddress;
-
+    
+    protected final IoConnector m_connector;
+    
     /**
      * Creates a new ICE connectivity checker over any transport.
      * 
      * @param localCandidate The local address.
      * @param remoteCandidate The remote address.
-     * @param messageVisitorFactory The factory for creating visitors for 
+     * @param serverMessageVisitorFactory The factory for creating visitors for 
      * incoming messages.
      * @param iceAgent The top-level ICE agent.
      * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
      * demultiplexing between STUN and another protocol.
-     * @param clazz The top-level message class the protocol other than STUN.
+     * @param clazz The top-level message class for the protocol other than 
+     * STUN.
      * @param protocolIoHandler The {@link IoHandler} to use for the other 
      * protocol.
      */
     public AbstractIceStunChecker(
         final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory messageVisitorFactory, 
+        final StunMessageVisitorFactory serverMessageVisitorFactory, 
         final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
         final Class clazz, final IoHandler protocolIoHandler)
         {
-        this.m_transactionTracker = new StunTransactionTrackerImpl();
-        this.m_checkerVisitorFactory = 
-            new IceStunCheckerMessageVisitorFactory(messageVisitorFactory, 
+        this(localCandidate, remoteCandidate, new StunTransactionTrackerImpl(),
+            serverMessageVisitorFactory, iceAgent, demuxingCodecFactory,
+            clazz, protocolIoHandler);
+        }
+
+    /**
+     * Creates a new ICE connectivity checker over any transport.
+     * 
+     * @param localCandidate The local address.
+     * @param remoteCandidate The remote address.
+     * @param serverMessageVisitorFactory The factory for creating visitors for 
+     * incoming messages.
+     * @param iceAgent The top-level ICE agent.
+     * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
+     * demultiplexing between STUN and another protocol.
+     * @param clazz The top-level message class for the protocol other than 
+     * STUN.
+     * @param protocolIoHandler The {@link IoHandler} to use for the other 
+     * protocol.
+     */
+    public AbstractIceStunChecker(
+        final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, 
+        final StunTransactionTracker<StunMessage> transactionTracker,
+        final StunMessageVisitorFactory serverMessageVisitorFactory, 
+        final IceAgent iceAgent, 
+        final ProtocolCodecFactory demuxingCodecFactory,
+        final Class clazz, final IoHandler protocolIoHandler)
+        {
+        this.m_transactionTracker = transactionTracker;
+        final StunMessageVisitorFactory<StunMessage> checkerVisitorFactory = 
+            new IceStunCheckerMessageVisitorFactory(serverMessageVisitorFactory, 
                 this.m_transactionTracker);
         final IoHandler ioHandler = 
-            new StunIoHandler<StunMessage>(this.m_checkerVisitorFactory);
+            new StunIoHandler<StunMessage>(checkerVisitorFactory);
         
         this.m_demuxer = new StunDemuxingIoHandler(clazz, 
             protocolIoHandler, ioHandler);
@@ -108,14 +135,14 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         final ProtocolCodecFilter stunFilter = 
             new ProtocolCodecFilter(demuxingCodecFactory);
         this.m_remoteAddress = remoteCandidate.getSocketAddress();
-        createConnector(
+        this.m_connector = createConnector(
             localCandidate.getSocketAddress(), 
             remoteCandidate.getSocketAddress(), 
             threadModel, stunFilter, m_demuxer);
 
         }
     
-    protected abstract void createConnector(
+    protected abstract IoConnector createConnector(
         InetSocketAddress localAddress, InetSocketAddress remoteAddress, 
         ThreadModel threadModel, ProtocolCodecFilter stunFilter, 
         IoHandler demuxer);
@@ -147,98 +174,10 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
             }
         }
     
-    private StunMessage writeInternal(final BindingRequest bindingRequest, 
-        final long rto)
-        {
-        if (bindingRequest == null)
-            {
-            throw new NullPointerException("Null Binding Request");
-            }
-        
-        // This method will retransmit the same request multiple times because
-        // it's being sent unreliably.  All of these requests will be 
-        // identical, using the same transaction ID.
-        final UUID id = bindingRequest.getTransactionId();
-        final InetSocketAddress localAddress = 
-            (InetSocketAddress) this.m_ioSession.getLocalAddress();
-        final InetSocketAddress remoteAddress =
-            (InetSocketAddress) this.m_ioSession.getRemoteAddress();
-        
-        this.m_transactionTracker.addTransaction(bindingRequest, this, 
-            localAddress, remoteAddress);
-        
-        synchronized (m_requestLock)
-            {   
-            this.m_transactionCancelled = false;
-            int requests = 0;
-            
-            long waitTime = 0L;
-
-            while (!m_idsToResponses.containsKey(id) && requests < 7 &&
-                !this.m_transactionCancelled && !this.m_icmpError)
-                {
-                waitIfNoResponse(bindingRequest, waitTime);
-                if (this.m_icmpError)
-                    {
-                    m_log.debug("ICMP error -- breaking");
-                    break;
-                    }
-                
-                // See draft-ietf-behave-rfc3489bis-06.txt section 7.1.  We
-                // continually send the same request until we receive a 
-                // response, never sending more that 7 requests and using
-                // an expanding interval between requests based on the 
-                // estimated round-trip-time to the server.  This is because
-                // some requests can be lost with UDP.
-                this.m_ioSession.write(bindingRequest);
-                
-                // Wait a little longer with each send.
-                waitTime = (2 * waitTime) + rto;
-                
-                requests++;
-                }
-            
-            // Now we wait for 1.6 seconds after the last request was sent.
-            // If we still don't receive a response, then the transaction 
-            // has failed.  
-            if (!this.m_transactionCancelled && !this.m_icmpError)
-                {
-                waitIfNoResponse(bindingRequest, 1600);
-                }
-
-            // Even if the transaction was canceled, we still may have 
-            // received a successful response.  If we did, we process it as
-            // usual.  This is specified in 7.2.1.4.
-            if (m_idsToResponses.containsKey(id))
-                {
-                final StunMessage response = this.m_idsToResponses.remove(id);
-                m_log.debug("Returning STUN response: {}", response);
-                return response;
-                }
-            
-            if (this.m_transactionCancelled)
-                {
-                m_log.debug("The transaction was cancelled!");
-                return new CanceledStunMessage();
-                }
-            
-            else
-                {
-                // This will happen quite often, such as when we haven't
-                // yet successfully punched a hole in the firewall.
-                m_log.debug("Did not get response on: {}", this.m_ioSession);
-                return new NullStunMessage();
-                }
-            }
-        }
-
-    public void cancelTransaction()
-        {
-        m_log.debug("Cancelling transaction!!");
-        this.m_transactionCancelled = true;
-        }
+    protected abstract StunMessage writeInternal(BindingRequest bindingRequest, 
+        long rto);
     
-    private void waitIfNoResponse(final BindingRequest request, 
+    protected final void waitIfNoResponse(final BindingRequest request, 
         final long waitTime)
         {
         if (waitTime == 0L) return;
@@ -255,6 +194,12 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
             }
         }
 
+    public void cancelTransaction()
+        {
+        m_log.debug("Cancelling transaction!!");
+        this.m_transactionCancelled = true;
+        }
+    
     public Object onTransactionFailed(final StunMessage request,
         final StunMessage response)
         {

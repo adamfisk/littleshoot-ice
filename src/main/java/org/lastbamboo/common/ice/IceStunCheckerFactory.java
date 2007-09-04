@@ -1,6 +1,9 @@
 package org.lastbamboo.common.ice;
 
+import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 
 /**
  * Interface for classes that create new ICE STUN connectivity check classes
@@ -19,5 +22,9 @@ public interface IceStunCheckerFactory
      */
     IceStunChecker createStunChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate);
+
+    IceStunChecker createStunChecker(IceCandidate localCandidate, 
+        IceCandidate remoteCandidate, IoSession session, 
+        StunTransactionTracker<StunMessage> transactionTracker);
 
     }

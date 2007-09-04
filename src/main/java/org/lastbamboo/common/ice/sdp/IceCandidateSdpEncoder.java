@@ -13,6 +13,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
@@ -78,13 +79,11 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
 
     private final Vector<Attribute> m_candidates;
 
-    private IceUdpServerReflexiveCandidate m_udpServerReflexiveCandidate;
-
     private final String m_mimeContentType;
 
     private final String m_mimeContentSubtype;
 
-    private IceUdpHostCandidate m_udpHostCandidate;
+    private final IceCandidate[] m_defaultCandidates = new IceCandidate[4];
 
     /**
      * Creates a new encoder for encoder ICE candidates into SDP.
@@ -182,15 +181,13 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
             // Use the UDP server reflexive address as the top level address.
             // This is slightly hacky because it relies on the UDP server
             // reflexive candidate being there.
-            final IceCandidate defaultCandidate;
-            if (this.m_udpServerReflexiveCandidate == null)
+            IceCandidate defaultCandidate = null;
+            for (final IceCandidate candidate : this.m_defaultCandidates)
                 {
-                // This can happen if we're not firewalled, for example.
-                defaultCandidate = this.m_udpHostCandidate;
-                }
-            else
-                {
-                defaultCandidate = this.m_udpServerReflexiveCandidate;
+                if (candidate != null)
+                    {
+                    defaultCandidate = candidate;
+                    }
                 }
             final MediaDescription md = 
                 createMessageMediaDesc(defaultCandidate);
@@ -213,9 +210,16 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         final IceTcpHostPassiveCandidate candidate)
         {
         addAttribute(candidate);
+        m_defaultCandidates[1] = candidate;
         return ObjectUtils.NULL;
         }
 
+
+    public Null visitTcpPeerReflexiveCandidate(IceTcpPeerReflexiveCandidate candidate)
+        {
+        addAttributeWithRelated(candidate);
+        return ObjectUtils.NULL;
+        }
 
     public Null visitTcpRelayPassiveCandidate(
         final IceTcpRelayPassiveCandidate candidate)
@@ -235,14 +239,14 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
 
     public Null visitTcpActiveCandidate(final IceTcpActiveCandidate candidate)
         {
-        addAttribute(candidate);
+        addAttribute(candidate, 9);
         return ObjectUtils.NULL;
         }
 
     public Null visitUdpHostCandidate(final IceUdpHostCandidate candidate)
         {
         addAttribute(candidate);
-        m_udpHostCandidate = candidate;
+        m_defaultCandidates[2] = candidate;
         return ObjectUtils.NULL;
         }
 
@@ -266,7 +270,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         final IceUdpServerReflexiveCandidate candidate)
         {
         addAttributeWithRelated(candidate);
-        this.m_udpServerReflexiveCandidate = candidate;
+        m_defaultCandidates[0] = candidate;
         return ObjectUtils.NULL;
         }
 
@@ -296,8 +300,18 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         return md;
         }
     
+    /**
+     * Creates the base level attribute {@link StringBuilder} applicable for
+     * all candidates.
+     * 
+     * @param candidate The candidate to encode.
+     * @param port The port to encode.  This is all because TCP active 
+     * candidates encode their port as 9 for discard.
+     * @return The {@link StringBuilder} for creating the rest of the 
+     * encoding.
+     */
     private StringBuilder createBaseCandidateAttribute(
-        final IceCandidate candidate)
+        final IceCandidate candidate, final int port)
         {
         final String space = " ";
         final StringBuilder sb = new StringBuilder();
@@ -313,7 +327,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         final InetAddress ia = sa.getAddress();
         sb.append(ia.getHostAddress());
         sb.append(space);
-        sb.append(candidate.getSocketAddress().getPort());
+        sb.append(port);
         sb.append(space);
         sb.append("typ");
         sb.append(space);
@@ -323,7 +337,12 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
 
     private void addAttribute(final IceCandidate candidate)
         {
-        final StringBuilder sb = createBaseCandidateAttribute(candidate);
+        addAttribute(candidate, candidate.getSocketAddress().getPort());
+        }
+    
+    private void addAttribute(final IceCandidate candidate, final int port)
+        {
+        final StringBuilder sb = createBaseCandidateAttribute(candidate, port);
         final Attribute attribute = 
             this.m_sdpFactory.createAttribute("candidate", sb.toString());
         m_candidates.add(attribute);
@@ -337,7 +356,8 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
      */
     private void addAttributeWithRelated(final IceCandidate candidate)
         {
-        final StringBuilder sb = createBaseCandidateAttribute(candidate);
+        final int port = candidate.getSocketAddress().getPort();
+        final StringBuilder sb = createBaseCandidateAttribute(candidate, port);
         final String space = " ";
         sb.append(space);
         sb.append("raddr");

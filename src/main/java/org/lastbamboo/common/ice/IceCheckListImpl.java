@@ -21,6 +21,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
@@ -138,6 +139,20 @@ public class IceCheckListImpl implements IceCheckList
             this.m_triggeredQueue.add(pair);
             }
         }
+    
+    public void addPair(final IceCandidatePair pair)
+        {
+        if (pair == null)
+            {
+            m_log.error("Null pair");
+            throw new NullPointerException("Null pair");
+            }
+        synchronized (this)
+            {
+            this.m_pairs.add(pair);
+            Collections.sort(this.m_pairs);
+            }
+        }
 
     public void recomputePairPriorities(final boolean controlling)
         {
@@ -172,16 +187,6 @@ public class IceCheckListImpl implements IceCheckList
             };
         executeOnPairs(pairs, closure);
         }
-
-    public void addPair(final IceCandidatePair pair)
-        {
-        synchronized (this)
-            {
-            this.m_pairs.add(pair);
-            Collections.sort(this.m_pairs);
-            }
-        }
-    
 
     public void formCheckList(final Collection<IceCandidate> remoteCandidates)
         {
@@ -335,6 +340,13 @@ public class IceCheckListImpl implements IceCheckList
                 final IceTcpServerReflexiveSoCandidate candidate)
                 {
                 // TODO: We don't currently support TCP SO.
+                return null;
+                }
+
+            public Pair<IceCandidate, IceCandidate> visitTcpPeerReflexiveCandidate(
+                final IceTcpPeerReflexiveCandidate candidate)
+                {
+                // Should not visit peer reflexive in check lists.
                 return null;
                 }
 

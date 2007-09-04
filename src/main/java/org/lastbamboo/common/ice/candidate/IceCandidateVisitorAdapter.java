@@ -34,13 +34,22 @@ public abstract class IceCandidateVisitorAdapter<T>
         return null;
         }
 
-    public T visitTcpRelayPassiveCandidate(IceTcpRelayPassiveCandidate candidate)
+    public T visitTcpRelayPassiveCandidate(
+        final IceTcpRelayPassiveCandidate candidate)
         {
         m_log.warn("Visiting unhandled candidate: {}", candidate);
         return null;
         }
 
-    public T visitTcpServerReflexiveSoCandidate(IceTcpServerReflexiveSoCandidate candidate)
+    public T visitTcpServerReflexiveSoCandidate(
+        final IceTcpServerReflexiveSoCandidate candidate)
+        {
+        m_log.warn("Visiting unhandled candidate: {}", candidate);
+        return null;
+        }
+    
+    public T visitTcpPeerReflexiveCandidate(
+        final IceTcpPeerReflexiveCandidate candidate)
         {
         m_log.warn("Visiting unhandled candidate: {}", candidate);
         return null;

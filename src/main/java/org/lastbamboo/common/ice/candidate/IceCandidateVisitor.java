@@ -35,4 +35,6 @@ public interface IceCandidateVisitor<T>
 
     T visitTcpActiveCandidate(IceTcpActiveCandidate candidate);
 
+    T visitTcpPeerReflexiveCandidate(IceTcpPeerReflexiveCandidate candidate);
+
     }

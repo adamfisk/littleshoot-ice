@@ -4,21 +4,27 @@ import java.net.InetSocketAddress;
 
 import org.apache.commons.id.uuid.UUID;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.TransportType;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
+import org.lastbamboo.common.stun.client.StunClientMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +34,8 @@ import org.slf4j.LoggerFactory;
  * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2
  */
 public class IceStunServerConnectivityChecker 
-    extends StunMessageVisitorAdapter<Void> 
+    extends StunClientMessageVisitor<StunMessage>
+    //extends StunMessageVisitorAdapter<Void> 
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -49,19 +56,20 @@ public class IceStunServerConnectivityChecker
      * for. 
      * @param checkerFactory The factory for creating new classes for 
      * performing connectivity checks.
-     * @param session 
      */
     public IceStunServerConnectivityChecker(
         final IceAgent agent, final IceMediaStream iceMediaStream,
-        final IceStunCheckerFactory checkerFactory, final IoSession session)
+        final IceStunCheckerFactory checkerFactory, final IoSession session, 
+        final StunTransactionTracker<StunMessage> transactionTracker)
         {
+        super (transactionTracker);
         m_agent = agent;
         m_iceMediaStream = iceMediaStream;
         m_checkerFactory = checkerFactory;
         m_ioSession = session;
         }
     
-    public Void visitBindingRequest(final BindingRequest request)
+    public StunMessage visitBindingRequest(final BindingRequest request)
         {
         m_log.debug("Visiting Binding Request message: {}", request);
         // We need to check ICE controlling and controlled roles for conflicts.
@@ -94,7 +102,12 @@ public class IceStunServerConnectivityChecker
      */
     private void processNoRoleConflict(final BindingRequest binding)
         {
-
+        if (binding.getAttributes().containsKey(
+            StunAttributeType.ICE_USE_CANDIDATE))
+            {
+            m_log.debug("GOT BINDING REQUEST WITH USE CANDIDATE");
+            }
+        
         final InetSocketAddress localAddress = 
             (InetSocketAddress) this.m_ioSession.getLocalAddress();
         final InetSocketAddress remoteAddress = 
@@ -113,22 +126,23 @@ public class IceStunServerConnectivityChecker
         // Check to see if the remote address matches the address of
         // any remote candidates we know about.  If it does not, it's a
         // new peer reflexive address.  See ICE section 7.2.1.3
-        final IceCandidate localCandidate;
+        final TransportType type = this.m_ioSession.getTransportType();
+        final boolean isUdp = type.isConnectionless();
         final IceCandidate remoteCandidate;
-        if (!this.m_iceMediaStream.hasRemoteCandidate(remoteAddress))
+        if (!this.m_iceMediaStream.hasRemoteCandidate(remoteAddress, isUdp))
             {
             remoteCandidate = this.m_iceMediaStream.addRemotePeerReflexive(
-                binding, localAddress, remoteAddress);
+                binding, localAddress, remoteAddress, isUdp);
             m_log.debug("Added peer reflexive remote candidate.");
             }
         else
             {
             remoteCandidate = 
-                this.m_iceMediaStream.getRemoteCandidate(remoteAddress);
+                this.m_iceMediaStream.getRemoteCandidate(remoteAddress, isUdp);
             }
         
-        localCandidate = 
-            this.m_iceMediaStream.getLocalCandidate(localAddress);
+        final IceCandidate localCandidate = 
+            this.m_iceMediaStream.getLocalCandidate(localAddress, isUdp);
         
         m_log.debug("Using existing local candidate: {}", localCandidate);
         
@@ -189,32 +203,31 @@ public class IceStunServerConnectivityChecker
             }
         else
             {
-            m_log.debug("Creating new UDP pair.");
-            final IceStunChecker connectivityChecker = 
-                this.m_checkerFactory.createStunChecker(localCandidate, 
-                    remoteCandidate);
+            m_log.debug("Creating new candidate pair.");
             
-            // Dynamically create a TCP or a UDP pair depending on the type
-            // of the local candidate.
-            final IceCandidateVisitor<IceCandidatePair> pairFactory =
-                new IceCandidateVisitorAdapter<IceCandidatePair>()
+            final IceStunChecker connectivityChecker;
+            if (localCandidate.isUdp())
                 {
-                public IceCandidatePair visitTcpActiveCandidate(
-                    final IceTcpActiveCandidate candidate)
-                    {
-                    return new TcpIceCandidatePair(localCandidate, 
-                        remoteCandidate, connectivityChecker);
-                    }
-
-                public IceCandidatePair visitUdpHostCandidate(
-                    final IceUdpHostCandidate candidate)
-                    {
-                    return new UdpIceCandidatePair(localCandidate, 
-                        remoteCandidate, connectivityChecker);
-                    }
-                };
-                
-            computedPair = localCandidate.accept(pairFactory);
+                connectivityChecker = 
+                    this.m_checkerFactory.createStunChecker(localCandidate, 
+                        remoteCandidate);
+                computedPair = new UdpIceCandidatePair(localCandidate, 
+                    remoteCandidate, connectivityChecker);
+                }
+            else
+                {
+                // The request just arrived on an existing TCP session.  We
+                // cannot create a new TCP connection from this acceptor to
+                // the remote connector because the remote side is using a 
+                // client and not an accepting socket, so we need to use
+                // the existing connection.
+                connectivityChecker = 
+                    this.m_checkerFactory.createStunChecker(localCandidate, 
+                        remoteCandidate, this.m_ioSession, 
+                        this.m_transactionTracker);
+                computedPair = new TcpIceCandidatePair(localCandidate,
+                    remoteCandidate, connectivityChecker);
+                }
                 
             // Continue with the rest of ICE section 7.2.1.4, 
             // "Triggered Checks"
@@ -276,7 +289,6 @@ public class IceStunServerConnectivityChecker
                         // No action.
                     }
                 }
-            
             }
         }
     }

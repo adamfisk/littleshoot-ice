@@ -248,7 +248,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         try
             {
             final InetSocketAddress activeAddress = 
-                new InetSocketAddress(NetworkUtils.getLocalHost(), 9);
+                new InetSocketAddress(NetworkUtils.getLocalHost(), 0);
             final IceTcpActiveCandidate activeCandidate = 
                 new IceTcpActiveCandidate(activeAddress, this.m_controlling);
             candidates.add(activeCandidate);

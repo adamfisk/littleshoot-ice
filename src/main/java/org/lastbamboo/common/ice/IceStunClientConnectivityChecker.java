@@ -9,8 +9,11 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceCandidateType;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
+import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
@@ -62,7 +65,36 @@ public class IceStunClientConnectivityChecker
         m_pair = udpPair;
         }
     
-    private IoSession visitLocalCandidate(final IceCandidate candidate)
+    
+    public IoSession visitUdpHostCandidate(
+        final IceUdpHostCandidate candidate)
+        {
+        m_log.debug("Checking UDP host candidate...");
+        return visitLocalCandidate(candidate);
+        }
+    
+    public IoSession visitTcpActiveCandidate(
+        final IceTcpActiveCandidate candidate)
+        {
+        m_log.debug("Visiting TCP active candidate: {}", candidate);
+        return visitLocalCandidate(candidate);
+        }
+    
+    public IoSession visitTcpHostPassiveCandidate(
+        final IceTcpHostPassiveCandidate candidate)
+        {
+        m_log.debug("Visiting TCP host passive candidate: {}", candidate);
+        return visitLocalCandidate(candidate);
+        }
+    
+    public IoSession visitTcpPeerReflexiveCandidate(
+        final IceTcpPeerReflexiveCandidate candidate)
+        {
+        m_log.debug("Visiting TCP peer reflexive candidate: {}", candidate);
+        return visitLocalCandidate(candidate);
+        }
+    
+    private IoSession visitLocalCandidate(final IceCandidate localCandidate)
         {
         // See ICE section 7 "Performing Connectivity Checks".
         final IceCandidate remoteCandidate = this.m_pair.getRemoteCandidate();
@@ -123,6 +155,7 @@ public class IceStunClientConnectivityChecker
             new StunMessageVisitorAdapter<IceCandidate>()
             {
             
+            @Override
             public IceCandidate visitBindingSuccessResponse(
                 final BindingSuccessResponse sbr)
                 {
@@ -132,7 +165,8 @@ public class IceStunClientConnectivityChecker
                 final InetSocketAddress mappedAddress = 
                     sbr.getMappedAddress();
                 final IceCandidate matchingCandidate = 
-                    m_mediaStream.getLocalCandidate(mappedAddress);
+                    m_mediaStream.getLocalCandidate(mappedAddress, 
+                        localCandidate.isUdp());
                 
                 if (matchingCandidate == null)
                     {
@@ -146,10 +180,19 @@ public class IceStunClientConnectivityChecker
                     
                     // We use the PRIORITY from the Binding Request, as
                     // specified in section 7.1.2.2.1. and 7.1.2.2.2.
-                    final IceCandidate prc = 
-                        new IceUdpPeerReflexiveCandidate(mappedAddress, 
-                            candidate, m_iceAgent.isControlling(), 
+                    final IceCandidate prc;
+                    if (localCandidate.isUdp())
+                        {
+                        prc = new IceUdpPeerReflexiveCandidate(mappedAddress, 
+                            localCandidate, m_iceAgent.isControlling(), 
                             requestPriority);
+                        }
+                    else
+                        {
+                        prc = new IceTcpPeerReflexiveCandidate(mappedAddress, 
+                            localCandidate, m_iceAgent.isControlling(), 
+                            requestPriority);
+                        }
                     m_mediaStream.addLocalCandidate(prc);
                     return prc;
                     }
@@ -161,6 +204,7 @@ public class IceStunClientConnectivityChecker
                     }
                 }
 
+            @Override
             public IceCandidate visitBindingErrorResponse(
                 final BindingErrorResponse bindingErrorResponse)
                 {
@@ -248,21 +292,6 @@ public class IceStunClientConnectivityChecker
             }
         }
     
-    public IoSession visitUdpHostCandidate(
-        final IceUdpHostCandidate candidate)
-        {
-        m_log.debug("Checking UDP host candidate...");
-        
-        return visitLocalCandidate(candidate);
-        }
-    
-    public IoSession visitTcpActiveCandidate(
-        final IceTcpActiveCandidate candidate)
-        {
-        m_log.debug("Visiting TCP active candidate: {}", candidate);
-        return visitLocalCandidate(candidate);
-        }
-    
     /**
      * Processes a successful response to a check.
      * 
@@ -315,7 +344,8 @@ public class IceStunClientConnectivityChecker
                 // remote candidate.  In that case, the priority is taken as the
                 // value of the PRIORITY attribute in the Binding Request which
                 // triggered the check that just completed.
-                if (this.m_mediaStream.hasRemoteCandidate(remoteAddress))
+                if (this.m_mediaStream.hasRemoteCandidate(remoteAddress, 
+                    remoteCandidate.isUdp()))
                     {
                     // It's not a triggered check, so use the original 
                     // candidate's priority, or, i.e., use the original 
@@ -339,8 +369,16 @@ public class IceStunClientConnectivityChecker
                 // If the local candidate is peer reflexive, it still has the
                 // same base as the original local candidate, so the 
                 // connectivity checker will be identical.
-                pairToAdd = new UdpIceCandidatePair(newLocalCandidate, 
-                    remoteCandidate, this.m_pair.getConnectivityChecker());
+                if (newLocalCandidate.isUdp())
+                    {
+                    pairToAdd = new UdpIceCandidatePair(newLocalCandidate, 
+                        remoteCandidate, this.m_pair.getConnectivityChecker());
+                    }
+                else
+                    {
+                    pairToAdd = new TcpIceCandidatePair(newLocalCandidate, 
+                        remoteCandidate, this.m_pair.getConnectivityChecker());
+                    }
                 }
             }
         m_mediaStream.addValidPair(pairToAdd);

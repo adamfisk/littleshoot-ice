@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+import org.apache.commons.id.uuid.UUID;
 import org.apache.mina.common.ConnectFuture;
+import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.RuntimeIOException;
@@ -14,7 +16,12 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.SocketConnector;
 import org.apache.mina.transport.socket.nio.SocketConnectorConfig;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
+import org.lastbamboo.common.stun.stack.message.NullStunMessage;
+import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,10 +34,9 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
 
     private final Logger m_log = 
         LoggerFactory.getLogger(IceTcpStunChecker.class);
-    private SocketConnector m_connector;
 
     /**
-     * Creates a new ICE connectivity checker over UDP.
+     * Creates a new ICE connectivity checker over TCP.
      * 
      * @param localCandidate The local address.
      * @param remoteCandidate The remote address.
@@ -53,20 +59,54 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             iceAgent, demuxingCodecFactory, clazz, ioHandler);
         }
     
+    /**
+     * Creates a new ICE connectivity checker over TCP.
+     * 
+     * @param localCandidate The local address.
+     * @param remoteCandidate The remote address.
+     * @param serverMessageVisitorFactory The factory for creating visitors for 
+     * incoming messages.
+     * @param iceAgent The top-level ICE agent.
+     * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
+     * demultiplexing between STUN and another protocol.
+     * @param clazz The top-level message class the protocol other than STUN.
+     * @param ioHandler The {@link IoHandler} to use for the other protocol.
+     */
+    public IceTcpStunChecker(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, 
+        final StunMessageVisitorFactory serverMessageVisitorFactory, 
+        final IceAgent iceAgent, 
+        final ProtocolCodecFactory demuxingCodecFactory,
+        final Class clazz, final IoHandler ioHandler, final IoSession session,
+        final StunTransactionTracker<StunMessage> transactionTracker)
+        {
+        super(localCandidate, remoteCandidate, transactionTracker, 
+            serverMessageVisitorFactory, 
+            iceAgent, demuxingCodecFactory, clazz, ioHandler);
+        this.m_ioSession = session;
+        }
+    
     @Override
-    protected void createConnector(
+    protected IoConnector createConnector(
         final InetSocketAddress localAddress, 
         final InetSocketAddress remoteAddress,
         final ThreadModel threadModel, final ProtocolCodecFilter stunFilter, 
         final IoHandler demuxer)
         {
-        this.m_connector = new SocketConnector();
+        if (this.m_connector != null) 
+            {
+            m_log.debug("Already connected...");
+            return this.m_connector;
+            }
         
-        final SocketConnectorConfig cfg = m_connector.getDefaultConfig();
+        final SocketConnector connector = new SocketConnector();
+        
+        final SocketConnectorConfig cfg = connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
         cfg.setThreadModel(threadModel);
         
-        m_connector.getFilterChain().addLast("stunFilter", stunFilter);
+        connector.getFilterChain().addLast("stunFilter", stunFilter);
+        return connector;
         }
 
     @Override
@@ -77,17 +117,13 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             {
             // We might be performing a second check to verify a nominated
             // pair, for example.
+            m_log.debug("Already connected");
             return true;
             }
-        
         final InetAddress address = this.m_remoteAddress.getAddress();
-        
         final int connectTimeout;
-
-
         if (address.isSiteLocalAddress())
             {
-
             try
                 {
                 if (!address.isReachable(400))
@@ -102,7 +138,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             m_log.debug("Address is reachable. Connecting:{}", address);
 
             // We should be able to connect to local, private addresses 
-            // really, really quickly.  So don't wait around too long.
+            // really quickly.  So don't wait around too long.
             connectTimeout = 3000;
             }
         else
@@ -124,15 +160,77 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
                 return false;
                 }
             this.m_ioSession = session;
+            m_log.debug("TCP STUN checker connected on: "+session);
             return true;
             }
         catch (final RuntimeIOException e)
             {
             // This happens when we can't connect.
             m_log.debug("Could not connect to host: {}", this.m_remoteAddress);
+            m_log.debug("Reason for no connection: ", e);
             return false;
             }
-        
+        }
 
+    @Override
+    protected StunMessage writeInternal(
+        final BindingRequest bindingRequest, final long rto)
+        {
+        if (bindingRequest == null)
+            {
+            throw new NullPointerException("Null Binding Request");
+            }
+        
+        // This method will retransmit the same request multiple times because
+        // it's being sent unreliably.  All of these requests will be 
+        // identical, using the same transaction ID.
+        final UUID id = bindingRequest.getTransactionId();
+        final InetSocketAddress localAddress = 
+            (InetSocketAddress) this.m_ioSession.getLocalAddress();
+        final InetSocketAddress remoteAddress =
+            (InetSocketAddress) this.m_ioSession.getRemoteAddress();
+        
+        this.m_transactionTracker.addTransaction(bindingRequest, this, 
+            localAddress, remoteAddress);
+        
+        m_log.debug("Waiting for lock...");
+        synchronized (m_requestLock)
+            {   
+            this.m_transactionCancelled = false;
+            m_log.debug("Sending Binding Request...");
+            this.m_ioSession.write(bindingRequest);
+            
+            // Now we wait for 1.6 seconds after the last request was sent.
+            // If we still don't receive a response, then the transaction 
+            // has failed.  
+            if (!this.m_transactionCancelled)
+                {
+                waitIfNoResponse(bindingRequest, 7900);
+                }
+
+            // Even if the transaction was canceled, we still may have 
+            // received a successful response.  If we did, we process it as
+            // usual.  This is specified in 7.2.1.4.
+            if (m_idsToResponses.containsKey(id))
+                {
+                final StunMessage response = this.m_idsToResponses.remove(id);
+                m_log.debug("Returning STUN response: {}", response);
+                return response;
+                }
+            
+            if (this.m_transactionCancelled)
+                {
+                m_log.debug("The transaction was cancelled!");
+                return new CanceledStunMessage();
+                }
+            
+            else
+                {
+                // This will happen quite often, such as when we haven't
+                // yet successfully punched a hole in the firewall.
+                m_log.debug("Did not get response on: {}", this.m_ioSession);
+                return new NullStunMessage();
+                }
+            }
         }
     }

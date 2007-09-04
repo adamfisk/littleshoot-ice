@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
@@ -12,57 +13,75 @@ import org.lastbamboo.common.util.NetworkUtils;
 public class StunClientStub implements StunClient
     {
 
-    private InetAddress m_stunServerAddress;
-    private InetSocketAddress m_hostAddress;
-    private InetSocketAddress m_serverReflexiveAddress =
-        new InetSocketAddress("76.24.52.2", 4820);
+    private final InetAddress m_stunServerAddress;
+    private final InetSocketAddress m_hostAddress;
+    private final InetSocketAddress m_serverReflexiveAddress;
+    private final InetSocketAddress m_relayAddress;
 
-    public StunClientStub(final InetAddress stunServerAddress)
+    public static StunClient newClient(final InetSocketAddress serverReflexive, 
+        final int hostPort)
         {
-        m_stunServerAddress = stunServerAddress;
         try
             {
-            m_hostAddress = 
-                new InetSocketAddress(NetworkUtils.getLocalHost(), 48302);
+            final StunClient client = 
+                new StunClientStub(InetAddress.getByName("32.34.3.2"),
+                new InetSocketAddress(NetworkUtils.getLocalHost(), hostPort),
+                serverReflexive);
+            return client;
             }
         catch (final UnknownHostException e)
             {
+            throw new IllegalArgumentException("Can't resolve host", e);
             }
         }
 
-    public StunClientStub()
+    public StunClientStub(final InetAddress stunServerAddress) 
+        throws UnknownHostException 
         {
-        try
-            {
-            m_stunServerAddress = InetAddress.getByName("32.34.3.2");
-            m_hostAddress = 
-                new InetSocketAddress(NetworkUtils.getLocalHost(), 48302);
-            }
-        catch (final UnknownHostException e)
-            {
-            }
+        this(stunServerAddress, 
+            new InetSocketAddress(NetworkUtils.getLocalHost(), getRandomPort()));
+        }
+
+    public StunClientStub() throws UnknownHostException
+        {
+        this(InetAddress.getByName("32.34.3.2"), 
+           new InetSocketAddress(NetworkUtils.getLocalHost(), getRandomPort()));
         }
 
     public StunClientStub(final InetAddress stunServerAddress, 
         final InetSocketAddress hostAddress)
         {
-        m_stunServerAddress = stunServerAddress;
-        m_hostAddress = hostAddress;
+        this(stunServerAddress, hostAddress, 
+            new InetSocketAddress("76.24.52.2", 4820));
         }
     
     public StunClientStub(final InetSocketAddress serverReflexiveAddress,
-        final int hostPort)
+        final int hostPort) throws UnknownHostException
         {
-        try
-            {
-            m_stunServerAddress = InetAddress.getByName("32.34.3.2");
-            m_hostAddress = 
-                new InetSocketAddress(NetworkUtils.getLocalHost(), hostPort);
-            }
-        catch (final UnknownHostException e)
-            {
-            }
+        this(InetAddress.getByName("32.34.3.2"),
+            new InetSocketAddress(NetworkUtils.getLocalHost(), hostPort),
+            serverReflexiveAddress);
+        }
+    
+    private StunClientStub(final InetAddress stunServerAddress, 
+        final InetSocketAddress hostAddress, 
+        final InetSocketAddress serverReflexiveAddress)
+        {
+        m_stunServerAddress = stunServerAddress;
+        m_hostAddress = hostAddress; 
         m_serverReflexiveAddress = serverReflexiveAddress;
+        
+        // Use a random port to avoid bind conflicts for tests that use
+        // multiple stubs.
+        m_relayAddress = new InetSocketAddress("98.242.12.7", getRandomPort());
+        }
+    
+
+    private static int getRandomPort()
+        {
+        final int relayPort = 
+            1024 + RandomUtils.nextInt() % (Short.MAX_VALUE*2 - 1025);
+        return relayPort;
         }
 
     public InetSocketAddress getHostAddress()
@@ -82,8 +101,7 @@ public class StunClientStub implements StunClient
 
     public InetSocketAddress getRelayAddress()
         {
-        // TODO Auto-generated method stub
-        return null;
+        return this.m_relayAddress;
         }
 
     public StunMessage write(BindingRequest request, InetSocketAddress remoteAddress)
@@ -97,11 +115,4 @@ public class StunClientStub implements StunClient
         // TODO Auto-generated method stub
         return null;
         }
-
-    public InetSocketAddress getLocalAddress()
-        {
-        // TODO Auto-generated method stub
-        return null;
-        }
-
     }

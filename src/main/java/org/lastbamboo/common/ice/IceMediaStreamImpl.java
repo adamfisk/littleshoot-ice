@@ -18,6 +18,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
+import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.lastbamboo.common.stun.client.StunClient;
@@ -153,13 +154,14 @@ public class IceMediaStreamImpl implements IceMediaStream
     
     public IceCandidate addRemotePeerReflexive(final BindingRequest request,
         final InetSocketAddress localAddress, 
-        final InetSocketAddress remoteAddress)
+        final InetSocketAddress remoteAddress, final boolean isUdp)
         {
         // See ICE section 7.2.1.3.
         final Map<StunAttributeType, StunAttribute> attributes = 
             request.getAttributes();
         final IcePriorityAttribute priorityAttribute = 
-            (IcePriorityAttribute) attributes.get(StunAttributeType.ICE_PRIORITY);
+            (IcePriorityAttribute) attributes.get(
+                StunAttributeType.ICE_PRIORITY);
         final long priority = priorityAttribute.getPriority();
         
         // We set the foundation to a random value.
@@ -168,7 +170,8 @@ public class IceMediaStreamImpl implements IceMediaStream
         // Find the local candidate for the address the request was sent to.
         // We use that to determine the component ID of the new peer
         // reflexive candidate.
-        final IceCandidate localCandidate = getLocalCandidate(localAddress);
+        final IceCandidate localCandidate = 
+            getLocalCandidate(localAddress, isUdp);
         if (localCandidate == null)
             {
             m_log.warn("Could not find local candidate.  Aborting: "+
@@ -178,9 +181,17 @@ public class IceMediaStreamImpl implements IceMediaStream
         final int componentId = localCandidate.getComponentId();
         
         m_log.debug("Creating new peer reflexive candidate");
-        final IceCandidate prc = 
-            new IceUdpPeerReflexiveCandidate(remoteAddress, foundation, 
+        final IceCandidate prc;
+        if (isUdp)
+            {
+            prc = new IceUdpPeerReflexiveCandidate(remoteAddress, foundation, 
                 componentId, this.m_iceAgent.isControlling(), priority);
+            }
+        else
+            {
+            prc = new IceTcpPeerReflexiveCandidate(remoteAddress, foundation, 
+                componentId, this.m_iceAgent.isControlling(), priority);
+            }
 
         this.m_remoteCandidates.add(prc);
         return prc;
@@ -280,27 +291,29 @@ public class IceMediaStreamImpl implements IceMediaStream
         this.m_localCandidates.add(localCandidate);
         }
 
-    public IceCandidate getLocalCandidate(final InetSocketAddress localAddress)
+    public IceCandidate getLocalCandidate(final InetSocketAddress localAddress,
+        final boolean isUdp)
         {
-        return getCandidate(this.m_localCandidates, localAddress);
+        return getCandidate(this.m_localCandidates, localAddress, isUdp);
         }
 
     public IceCandidate getRemoteCandidate(
-        final InetSocketAddress remoteAddress)
+        final InetSocketAddress remoteAddress, final boolean isUdp)
         {
-        return getCandidate(this.m_remoteCandidates, remoteAddress);
+        return getCandidate(this.m_remoteCandidates, remoteAddress, isUdp);
         }
     
-    public boolean hasRemoteCandidate(final InetSocketAddress remoteAddress)
+    public boolean hasRemoteCandidate(final InetSocketAddress remoteAddress,
+        final boolean isUdp)
         {
         final IceCandidate remoteCandidate = 
-            getCandidate(this.m_remoteCandidates, remoteAddress);
+            getCandidate(this.m_remoteCandidates, remoteAddress, isUdp);
         
         return remoteCandidate != null;
         }
     
     private IceCandidate getCandidate(final Collection<IceCandidate> candidates,
-        final InetSocketAddress address)
+        final InetSocketAddress address, final boolean isUdp)
         {
         // A little inefficient here, but we're not talking about a lot of
         // candidates.
@@ -308,12 +321,21 @@ public class IceMediaStreamImpl implements IceMediaStream
             {
             for (final IceCandidate candidate : candidates)
                 {
-                if (candidate.getSocketAddress().equals(address))
+                if (candidate.isUdp())
+                    {
+                    if (!isUdp) continue;
+                    }
+                else 
+                    {
+                    if (isUdp) continue;
+                    }
+                if (address.equals(candidate.getSocketAddress()))
                     {
                     return candidate;
                     }
                 }
-            m_log.debug(address+" not found in "+candidates);
+            m_log.debug(address+" with transport UDP: "+isUdp+
+                " not found in "+candidates);
             }
         
         return null;

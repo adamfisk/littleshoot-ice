@@ -122,4 +122,6 @@ public interface IceCandidate
      */
     void setPriority(long priority);
 
+    boolean isUdp();
+
     }

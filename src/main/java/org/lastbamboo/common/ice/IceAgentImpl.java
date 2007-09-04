@@ -288,12 +288,14 @@ public class IceAgentImpl implements IceAgent
                 mediaStream.getValidPairs();
             final IceCandidatePair pair = validPairs.peek();
             
+            /*
             if (mediaStream.hasHigherPriorityPendingPair(pair))
                 {
                 m_log.debug("We have higher priority pairs that haven't " +
                     "completed their checks");
                 }
             else
+            */
                 {
                 m_log.debug("Repeating check that produced the valid pair " +
                     "using USE-CANDIDATE");

@@ -19,13 +19,6 @@ public class IceMediaStreamImplStub implements IceMediaStream
 
         }
 
-    public IceCandidate addRemotePeerReflexive(BindingRequest request,
-            InetSocketAddress localAddress, InetSocketAddress remoteAddress)
-        {
-        // TODO Auto-generated method stub
-        return null;
-        }
-
     public void addTriggeredCheck(IceCandidatePair pair)
         {
         // TODO Auto-generated method stub
@@ -50,20 +43,8 @@ public class IceMediaStreamImplStub implements IceMediaStream
 
         }
 
-    public IceCandidate getLocalCandidate(InetSocketAddress localAddress)
-        {
-        // TODO Auto-generated method stub
-        return null;
-        }
-
     public IceCandidatePair getPair(InetSocketAddress localAddress,
             InetSocketAddress remoteAddress)
-        {
-        // TODO Auto-generated method stub
-        return null;
-        }
-
-    public IceCandidate getRemoteCandidate(InetSocketAddress remoteAddress)
         {
         // TODO Auto-generated method stub
         return null;
@@ -73,12 +54,6 @@ public class IceMediaStreamImplStub implements IceMediaStream
         {
         // TODO Auto-generated method stub
         return null;
-        }
-
-    public boolean hasRemoteCandidate(InetSocketAddress remoteAddress)
-        {
-        // TODO Auto-generated method stub
-        return false;
         }
 
     public void updatePairStates(IceCandidatePair validPair,
@@ -140,6 +115,30 @@ public class IceMediaStreamImplStub implements IceMediaStream
         {
         // TODO Auto-generated method stub
         return 0;
+        }
+
+    public IceCandidate addRemotePeerReflexive(BindingRequest request, InetSocketAddress localAddress, InetSocketAddress remoteAddress, boolean isUdp)
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
+    public IceCandidate getLocalCandidate(InetSocketAddress localAddress, boolean isUdp)
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
+    public IceCandidate getRemoteCandidate(InetSocketAddress remoteAddress, boolean isUdp)
+        {
+        // TODO Auto-generated method stub
+        return null;
+        }
+
+    public boolean hasRemoteCandidate(InetSocketAddress remoteAddress, boolean isUdp)
+        {
+        // TODO Auto-generated method stub
+        return false;
         }
 
     }

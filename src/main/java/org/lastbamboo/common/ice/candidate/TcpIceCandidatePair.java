@@ -3,6 +3,8 @@ package org.lastbamboo.common.ice.candidate;
 import java.net.Socket;
 
 import org.lastbamboo.common.ice.IceStunChecker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A TCP ICE candidate pair. 
@@ -10,6 +12,8 @@ import org.lastbamboo.common.ice.IceStunChecker;
 public class TcpIceCandidatePair extends AbstractIceCandidatePair
     {
 
+    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    
     private Socket m_socket;
     
     /**
