@@ -70,16 +70,6 @@ public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
     public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
-        return createStunChecker(localCandidate, remoteCandidate, null);
-        }
-
-    public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final IoSession session)
-        {
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory =
-            new IceStunConnectivityCheckerFactory(this.m_iceAgent, 
-                this.m_iceMediaStream, this, m_transactionTracker);
-        
         final IoHandler demuxIoHandler;
         
         // TODO: This does not currently handle the changing of roles.
@@ -91,7 +81,43 @@ public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
             {
             demuxIoHandler = this.m_serverDemuxIoHandler;
             }
-
+        return createStunChecker(localCandidate, remoteCandidate, demuxIoHandler, null);
+        }
+    
+    public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, final IoHandler handler)
+        {
+        return createStunChecker(localCandidate, remoteCandidate, handler, null);
+        }
+   
+    public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, final IoSession session)
+        {
+        final IoHandler demuxIoHandler;
+        
+        // TODO: This does not currently handle the changing of roles.
+        if (this.m_iceAgent.isControlling())
+            {
+            demuxIoHandler = this.m_clientDemuxIoHandler;
+            }
+        else
+            {
+            demuxIoHandler = this.m_serverDemuxIoHandler;
+            }
+        
+        return createStunChecker(localCandidate, remoteCandidate, 
+            demuxIoHandler, session);
+        }
+    
+    
+    public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, final IoHandler handler,
+        final IoSession ioSession)
+        {
+        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory =
+            new IceStunConnectivityCheckerFactory(this.m_iceAgent, 
+                this.m_iceMediaStream, this, m_transactionTracker);
+            
         // Create the checker based on the type of the local candidate.
         // We'll likely support more candidate types in the future here, such
         // as relays.
@@ -141,19 +167,19 @@ public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
             private IceStunChecker udpChecker()
                 {
                 return new IceUdpStunChecker(localCandidate, remoteCandidate,
-                    messageVisitorFactory,
-                    m_iceAgent, m_codecFactory, 
-                    m_demuxClass, demuxIoHandler, m_transactionTracker);
+                    messageVisitorFactory, m_iceAgent, m_codecFactory, 
+                    m_demuxClass, handler, m_transactionTracker);
                 }
             
             private IceStunChecker tcpChecker()
                 {
                 return new IceTcpStunChecker(localCandidate, remoteCandidate,
                     messageVisitorFactory,
-                    m_iceAgent, demuxIoHandler, session, m_transactionTracker);
+                    m_iceAgent, ioSession, m_transactionTracker, handler);
                 }
             };
             
         return localCandidate.accept(visitor);
         }
+
     }

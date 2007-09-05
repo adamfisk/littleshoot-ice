@@ -31,7 +31,7 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
 
     public IoSession getIoSession()
         {
-        return this.m_connectivityChecker.getIoSession();
+        return this.m_stunChecker.getIoSession();
         }
 
     public <T> T accept(final IceCandidatePairVisitor<T> visitor)

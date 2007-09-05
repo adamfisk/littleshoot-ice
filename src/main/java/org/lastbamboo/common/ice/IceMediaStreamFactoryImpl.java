@@ -23,7 +23,8 @@ public class IceMediaStreamFactoryImpl implements IceMediaStreamFactory
      */
     public IceMediaStreamFactoryImpl(final IceMediaStreamDesc streamDesc,
         final ProtocolCodecFactory codecFactory, final Class mediaClass,
-        final IoHandler clientMediaIoHandler, final IoHandler serverMediaIoHandler)
+        final IoHandler clientMediaIoHandler, 
+        final IoHandler serverMediaIoHandler)
         {
         m_streamDesc = streamDesc;
         m_codecFactory = codecFactory;

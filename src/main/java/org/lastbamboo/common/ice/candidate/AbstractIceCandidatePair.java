@@ -16,7 +16,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final String m_foundation;
     private final int m_componentId;
     private boolean m_nominated = false;
-    protected final IceStunChecker m_connectivityChecker;
+    protected final IceStunChecker m_stunChecker;
     private boolean m_nominateOnSuccess = false;
     
     /**
@@ -62,7 +62,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         m_state = IceCandidatePairState.FROZEN;
         m_foundation = String.valueOf(localCandidate.getFoundation()) + 
             String.valueOf(remoteCandidate.getFoundation());
-        this.m_connectivityChecker = connectivityChecker;
+        this.m_stunChecker = connectivityChecker;
         }
     
     public void useCandidate()
@@ -87,7 +87,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     
     public void cancelStunTransaction()
         {
-        this.m_connectivityChecker.cancelTransaction();
+        this.m_stunChecker.cancelTransaction();
         }
     
     public void recomputePriority()
@@ -138,7 +138,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     
     public IceStunChecker getConnectivityChecker()
         {
-        return m_connectivityChecker;
+        return m_stunChecker;
         }
     
     @Override

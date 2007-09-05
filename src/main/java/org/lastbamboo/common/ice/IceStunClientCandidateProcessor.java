@@ -29,6 +29,7 @@ import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttr
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceUseCandidateAttribute;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -376,8 +377,10 @@ public class IceStunClientCandidateProcessor
                     }
                 else
                     {
+                    final TcpFrameIoHandler handler = new TcpFrameIoHandler();
                     pairToAdd = new TcpIceCandidatePair(newLocalCandidate, 
-                        remoteCandidate, this.m_pair.getConnectivityChecker());
+                        remoteCandidate, this.m_pair.getConnectivityChecker(),
+                        handler);
                     }
                 }
             }

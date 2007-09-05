@@ -50,19 +50,20 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
      * @param messageVisitorFactory The factory for creating visitors for 
      * incoming messages.
      * @param iceAgent The top-level ICE agent.
-     * @param ioHandler The {@link IoHandler} to use for the other protocol.
+     * @param protocolIoHandler The {@link IoHandler} to use for the other protocol.
      */
     public IceTcpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
         final StunMessageVisitorFactory<StunMessage> messageVisitorFactory, 
         final IceAgent iceAgent, 
-        final IoHandler ioHandler, 
         final IoSession session,
-        final StunTransactionTracker<StunMessage> transactionTracker)
+        final StunTransactionTracker<StunMessage> transactionTracker,
+        final IoHandler protocolIoHandler)
         {
         super(localCandidate, remoteCandidate, transactionTracker, 
             messageVisitorFactory, 
-            iceAgent, createCodecFactory(), TcpFrame.class, ioHandler);
+            iceAgent, createCodecFactory(), TcpFrame.class, 
+            protocolIoHandler);
         this.m_ioSession = session;
         }
     
@@ -143,7 +144,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
         // TODO: We don't currently support TCP-SO, so we don't bind to the 
         // local port.
         final ConnectFuture cf = 
-            m_connector.connect(this.m_remoteAddress, this.m_demuxer);
+            m_connector.connect(this.m_remoteAddress, this.m_demuxingIoHandler);
         cf.join(connectTimeout);
         try
             {

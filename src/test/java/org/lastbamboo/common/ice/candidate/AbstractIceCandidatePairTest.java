@@ -6,12 +6,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.lastbamboo.common.ice.IceStunChecker;
-import org.lastbamboo.common.ice.IceStunConnectivityChecker;
-import org.lastbamboo.common.ice.IceStunConnectivityChecker;
-import org.lastbamboo.common.ice.IceUdpStunChecker;
-
 import junit.framework.TestCase;
+
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 
 /**
  * Test for ICE candidate pairs.
@@ -33,7 +30,8 @@ public class AbstractIceCandidatePairTest extends TestCase
         final IceCandidate tcpRemote = 
             new IceTcpActiveCandidate(tcpRemoteAddress, false);
         final TcpIceCandidatePair tcpPair = 
-            new TcpIceCandidatePair(tcpLocal, tcpRemote, null);
+            new TcpIceCandidatePair(tcpLocal, tcpRemote, null, 
+                new TcpFrameIoHandler());
         
         final InetAddress stunServerAddress = 
             InetAddress.getByName("64.2.1.86");

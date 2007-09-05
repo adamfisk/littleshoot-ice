@@ -50,7 +50,7 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
      */
     protected volatile boolean m_transactionCancelled = false;
 
-    protected final StunDemuxingIoHandler m_demuxer;
+    protected final StunDemuxingIoHandler m_demuxingIoHandler;
 
     protected final InetSocketAddress m_remoteAddress;
     
@@ -83,12 +83,11 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         final Class clazz, final IoHandler protocolIoHandler)
         {
         this.m_transactionTracker = transactionTracker;
-        final IoHandler ioHandler = 
+        final IoHandler stunIoHandler = 
             new StunIoHandler<StunMessage>(messageVisitorFactory);
         
-        this.m_demuxer = new StunDemuxingIoHandler(clazz, 
-            protocolIoHandler, ioHandler);
-        
+        this.m_demuxingIoHandler = new StunDemuxingIoHandler(clazz, 
+            protocolIoHandler, stunIoHandler);
 
         final String controllingString;
         if (iceAgent.isControlling())
@@ -108,7 +107,7 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         this.m_connector = createConnector(
             localCandidate.getSocketAddress(), 
             remoteCandidate.getSocketAddress(), 
-            threadModel, stunFilter, m_demuxer);
+            threadModel, stunFilter, m_demuxingIoHandler);
 
         }
     

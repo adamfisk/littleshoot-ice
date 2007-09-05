@@ -17,6 +17,7 @@ import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,11 +213,13 @@ public class IceStunConnectivityChecker
                 // the remote connector because the remote side is using a 
                 // client and not an accepting socket, so we need to use
                 // the existing connection.
+                final TcpFrameIoHandler frameIoHandler = 
+                    new TcpFrameIoHandler();
                 connectivityChecker = 
                     this.m_checkerFactory.createStunChecker(localCandidate, 
-                        remoteCandidate, this.m_ioSession);
+                        remoteCandidate, frameIoHandler, this.m_ioSession);
                 computedPair = new TcpIceCandidatePair(localCandidate,
-                    remoteCandidate, connectivityChecker);
+                    remoteCandidate, connectivityChecker, frameIoHandler);
                 }
                 
             // Continue with the rest of ICE section 7.2.1.4, 
