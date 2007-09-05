@@ -13,7 +13,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.mina.common.IoHandler;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairPriorityCalculator;
@@ -38,7 +37,6 @@ import org.lastbamboo.common.util.CollectionUtilsImpl;
 import org.lastbamboo.common.util.Pair;
 import org.lastbamboo.common.util.PairImpl;
 import org.lastbamboo.common.util.Predicate;
-import org.lastbamboo.common.util.SequenceInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
