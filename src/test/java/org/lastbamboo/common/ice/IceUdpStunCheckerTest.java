@@ -4,20 +4,18 @@ import java.net.InetSocketAddress;
 
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoHandlerAdapter;
-import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
+import org.lastbamboo.common.stun.client.StunClientMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
@@ -55,23 +53,10 @@ public class IceUdpStunCheckerTest
             new IceUdpHostCandidate(remoteAddress, false);
         final IceAgent iceAgent = new IceAgentStub();
         
-        
-        // Dummy since we're only testing client-side messages here.
-        final StunMessageVisitorFactory<StunMessage> visitorFactory = 
-            new StunMessageVisitorFactory<StunMessage>()
-            {
-
-            public StunMessageVisitor<StunMessage> createVisitor(IoSession session)
-                {
-                return new StunMessageVisitorAdapter<StunMessage>()
-                    {
-                
-                    };
-                }
-        
-            };
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
+        final StunMessageVisitorFactory<StunMessage> visitorFactory = 
+            new StunClientMessageVisitorFactory<StunMessage>(tracker);
         final StunIoHandler<StunMessage> stunIoHandler =
             new StunIoHandler<StunMessage>(visitorFactory);
         final IceUdpStunChecker checker = 

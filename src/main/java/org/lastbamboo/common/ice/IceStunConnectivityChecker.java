@@ -37,13 +37,10 @@ public class IceStunConnectivityChecker
 
     private final IceMediaStream m_iceMediaStream;
 
-    //private final IceStunCheckerFactory m_checkerFactory;
-
     private final IoSession m_ioSession;
 
-    //private final IceStunConnectivityManager m_connectivityManager;
-
-    private final StunMessageVisitorFactory<StunMessage> m_stunMessageVisitorFactory;
+    private final StunMessageVisitorFactory<StunMessage> 
+        m_stunMessageVisitorFactory;
 
     private final IceStunCheckerFactory m_checkerFactory;
 
@@ -69,7 +66,6 @@ public class IceStunConnectivityChecker
         m_iceMediaStream = iceMediaStream;
         m_ioSession = session;
         m_checkerFactory = checkerFactory;
-        //m_connectivityManager = connectivityManager;
         m_stunMessageVisitorFactory = stunMessageVisitorFactory;
         }
     

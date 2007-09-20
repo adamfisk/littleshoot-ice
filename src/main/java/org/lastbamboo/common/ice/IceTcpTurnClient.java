@@ -3,7 +3,6 @@ package org.lastbamboo.common.ice;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import org.apache.mina.common.IoHandler;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
