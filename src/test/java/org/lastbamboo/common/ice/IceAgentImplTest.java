@@ -31,6 +31,8 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
@@ -80,9 +82,18 @@ public class IceAgentImplTest
                         otherCodecFactory);
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final IoHandler serverIoHandler = new IoHandlerAdapter();
-                return new IceMediaStreamImpl(iceAgent, desc, tcpTurnClient, 
-                    udpStunClient, codecFactory, Void.class, clientIoHandler, 
-                    serverIoHandler);
+                final StunTransactionTracker<StunMessage> transactionTracker =
+                    new StunTransactionTrackerImpl();
+    
+                final IceStunCheckerFactory checkerFactory =
+                    new IceStunCheckerFactoryImpl(iceAgent, 
+                        codecFactory, Void.class, clientIoHandler, 
+                        serverIoHandler, transactionTracker);
+                return new IceMediaStreamImpl(iceAgent, desc, udpStunClient, 
+                    tcpTurnClient, checkerFactory, transactionTracker);
+                //return new IceMediaStreamImpl(iceAgent, desc, tcpTurnClient, 
+                  //  udpStunClient, codecFactory, Void.class, clientIoHandler, 
+                    //serverIoHandler);
                 }
             };
         
@@ -106,15 +117,22 @@ public class IceAgentImplTest
                         otherCodecFactory);
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final IoHandler serverIoHandler = new IoHandlerAdapter();
-                return new IceMediaStreamImpl(iceAgent, desc, tcpTurnClient, 
-                    udpStunClient, codecFactory, Void.class, clientIoHandler, 
-                    serverIoHandler);
+                final StunTransactionTracker<StunMessage> transactionTracker =
+                    new StunTransactionTrackerImpl();
+    
+                final IceStunCheckerFactory checkerFactory =
+                    new IceStunCheckerFactoryImpl(iceAgent, 
+                        codecFactory, Void.class, clientIoHandler, 
+                        serverIoHandler, transactionTracker);
+                return new IceMediaStreamImpl(iceAgent, desc, udpStunClient, 
+                    tcpTurnClient, checkerFactory, transactionTracker);
                 }
             };
         final IceMediaFactory iceMediaFactory = new IceMediaFactory()
             {
 
-            public void newMedia(IceCandidatePair pair, boolean client, OfferAnswerMediaListener mediaListener)
+            public void newMedia(IceCandidatePair pair, boolean client, 
+                final OfferAnswerMediaListener mediaListener)
                 {
                 // TODO Auto-generated method stub
                 
@@ -160,7 +178,6 @@ public class IceAgentImplTest
         final AtomicBoolean threadFailed = new AtomicBoolean(false);
         final Thread answerThread = new Thread(new Runnable()
             {
-
             public void run()
                 {
                 try
@@ -172,7 +189,6 @@ public class IceAgentImplTest
                     threadFailed.set(true);
                     }
                 }
-            
             });
         
         answerThread.setDaemon(true);

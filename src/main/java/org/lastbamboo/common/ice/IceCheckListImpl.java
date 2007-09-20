@@ -30,6 +30,8 @@ import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
+import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.CollectionUtils;
@@ -67,19 +69,25 @@ public class IceCheckListImpl implements IceCheckList
 
     private final IceStunCheckerFactory m_checkerFactory;
 
+    private final StunMessageVisitorFactory<StunMessage> 
+        m_messageVisitorFactory;
+
     /**
      * Creates a new check list, starting with only local candidates.
      * 
      * @param checkerFactory The factory for generating connectivity checker
      * classes. 
      * @param localCandidates The local candidates to use in the check list.
+     * @param messageVisitorFactory 
      */
     public IceCheckListImpl(
         final IceStunCheckerFactory checkerFactory,
-        final Collection<IceCandidate> localCandidates)
+        final Collection<IceCandidate> localCandidates, 
+        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
         {
         m_checkerFactory = checkerFactory;
         m_localCandidates = localCandidates;
+        m_messageVisitorFactory = messageVisitorFactory;
         }
     
     public IceCandidatePair removeTopTriggeredPair()
@@ -252,6 +260,30 @@ public class IceCheckListImpl implements IceCheckList
             this.m_pairs.addAll(sorted);
             m_log.debug("Created pairs:\n"+this.m_pairs);
             }
+        
+        final Closure<IceCandidatePair> tcpTurnClosure =
+            new Closure<IceCandidatePair>()
+            {
+            private final Set<InetAddress> addedAddresses =
+                new HashSet<InetAddress>();
+            public void execute(final IceCandidatePair pair)
+                {
+                final IceCandidate remote = pair.getRemoteCandidate();
+                final InetAddress remoteAddress = 
+                    remote.getSocketAddress().getAddress();
+                if (addedAddresses.contains(remoteAddress))
+                    {
+                    return;
+                    }
+                if (!remoteAddress.isSiteLocalAddress() &&
+                    !remoteAddress.isLinkLocalAddress() &&
+                    !remoteAddress.isAnyLocalAddress())
+                    {
+                    addedAddresses.add(remoteAddress);
+                    }
+                }
+            };
+        executeOnPairs(tcpTurnClosure);
         }
     
 
@@ -430,7 +462,8 @@ public class IceCheckListImpl implements IceCheckList
                     new TcpFrameIoHandler();
                 final IceStunChecker checker = 
                     m_checkerFactory.createStunChecker(candidate, 
-                        remoteCandidate, frameIoHandler);
+                        remoteCandidate, frameIoHandler, 
+                        m_messageVisitorFactory);
                 return new TcpIceCandidatePair(candidate, remoteCandidate,
                     checker, frameIoHandler);
                 }
@@ -441,7 +474,7 @@ public class IceCheckListImpl implements IceCheckList
                 m_log.debug("Creating STUN checker...");
                 final IceStunChecker checker = 
                     m_checkerFactory.createStunChecker(candidate, 
-                        remoteCandidate);
+                        remoteCandidate, m_messageVisitorFactory);
 
                 return new UdpIceCandidatePair(candidate, remoteCandidate, 
                     checker);

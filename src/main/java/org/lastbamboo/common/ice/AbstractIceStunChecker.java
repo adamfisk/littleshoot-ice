@@ -13,7 +13,6 @@ import org.apache.mina.common.ThreadModel;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.stun.stack.StunDemuxingIoHandler;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
@@ -21,6 +20,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionListener;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,7 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
      */
     protected volatile boolean m_transactionCancelled = false;
 
-    protected final StunDemuxingIoHandler m_demuxingIoHandler;
+    protected final DemuxingIoHandler m_demuxingIoHandler;
 
     protected final InetSocketAddress m_remoteAddress;
     
@@ -77,17 +77,14 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
         final StunTransactionTracker<StunMessage> transactionTracker,
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory, 
+        final IoHandler stunIoHandler,
         final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
         final Class clazz, final IoHandler protocolIoHandler)
         {
         this.m_transactionTracker = transactionTracker;
-        final IoHandler stunIoHandler = 
-            new StunIoHandler<StunMessage>(messageVisitorFactory);
-        
-        this.m_demuxingIoHandler = new StunDemuxingIoHandler(clazz, 
-            protocolIoHandler, stunIoHandler);
+        this.m_demuxingIoHandler = new DemuxingIoHandler(StunMessage.class, 
+            stunIoHandler, clazz, protocolIoHandler);
 
         final String controllingString;
         if (iceAgent.isControlling())

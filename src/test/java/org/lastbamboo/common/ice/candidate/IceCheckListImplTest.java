@@ -15,26 +15,16 @@ import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.IceAgent;
 import org.lastbamboo.common.ice.IceCheckList;
 import org.lastbamboo.common.ice.IceCheckListImpl;
-import org.lastbamboo.common.ice.IceMediaStream;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
-import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.IceStunCheckerFactoryImpl;
+import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
-import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
 import org.lastbamboo.common.ice.stubs.ProtocolCodecFactoryStub;
-import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
-import org.lastbamboo.common.stun.stack.encoder.StunMessageEncoder;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.NetworkUtils;
-import org.lastbamboo.common.util.Pair;
-import org.lastbamboo.common.util.PairImpl;
-import org.lastbamboo.common.util.mina.DemuxableDecoderFactory;
-import org.lastbamboo.common.util.mina.DemuxableEncoderFactory;
-import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
-import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 
 /**
  * Test for check list creation.
@@ -53,12 +43,6 @@ public class IceCheckListImplTest extends TestCase
         final Collection<IceCandidate> remoteCandidates = createCandidates(false);
         
         final IceAgent agent = new IceAgentStub();
-        final IceMediaStream mediaStream = new IceMediaStreamImplStub();
-        
-        //final Pair<DemuxableEncoderFactory, DemuxableDecoderFactory> pair =
-          //  new PairImpl<DemuxableEncoderFactory, DemuxableDecoderFactory>(new StunMessageEncoder(), stunMessageDecoder)
-        final DemuxableProtocolCodecFactory stunCodecFactory =
-            new StunDemuxableProtocolCodecFactory();
         
         final ProtocolCodecFactory codecFactory = 
             new ProtocolCodecFactoryStub();
@@ -67,10 +51,10 @@ public class IceCheckListImplTest extends TestCase
         final StunTransactionTracker<StunMessage> tracker = 
         new StunTransactionTrackerImpl();
         final IceStunCheckerFactory checkerFactory =
-            new IceStunCheckerFactoryImpl(agent, mediaStream, codecFactory, 
+            new IceStunCheckerFactoryImpl(agent, codecFactory, 
                 Object.class, clientIoHandlerStub, serverIoHandlerStub, tracker);
         final IceCheckList checkList = 
-            new IceCheckListImpl(checkerFactory, localCandidates);
+            new IceCheckListImpl(checkerFactory, localCandidates, null);
         checkList.formCheckList(remoteCandidates);
         
         final Field pairsField = checkList.getClass().getDeclaredField("m_pairs");

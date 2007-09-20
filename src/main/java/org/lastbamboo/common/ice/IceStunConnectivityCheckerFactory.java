@@ -20,8 +20,8 @@ public class IceStunConnectivityCheckerFactory
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final IceAgent m_iceAgent;
     private final IceMediaStream m_iceMediaStream;
-    private final IceStunCheckerFactory m_stunCheckerFactory;
-    private StunTransactionTracker<StunMessage> m_transactionTracker;
+    private final StunTransactionTracker<StunMessage> m_transactionTracker;
+    private final IceStunCheckerFactory m_checkerFactory;
 
     /**
      * Creates a new STUN message visitor factory for ICE.
@@ -31,13 +31,13 @@ public class IceStunConnectivityCheckerFactory
      */
     public IceStunConnectivityCheckerFactory(
         final IceAgent agent, final IceMediaStream iceMediaStream,
-        final IceStunCheckerFactory stunCheckerFactory, 
-        final StunTransactionTracker<StunMessage> transactionTracker)
+        final StunTransactionTracker<StunMessage> transactionTracker,
+        final IceStunCheckerFactory checkerFactory)
         {
         m_iceAgent = agent;
         m_iceMediaStream = iceMediaStream;
-        m_stunCheckerFactory = stunCheckerFactory;
         m_transactionTracker = transactionTracker;
+        m_checkerFactory = checkerFactory;
         }
 
     public StunMessageVisitor<StunMessage> createVisitor(
@@ -45,7 +45,8 @@ public class IceStunConnectivityCheckerFactory
         {
         return new IceStunConnectivityChecker( 
             this.m_iceAgent, this.m_iceMediaStream, 
-                this.m_stunCheckerFactory, session, this.m_transactionTracker);
+                session, this.m_transactionTracker, this.m_checkerFactory,
+                this);
         }
 
     }

@@ -11,8 +11,6 @@ import java.util.Queue;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.math.RandomUtils;
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
@@ -29,7 +27,6 @@ import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.Predicate;
 import org.slf4j.Logger;
@@ -60,51 +57,27 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final Collection<IceCandidate> m_remoteCandidates = 
         new LinkedList<IceCandidate>();
     
-    /**
-     * Creates a new media stream for ICE.
-     * 
-     * @param iceAgent The top-level agent for this session.
-     * @param desc The class describing the media stream we're establishing
-     * a connection for.
-     * @param tcpTurnClient The TCP TURN client connection.   
-     */
-    public IceMediaStreamImpl(final IceAgent iceAgent, 
-        final IceMediaStreamDesc desc, final StunClient tcpTurnClient,
-        final ProtocolCodecFactory codecFactory, final Class mediaClass, 
-        final IoHandler clientMediaIoHandler, 
-        final IoHandler serverMediaIoHandler)
+    public IceMediaStreamImpl(
+        final IceAgent iceAgent, final IceMediaStreamDesc desc, 
+        final StunClient tcpTurnClient, 
+        final IceStunCheckerFactory checkerFactory,
+        final StunTransactionTracker<StunMessage> transactionTracker)
         {
-        this(iceAgent, desc, tcpTurnClient, null, codecFactory, mediaClass,
-            clientMediaIoHandler, serverMediaIoHandler);
+        this(iceAgent, desc, null, tcpTurnClient, checkerFactory, 
+            transactionTracker);
         }
-    
-    /**
-     * Creates a new media stream for ICE.
-     * 
-     * @param iceAgent The top-level agent for this session.
-     * @param desc The class describing the media stream we're establishing
-     * a connection for.
-     * @param tcpTurnClient The TCP TURN client.   
-     * @param udpStunClient The STUN client to use for UDP.
-     */
-    public IceMediaStreamImpl(final IceAgent iceAgent, 
-        final IceMediaStreamDesc desc, final StunClient tcpTurnClient,
-        final StunClient udpStunClient, 
-        final ProtocolCodecFactory codecFactory,
-        final Class mediaClass, final IoHandler clientMediaIoHandler,
-        final IoHandler serverMediaIoHandler)
+
+    public IceMediaStreamImpl(IceAgent iceAgent, IceMediaStreamDesc desc, 
+        final StunClient udpStunClient, final StunClient tcpTurnClient, 
+        final IceStunCheckerFactory checkerFactory, 
+        final StunTransactionTracker<StunMessage> transactionTracker)
         {
         m_iceAgent = iceAgent;
         m_desc = desc;
-        final StunTransactionTracker<StunMessage> transactionTracker =
-            new StunTransactionTrackerImpl();
-        final IceStunCheckerFactory checkerFactory =
-            new IceStunCheckerFactoryImpl(this.m_iceAgent, this, 
-                codecFactory, mediaClass, clientMediaIoHandler, 
-                serverMediaIoHandler, transactionTracker);
-        final StunMessageVisitorFactory messageVisitorFactory =
-            new IceStunConnectivityCheckerFactory(this.m_iceAgent, 
-                this, checkerFactory, transactionTracker);
+
+        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory =
+            new IceStunConnectivityCheckerFactory(iceAgent, 
+                this, transactionTracker, checkerFactory);
         final StunClient udpStunPeer;
         if (udpStunClient == null && desc.isUdp())
             {
@@ -116,6 +89,8 @@ public class IceMediaStreamImpl implements IceMediaStream
             {
             udpStunPeer = udpStunClient;
             }
+        
+        
         final StunClient tcpIceClient = 
             new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 
                 iceAgent.isControlling());
@@ -124,7 +99,8 @@ public class IceMediaStreamImpl implements IceMediaStream
                 iceAgent.isControlling(), desc);
         this.m_localCandidates = gatherer.gatherCandidates();
         this.m_checkList = 
-            new IceCheckListImpl(checkerFactory, this.m_localCandidates);
+            new IceCheckListImpl(checkerFactory, this.m_localCandidates, 
+                messageVisitorFactory);
         }
 
     public byte[] encodeCandidates()
@@ -148,6 +124,9 @@ public class IceMediaStreamImpl implements IceMediaStream
         
         m_checkList.formCheckList(remoteCandidates);
         
+        // TODO: We currently skip this step because it eliminates our extra
+        // UDP candidates for trying to cross NATs with port and address
+        // dependent mapping.
         //processPairGroups();
         
         final IceCheckScheduler scheduler = 

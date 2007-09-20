@@ -58,7 +58,7 @@ public class IceStunUdpPeerTest
             new StunTransactionTrackerImpl();
         final StunMessageVisitorFactory messageVisitorFactory =
             new IceStunConnectivityCheckerFactory(iceAgent, 
-                iceMediaStream, null, tracker);
+                iceMediaStream, tracker, null);
             
         final IceStunUdpPeer peer1 = 
             new IceStunUdpPeer(messageVisitorFactory, true);

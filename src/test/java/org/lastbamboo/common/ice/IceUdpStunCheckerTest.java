@@ -12,6 +12,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
+import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
@@ -56,13 +57,13 @@ public class IceUdpStunCheckerTest
         
         
         // Dummy since we're only testing client-side messages here.
-        final StunMessageVisitorFactory visitorFactory = 
-            new StunMessageVisitorFactory<Void>()
+        final StunMessageVisitorFactory<StunMessage> visitorFactory = 
+            new StunMessageVisitorFactory<StunMessage>()
             {
 
-            public StunMessageVisitor<Void> createVisitor(IoSession session)
+            public StunMessageVisitor<StunMessage> createVisitor(IoSession session)
                 {
-                return new StunMessageVisitorAdapter<Void>()
+                return new StunMessageVisitorAdapter<StunMessage>()
                     {
                 
                     };
@@ -71,9 +72,11 @@ public class IceUdpStunCheckerTest
             };
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
+        final StunIoHandler<StunMessage> stunIoHandler =
+            new StunIoHandler<StunMessage>(visitorFactory);
         final IceUdpStunChecker checker = 
             new IceUdpStunChecker(localCandidate, remoteCandidate, 
-                visitorFactory, 
+                stunIoHandler, 
                 iceAgent, codecFactory, Object.class, clientIoHandler, tracker);
         
         final BindingRequest bindingRequest = new BindingRequest();

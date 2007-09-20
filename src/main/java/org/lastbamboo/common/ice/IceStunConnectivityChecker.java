@@ -15,6 +15,7 @@ import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
@@ -36,9 +37,15 @@ public class IceStunConnectivityChecker
 
     private final IceMediaStream m_iceMediaStream;
 
-    private final IceStunCheckerFactory m_checkerFactory;
+    //private final IceStunCheckerFactory m_checkerFactory;
 
     private final IoSession m_ioSession;
+
+    //private final IceStunConnectivityManager m_connectivityManager;
+
+    private final StunMessageVisitorFactory<StunMessage> m_stunMessageVisitorFactory;
+
+    private final IceStunCheckerFactory m_checkerFactory;
 
     /**
      * Creates a new message visitor for the specified session.
@@ -46,19 +53,24 @@ public class IceStunConnectivityChecker
      * @param agent The top-level ICE agent.
      * @param iceMediaStream The media stream this STUN processor is working 
      * for. 
+     * @param stunMessageVisitorFactory 
      * @param checkerFactory The factory for creating new classes for 
      * performing connectivity checks.
      */
     public IceStunConnectivityChecker(
         final IceAgent agent, final IceMediaStream iceMediaStream,
-        final IceStunCheckerFactory checkerFactory, final IoSession session, 
-        final StunTransactionTracker<StunMessage> transactionTracker)
+        final IoSession session, 
+        final StunTransactionTracker<StunMessage> transactionTracker,
+        final IceStunCheckerFactory checkerFactory, 
+        final StunMessageVisitorFactory<StunMessage> stunMessageVisitorFactory)
         {
         super (transactionTracker);
         m_agent = agent;
         m_iceMediaStream = iceMediaStream;
-        m_checkerFactory = checkerFactory;
         m_ioSession = session;
+        m_checkerFactory = checkerFactory;
+        //m_connectivityManager = connectivityManager;
+        m_stunMessageVisitorFactory = stunMessageVisitorFactory;
         }
     
     public StunMessage visitBindingRequest(final BindingRequest request)
@@ -197,30 +209,9 @@ public class IceStunConnectivityChecker
             {
             m_log.debug("Creating new candidate pair.");
             
-            final IceStunChecker connectivityChecker;
-            if (localCandidate.isUdp())
-                {
-                connectivityChecker = 
-                    this.m_checkerFactory.createStunChecker(localCandidate, 
-                        remoteCandidate);
-                computedPair = new UdpIceCandidatePair(localCandidate, 
-                    remoteCandidate, connectivityChecker);
-                }
-            else
-                {
-                // The request just arrived on an existing TCP session.  We
-                // cannot create a new TCP connection from this acceptor to
-                // the remote connector because the remote side is using a 
-                // client and not an accepting socket, so we need to use
-                // the existing connection.
-                final TcpFrameIoHandler frameIoHandler = 
-                    new TcpFrameIoHandler();
-                connectivityChecker = 
-                    this.m_checkerFactory.createStunChecker(localCandidate, 
-                        remoteCandidate, frameIoHandler, this.m_ioSession);
-                computedPair = new TcpIceCandidatePair(localCandidate,
-                    remoteCandidate, connectivityChecker, frameIoHandler);
-                }
+            computedPair = newPair(localCandidate, 
+                    remoteCandidate, this.m_ioSession, 
+                    this.m_stunMessageVisitorFactory);
                 
             // Continue with the rest of ICE section 7.2.1.4, 
             // "Triggered Checks"
@@ -282,6 +273,35 @@ public class IceStunConnectivityChecker
                         // No action.
                     }
                 }
+            }
+        }
+
+    private IceCandidatePair newPair(IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, final IoSession ioSession, 
+        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
+        {
+        if (localCandidate.isUdp())
+            {
+            final IceStunChecker connectivityChecker = 
+                this.m_checkerFactory.createStunChecker(localCandidate, 
+                    remoteCandidate, messageVisitorFactory);
+            return new UdpIceCandidatePair(localCandidate, 
+                remoteCandidate, connectivityChecker);
+            }
+        else
+            {
+            // The request just arrived on an existing TCP session.  We
+            // cannot create a new TCP connection from this acceptor to
+            // the remote connector because the remote side is using a 
+            // client and not an accepting socket, so we need to use
+            // the existing connection.
+            final TcpFrameIoHandler frameIoHandler = 
+                new TcpFrameIoHandler();
+            final IceStunChecker connectivityChecker = 
+                this.m_checkerFactory.createStunChecker(localCandidate, 
+                    remoteCandidate, frameIoHandler, ioSession, messageVisitorFactory);
+            return new TcpIceCandidatePair(localCandidate,
+                remoteCandidate, connectivityChecker, frameIoHandler);
             }
         }
     }

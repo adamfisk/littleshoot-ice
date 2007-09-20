@@ -13,6 +13,7 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
+import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
@@ -51,14 +52,14 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
      */
     public IceUdpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory, 
+        final IoHandler stunIoHandler,
         final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
         final Class clazz, final IoHandler ioHandler, 
         final StunTransactionTracker<StunMessage> transactionTracker)
         {
         super(localCandidate, remoteCandidate, transactionTracker, 
-            messageVisitorFactory, iceAgent, demuxingCodecFactory, clazz, 
+            stunIoHandler, iceAgent, demuxingCodecFactory, clazz, 
             ioHandler);
         }
 

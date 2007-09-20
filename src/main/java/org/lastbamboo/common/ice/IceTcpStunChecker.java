@@ -21,7 +21,6 @@ import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.tcp.frame.TcpFrame;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
@@ -54,14 +53,14 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
      */
     public IceTcpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory, 
+        final IoHandler stunIoHandler,
         final IceAgent iceAgent, 
         final IoSession session,
         final StunTransactionTracker<StunMessage> transactionTracker,
         final IoHandler protocolIoHandler)
         {
         super(localCandidate, remoteCandidate, transactionTracker, 
-            messageVisitorFactory, 
+            stunIoHandler, 
             iceAgent, createCodecFactory(), TcpFrame.class, 
             protocolIoHandler);
         this.m_ioSession = session;
@@ -116,6 +115,9 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             }
         final InetAddress address = this.m_remoteAddress.getAddress();
         final int connectTimeout;
+        // If the address is on the local network, we should be able to 
+        // connect more quickly.  If we can't, that likely indicates the 
+        // address is just from a different local network.
         if (address.isSiteLocalAddress())
             {
             try
