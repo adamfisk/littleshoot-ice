@@ -23,6 +23,7 @@ import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.client.StunClientFactory;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
@@ -59,14 +60,20 @@ public class IceAgentImplTest
         final IceMediaStreamDesc desc = 
             new IceMediaStreamDesc(false, true, "message", "http", 1);
 
-        final StunClient turnClient1 = new StunClientStub();
-        final StunClient turnClient2 = new StunClientStub();
+        final StunClientFactory<StunMessage> stunClientFactory =
+            new StunClientFactory<StunMessage>()
+            {
+            public StunClient newStunClient(
+                final StunMessageVisitorFactory<StunMessage> visitorFactory)
+                {
+                return StunClientStub.newClient();
+                }
+            };
         
         final IceMediaStreamFactory mediaStreamFactory1 = 
             new IceMediaStreamFactory()
             {
-            public IceMediaStream newStream(final IceAgent iceAgent, 
-                final StunClient tcpTurnClient) 
+            public IceMediaStream newStream(final IceAgent iceAgent) 
                 {
                 final int hostPort = 65044;
                 final InetSocketAddress serverReflexive =
@@ -89,19 +96,16 @@ public class IceAgentImplTest
                     new IceStunCheckerFactoryImpl(iceAgent, 
                         codecFactory, Void.class, clientIoHandler, 
                         serverIoHandler, transactionTracker);
-                return new IceMediaStreamImpl(iceAgent, desc, udpStunClient, 
-                    tcpTurnClient, checkerFactory, transactionTracker);
-                //return new IceMediaStreamImpl(iceAgent, desc, tcpTurnClient, 
-                  //  udpStunClient, codecFactory, Void.class, clientIoHandler, 
-                    //serverIoHandler);
+                return new IceMediaStreamImpl<StunMessage>(stunClientFactory, 
+                    iceAgent, desc, udpStunClient, checkerFactory, 
+                    transactionTracker);
                 }
             };
         
         final IceMediaStreamFactory mediaStreamFactory2 = 
             new IceMediaStreamFactory()
             {
-            public IceMediaStream newStream(final IceAgent iceAgent, 
-                final StunClient tcpTurnClient)
+            public IceMediaStream newStream(final IceAgent iceAgent)
                 {
                 final int hostPort = 48290;
                 final InetSocketAddress serverReflexive =
@@ -124,29 +128,27 @@ public class IceAgentImplTest
                     new IceStunCheckerFactoryImpl(iceAgent, 
                         codecFactory, Void.class, clientIoHandler, 
                         serverIoHandler, transactionTracker);
-                return new IceMediaStreamImpl(iceAgent, desc, udpStunClient, 
-                    tcpTurnClient, checkerFactory, transactionTracker);
+                return new IceMediaStreamImpl<StunMessage>(stunClientFactory, 
+                    iceAgent, desc, udpStunClient, checkerFactory, 
+                    transactionTracker);
                 }
             };
         final IceMediaFactory iceMediaFactory = new IceMediaFactory()
             {
-
             public void newMedia(IceCandidatePair pair, boolean client, 
                 final OfferAnswerMediaListener mediaListener)
                 {
-                // TODO Auto-generated method stub
-                
                 }
-            
             };
-        final IceAgent offerer = new IceAgentImpl(turnClient1, 
+        
+        final IceAgent offerer = new IceAgentImpl(
             mediaStreamFactory1, true, iceMediaFactory);
         final byte[] offer = offerer.generateOffer();
 
         m_log.debug("Telling answerer to process offer: {}", new String(offer));
         
         
-        final IceAgent answerer = new IceAgentImpl(turnClient2, 
+        final IceAgent answerer = new IceAgentImpl(
             mediaStreamFactory2, false, iceMediaFactory);
         
         Assert.assertFalse(answerer.isControlling());

@@ -2,6 +2,7 @@ package org.lastbamboo.common.ice.candidate;
 
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunChecker;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +12,7 @@ import org.slf4j.LoggerFactory;
 public class UdpIceCandidatePair extends AbstractIceCandidatePair
     {
 
-    private final static Logger LOG = 
+    private final Logger m_log = 
         LoggerFactory.getLogger(UdpIceCandidatePair.class);
     
     /**
@@ -37,6 +38,11 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
     public <T> T accept(final IceCandidatePairVisitor<T> visitor)
         {
         return visitor.visitUdpIceCandidatePair(this);
+        }
+
+    public TcpFrameIoHandler getIoHandler()
+        {
+        return null;
         }
 
     }

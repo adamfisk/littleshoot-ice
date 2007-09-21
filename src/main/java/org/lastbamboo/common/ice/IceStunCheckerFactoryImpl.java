@@ -21,7 +21,7 @@ import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
  * media stream requires its own factory because the checkers are coupled to
  * data for that specific stream.
  */
-public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
+public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory<StunMessage>
     {
 
     private final IceAgent m_iceAgent;
@@ -62,7 +62,6 @@ public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
         m_clientDemuxIoHandler = clientDemuxIoHandler;
         m_serverDemuxIoHandler = serverDemuxIoHandler;
         m_transactionTracker = transactionTracker;
-        
         }
     
     public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
@@ -88,14 +87,14 @@ public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
     
     public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoHandler handler, 
-        StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
+        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
         {
         return createStunChecker(localCandidate, remoteCandidate, handler, null, 
             messageVisitorFactory);
         }
     
     public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final IoHandler handler,
+        final IceCandidate remoteCandidate, final IoHandler protocolIoHandler,
         final IoSession ioSession,
         final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
         {
@@ -152,14 +151,14 @@ public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
 
                 return new IceUdpStunChecker(localCandidate, remoteCandidate,
                     stunIoHandler, m_iceAgent, m_codecFactory, 
-                    m_demuxClass, handler, m_transactionTracker);
+                    m_demuxClass, protocolIoHandler, m_transactionTracker);
                 }
             
             private IceStunChecker tcpChecker()
                 {
                 return new IceTcpStunChecker(localCandidate, remoteCandidate,
                     stunIoHandler, m_iceAgent, ioSession, 
-                    m_transactionTracker, handler);
+                    m_transactionTracker, protocolIoHandler);
                 }
             };
             

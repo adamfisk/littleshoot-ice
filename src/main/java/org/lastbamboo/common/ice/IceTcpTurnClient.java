@@ -2,30 +2,75 @@ package org.lastbamboo.common.ice;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.LinkedList;
 
+import org.apache.mina.common.IoHandler;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
 import org.lastbamboo.common.turn.client.TcpTurnClient;
 import org.lastbamboo.common.turn.client.TurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
+import org.lastbamboo.common.turn.client.TurnConnectionEstablisher;
+import org.lastbamboo.common.turn.client.TurnServerCandidateProvider;
+import org.lastbamboo.common.util.CandidateProvider;
+import org.lastbamboo.common.util.ConnectionMaintainer;
+import org.lastbamboo.common.util.ConnectionMaintainerImpl;
 import org.lastbamboo.common.util.ConnectionMaintainerListener;
+import org.lastbamboo.common.util.ThreadUtils;
+import org.lastbamboo.common.util.ThreadUtilsImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 
+/**
+ * TURN client for ICE.  This specifies the protocol encoders decoders and 
+ * {@link IoHandler}s necessary for ICE processing.
+ */
 public class IceTcpTurnClient implements TurnClient
     {
     
-    private TcpTurnClient m_turnClient;
+    private final TcpTurnClient m_turnClient;
 
-    public IceTcpTurnClient(
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory,
-        final TurnClientListener turnClientListener,
-        final InetSocketAddress turnServerAddress, 
-        final ConnectionMaintainerListener<InetSocketAddress> connectionListener)
+    /**
+     * Creates a new ICE TCP TURN client.
+     * 
+     * @param turnClientListener The class that listens for TURN client events,
+     * including processing of incoming data.
+     */
+    public IceTcpTurnClient(final TurnClientListener turnClientListener)
+        {
+        this(turnClientListener, new TurnServerCandidateProvider());
+        }
+
+    /**
+     * Convenience constructor that allows the caller to specifiy a single
+     * TURN server to connect to.
+     * 
+     * @param turnClientListener The listener for TURN client events,
+     * including processing of incoming data.
+     * @param turnServerAddress The address of the TURN server to connect to.
+     */
+    public IceTcpTurnClient(final TurnClientListener turnClientListener, 
+        final InetSocketAddress turnServerAddress)
+        {
+        this(turnClientListener, 
+            new CandidateProvider<InetSocketAddress>()
+            {
+            public Collection<InetSocketAddress> getCandidates()
+                {
+                final Collection<InetSocketAddress> candidates = 
+                    new LinkedList<InetSocketAddress>();
+                candidates.add(turnServerAddress);
+                return candidates;
+                }
+            });
+        }
+    
+    private IceTcpTurnClient(final TurnClientListener turnClientListener, 
+        final CandidateProvider<InetSocketAddress> candidateProvider)
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
@@ -37,8 +82,17 @@ public class IceTcpTurnClient implements TurnClient
     
         this.m_turnClient = 
             new TcpTurnClient(turnClientListener, dataCodecFactory);
-
-        connect(connectionListener, turnServerAddress);
+    
+        // Take care of all the connection maintaining code here.
+        final TurnConnectionEstablisher connectionEstablisher = 
+            new TurnConnectionEstablisher(this.m_turnClient);
+        
+        final ThreadUtils threadUtils = new ThreadUtilsImpl();
+        final ConnectionMaintainer<InetSocketAddress> connectionMaintainer =
+            new ConnectionMaintainerImpl<InetSocketAddress, InetSocketAddress>(
+                threadUtils, connectionEstablisher, candidateProvider, 1);
+        
+        connectionMaintainer.start();
         }
 
     public InetSocketAddress getHostAddress()
@@ -101,6 +155,11 @@ public class IceTcpTurnClient implements TurnClient
         final InetSocketAddress remoteAddress, final long rto)
         {
         return this.m_turnClient.write(request, remoteAddress, rto);
+        }
+
+    public boolean isConnected()
+        {
+        return this.m_turnClient.isConnected();
         }
 
     }

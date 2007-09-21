@@ -46,8 +46,6 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
      * 
      * @param localCandidate The local address.
      * @param remoteCandidate The remote address.
-     * @param messageVisitorFactory The factory for creating visitors for 
-     * incoming messages.
      * @param iceAgent The top-level ICE agent.
      * @param protocolIoHandler The {@link IoHandler} to use for the other protocol.
      */

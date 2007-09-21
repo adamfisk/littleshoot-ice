@@ -16,7 +16,6 @@ import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
-import org.lastbamboo.common.stun.client.StunClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,8 +58,6 @@ public class IceAgentImpl implements IceAgent
      * Creates a new ICE agent for an answerer.  Passes the offer in the 
      * constructor.
      * 
-     * @param tcpTurnClient The TCP TURN client for gathering TCP TURN
-     * candidate.
      * @param mediaStreamFactory Factory for creating the media streams we're
      * using ICE to establish.
      * @param controlling Whether or not the agent will start out as 
@@ -68,7 +65,7 @@ public class IceAgentImpl implements IceAgent
      * @param iceMediaFactory The factory for creating media that needs to 
      * know about ICE.
      */
-    public IceAgentImpl(final StunClient tcpTurnClient, 
+    public IceAgentImpl(
         final IceMediaStreamFactory mediaStreamFactory, 
         final boolean controlling, final IceMediaFactory iceMediaFactory) 
         {
@@ -77,7 +74,7 @@ public class IceAgentImpl implements IceAgent
         this.m_tieBreaker = new BigInteger(64, new Random()).toByteArray();
         
         // TODO: We only currently support a single media stream!!
-        this.m_mediaStream = mediaStreamFactory.newStream(this, tcpTurnClient);
+        this.m_mediaStream = mediaStreamFactory.newStream(this);
         this.m_mediaStreams.add(this.m_mediaStream);
         }
 

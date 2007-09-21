@@ -20,6 +20,7 @@ import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.client.StunClientFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
@@ -27,6 +28,9 @@ import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.turn.client.TcpFrameTurnClientListener;
+import org.lastbamboo.common.turn.client.TurnClientListener;
+import org.lastbamboo.common.turn.http.server.ServerDataFeeder;
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.Predicate;
 import org.slf4j.Logger;
@@ -36,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * Class containing an ICE media stream.  Each media stream contains a single
  * ICE check list, as described in ICE section 5.7.
  */
-public class IceMediaStreamImpl implements IceMediaStream
+public class IceMediaStreamImpl<T> implements IceMediaStream
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -57,25 +61,25 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final Collection<IceCandidate> m_remoteCandidates = 
         new LinkedList<IceCandidate>();
     
-    public IceMediaStreamImpl(
+    public IceMediaStreamImpl(final StunClientFactory<T> stunClientFactory,
         final IceAgent iceAgent, final IceMediaStreamDesc desc, 
-        final StunClient tcpTurnClient, 
         final IceStunCheckerFactory checkerFactory,
         final StunTransactionTracker<StunMessage> transactionTracker)
         {
-        this(iceAgent, desc, null, tcpTurnClient, checkerFactory, 
+        this(stunClientFactory, iceAgent, desc, null, checkerFactory, 
             transactionTracker);
         }
 
-    public IceMediaStreamImpl(IceAgent iceAgent, IceMediaStreamDesc desc, 
-        final StunClient udpStunClient, final StunClient tcpTurnClient, 
+    public IceMediaStreamImpl(final StunClientFactory<T> stunClientFactory,
+        final IceAgent iceAgent, 
+        final IceMediaStreamDesc desc, final StunClient udpStunClient, 
         final IceStunCheckerFactory checkerFactory, 
         final StunTransactionTracker<StunMessage> transactionTracker)
         {
         m_iceAgent = iceAgent;
         m_desc = desc;
 
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory =
+        final StunMessageVisitorFactory<T> messageVisitorFactory =
             new IceStunConnectivityCheckerFactory(iceAgent, 
                 this, transactionTracker, checkerFactory);
         final StunClient udpStunPeer;
@@ -90,7 +94,8 @@ public class IceMediaStreamImpl implements IceMediaStream
             udpStunPeer = udpStunClient;
             }
         
-        
+        final StunClient tcpTurnClient = 
+            stunClientFactory.newStunClient(messageVisitorFactory);
         final StunClient tcpIceClient = 
             new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 
                 iceAgent.isControlling());

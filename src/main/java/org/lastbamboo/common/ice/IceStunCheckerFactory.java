@@ -10,7 +10,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
  * Interface for classes that create new ICE STUN connectivity check classes
  * for different transports. 
  */
-public interface IceStunCheckerFactory
+public interface IceStunCheckerFactory<T>
     {
 
     /**
@@ -23,14 +23,14 @@ public interface IceStunCheckerFactory
      */
     IceStunChecker createStunChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, 
-        StunMessageVisitorFactory<StunMessage> visitorFactory);
+        StunMessageVisitorFactory<T> visitorFactory);
 
     IceStunChecker createStunChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, IoHandler ioHandler, 
-        StunMessageVisitorFactory<StunMessage> messageVisitorFactory);
+        StunMessageVisitorFactory<T> messageVisitorFactory);
 
     IceStunChecker createStunChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, IoHandler ioHandler, IoSession session, 
-        StunMessageVisitorFactory<StunMessage> messageVisitorFactory);
+        StunMessageVisitorFactory<T> messageVisitorFactory);
 
     }

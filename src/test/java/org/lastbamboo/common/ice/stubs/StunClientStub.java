@@ -18,6 +18,18 @@ public class StunClientStub implements StunClient
     private final InetSocketAddress m_serverReflexiveAddress;
     private final InetSocketAddress m_relayAddress;
 
+    public static StunClient newClient()
+        {
+        try
+            {
+            return new StunClientStub();
+            }
+        catch (final UnknownHostException e)
+            {
+            throw new IllegalArgumentException("Can't resolve host", e);
+            }
+        }
+
     public static StunClient newClient(final InetSocketAddress serverReflexive, 
         final int hostPort)
         {

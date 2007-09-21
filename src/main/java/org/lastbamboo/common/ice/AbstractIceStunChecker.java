@@ -71,8 +71,7 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
      * protocol.
      */
     public AbstractIceStunChecker(
-        final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, 
+        final IceCandidate localCandidate, final IceCandidate remoteCandidate, 
         final StunTransactionTracker<StunMessage> transactionTracker,
         final IoHandler stunIoHandler, final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,

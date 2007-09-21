@@ -41,4 +41,9 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
         {
         return visitor.visitTcpIceCandidatePair(this);
         }
+
+    public TcpFrameIoHandler getIoHandler()
+        {
+        return m_tcpFrameIoHandler;
+        }
     }

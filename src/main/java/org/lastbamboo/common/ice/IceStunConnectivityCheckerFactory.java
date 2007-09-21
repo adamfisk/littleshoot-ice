@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
  * are somewhat unique in that each client must handle both "client" and 
  * "server" side messages in ICE.
  */
-public class IceStunConnectivityCheckerFactory 
-    implements StunMessageVisitorFactory<StunMessage>
+public class IceStunConnectivityCheckerFactory<T> 
+    implements StunMessageVisitorFactory<T>
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -40,7 +40,7 @@ public class IceStunConnectivityCheckerFactory
         m_checkerFactory = checkerFactory;
         }
 
-    public StunMessageVisitor<StunMessage> createVisitor(
+    public StunMessageVisitor<T> createVisitor(
         final IoSession session)
         {
         return new IceStunConnectivityChecker( 

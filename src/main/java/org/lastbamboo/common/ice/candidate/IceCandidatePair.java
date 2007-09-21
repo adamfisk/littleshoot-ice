@@ -1,6 +1,8 @@
 package org.lastbamboo.common.ice.candidate;
 
+import org.apache.mina.common.IoHandler;
 import org.lastbamboo.common.ice.IceStunChecker;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 
 /**
  * Interface for a pair of ICE candidates.
@@ -138,5 +140,7 @@ public interface IceCandidatePair extends Comparable
      * @return <code>true</code> if the USE-CANDIDATE attribute is in use. 
      */
     boolean useCandidateSet();
+
+    TcpFrameIoHandler getIoHandler();
 
     }

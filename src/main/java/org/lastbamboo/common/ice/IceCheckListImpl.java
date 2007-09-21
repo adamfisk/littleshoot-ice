@@ -30,7 +30,6 @@ import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.util.Closure;
@@ -47,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * 
  * See: http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-5.7
  */
-public class IceCheckListImpl implements IceCheckList
+public class IceCheckListImpl<T> implements IceCheckList
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -69,7 +68,7 @@ public class IceCheckListImpl implements IceCheckList
 
     private final IceStunCheckerFactory m_checkerFactory;
 
-    private final StunMessageVisitorFactory<StunMessage> 
+    private final StunMessageVisitorFactory<T> 
         m_messageVisitorFactory;
 
     /**
@@ -83,7 +82,7 @@ public class IceCheckListImpl implements IceCheckList
     public IceCheckListImpl(
         final IceStunCheckerFactory checkerFactory,
         final Collection<IceCandidate> localCandidates, 
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
+        final StunMessageVisitorFactory<T> messageVisitorFactory)
         {
         m_checkerFactory = checkerFactory;
         m_localCandidates = localCandidates;

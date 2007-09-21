@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
  * 
  * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2
  */
-public class IceStunConnectivityChecker 
-    extends StunClientMessageVisitor<StunMessage>
+public class IceStunConnectivityChecker<T>
+    extends StunClientMessageVisitor<T>
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -39,7 +39,7 @@ public class IceStunConnectivityChecker
 
     private final IoSession m_ioSession;
 
-    private final StunMessageVisitorFactory<StunMessage> 
+    private final StunMessageVisitorFactory<T> 
         m_stunMessageVisitorFactory;
 
     private final IceStunCheckerFactory m_checkerFactory;
@@ -57,9 +57,9 @@ public class IceStunConnectivityChecker
     public IceStunConnectivityChecker(
         final IceAgent agent, final IceMediaStream iceMediaStream,
         final IoSession session, 
-        final StunTransactionTracker<StunMessage> transactionTracker,
+        final StunTransactionTracker<T> transactionTracker,
         final IceStunCheckerFactory checkerFactory, 
-        final StunMessageVisitorFactory<StunMessage> stunMessageVisitorFactory)
+        final StunMessageVisitorFactory<T> stunMessageVisitorFactory)
         {
         super (transactionTracker);
         m_agent = agent;
@@ -69,7 +69,7 @@ public class IceStunConnectivityChecker
         m_stunMessageVisitorFactory = stunMessageVisitorFactory;
         }
     
-    public StunMessage visitBindingRequest(final BindingRequest request)
+    public T visitBindingRequest(final BindingRequest request)
         {
         m_log.debug("Visiting Binding Request message: {}", request);
         // We need to check ICE controlling and controlled roles for conflicts.
@@ -206,8 +206,8 @@ public class IceStunConnectivityChecker
             m_log.debug("Creating new candidate pair.");
             
             computedPair = newPair(localCandidate, 
-                    remoteCandidate, this.m_ioSession, 
-                    this.m_stunMessageVisitorFactory);
+                remoteCandidate, this.m_ioSession, 
+                this.m_stunMessageVisitorFactory);
                 
             // Continue with the rest of ICE section 7.2.1.4, 
             // "Triggered Checks"
@@ -274,7 +274,7 @@ public class IceStunConnectivityChecker
 
     private IceCandidatePair newPair(IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoSession ioSession, 
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
+        final StunMessageVisitorFactory<T> messageVisitorFactory)
         {
         if (localCandidate.isUdp())
             {
