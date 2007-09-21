@@ -20,10 +20,13 @@ import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.ConnectionMaintainer;
 import org.lastbamboo.common.util.ConnectionMaintainerImpl;
 import org.lastbamboo.common.util.ConnectionMaintainerListener;
+import org.lastbamboo.common.util.RuntimeIoException;
 import org.lastbamboo.common.util.ThreadUtils;
 import org.lastbamboo.common.util.ThreadUtilsImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TURN client for ICE.  This specifies the protocol encoders decoders and 
@@ -32,10 +35,14 @@ import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 public class IceTcpTurnClient implements TurnClient
     {
     
+    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    
     private final TcpTurnClient m_turnClient;
 
     /**
-     * Creates a new ICE TCP TURN client.
+     * Creates a new ICE TCP TURN client.  This connects automatically and 
+     * blocks until it receives a successful Allocate Response message from 
+     * the server.
      * 
      * @param turnClientListener The class that listens for TURN client events,
      * including processing of incoming data.
@@ -47,7 +54,9 @@ public class IceTcpTurnClient implements TurnClient
 
     /**
      * Convenience constructor that allows the caller to specifiy a single
-     * TURN server to connect to.
+     * TURN server to connect to.  This connects automatically and 
+     * blocks until it receives a successful Allocate Response message from 
+     * the server.
      * 
      * @param turnClientListener The listener for TURN client events,
      * including processing of incoming data.
@@ -93,6 +102,26 @@ public class IceTcpTurnClient implements TurnClient
                 threadUtils, connectionEstablisher, candidateProvider, 1);
         
         connectionMaintainer.start();
+        
+        // Make sure we connect.
+        int connectChecks = 0;
+        while (!this.m_turnClient.isConnected() && connectChecks < 300)
+            {
+            try
+                {
+                Thread.sleep(100);
+                }
+            catch (InterruptedException e)
+                {
+                m_log.error("Thread interrupted??", e);
+                }
+            connectChecks++;
+            }
+        if (!this.m_turnClient.isConnected())
+            {
+            m_log.error("Could not connect to server");
+            throw new RuntimeIoException("Could not connect!!");
+            }
         }
 
     public InetSocketAddress getHostAddress()
