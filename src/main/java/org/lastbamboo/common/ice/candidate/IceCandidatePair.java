@@ -2,8 +2,6 @@ package org.lastbamboo.common.ice.candidate;
 
 import org.lastbamboo.common.ice.IceStunChecker;
 
-
-
 /**
  * Interface for a pair of ICE candidates.
  */
@@ -16,7 +14,7 @@ public interface IceCandidatePair extends Comparable
      * 
      * @return The ICE STUN connectivity checker for this pair.
      */
-    IceStunChecker getConnectivityChecker();
+    IceStunChecker getStunChecker();
 
     /**
      * Accessor for the local candidate for the pair.

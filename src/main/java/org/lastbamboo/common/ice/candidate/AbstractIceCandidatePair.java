@@ -30,15 +30,16 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * 
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
+     * @param stunChecker The class that performs STUN checks for this pair.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final IceStunChecker connectivityChecker)
+        final IceStunChecker stunChecker)
         {
         this(localCandidate, remoteCandidate, 
             IceCandidatePairPriorityCalculator.calculatePriority(
                 localCandidate, remoteCandidate),
-            connectivityChecker);
+            stunChecker);
         }
 
     /**
@@ -47,10 +48,11 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
      * @param priority The priority of the pair.
+     * @param stunChecker The class that performs STUN checks for this pair.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final long priority,
-        final IceStunChecker connectivityChecker)
+        final IceStunChecker stunChecker)
         {
         m_localCandidate = localCandidate;
         m_remoteCandidate = remoteCandidate;
@@ -62,7 +64,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         m_state = IceCandidatePairState.FROZEN;
         m_foundation = String.valueOf(localCandidate.getFoundation()) + 
             String.valueOf(remoteCandidate.getFoundation());
-        this.m_stunChecker = connectivityChecker;
+        this.m_stunChecker = stunChecker;
         }
     
     public void useCandidate()
@@ -136,7 +138,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         this.m_nominated = true;
         }
     
-    public IceStunChecker getConnectivityChecker()
+    public IceStunChecker getStunChecker()
         {
         return m_stunChecker;
         }

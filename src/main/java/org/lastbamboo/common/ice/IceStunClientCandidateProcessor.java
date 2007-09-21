@@ -144,7 +144,7 @@ public class IceStunClientCandidateProcessor
             includedUseCandidate = false;
             }
         
-        final IceStunChecker checker = this.m_pair.getConnectivityChecker();
+        final IceStunChecker checker = this.m_pair.getStunChecker();
         
         // TODO: Obtain RTO properly.
         final long rto = 20L;
@@ -373,13 +373,13 @@ public class IceStunClientCandidateProcessor
                 if (newLocalCandidate.isUdp())
                     {
                     pairToAdd = new UdpIceCandidatePair(newLocalCandidate, 
-                        remoteCandidate, this.m_pair.getConnectivityChecker());
+                        remoteCandidate, this.m_pair.getStunChecker());
                     }
                 else
                     {
                     final TcpFrameIoHandler handler = new TcpFrameIoHandler();
                     pairToAdd = new TcpIceCandidatePair(newLocalCandidate, 
-                        remoteCandidate, this.m_pair.getConnectivityChecker(),
+                        remoteCandidate, this.m_pair.getStunChecker(),
                         handler);
                     }
                 }

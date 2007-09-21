@@ -291,11 +291,11 @@ public class IceStunConnectivityChecker
             // the remote connector because the remote side is using a 
             // client and not an accepting socket, so we need to use
             // the existing connection.
-            final TcpFrameIoHandler frameIoHandler = 
-                new TcpFrameIoHandler();
+            final TcpFrameIoHandler frameIoHandler = new TcpFrameIoHandler();
             final IceStunChecker connectivityChecker = 
                 this.m_checkerFactory.createStunChecker(localCandidate, 
-                    remoteCandidate, frameIoHandler, ioSession, messageVisitorFactory);
+                    remoteCandidate, frameIoHandler, ioSession, 
+                    messageVisitorFactory);
             return new TcpIceCandidatePair(localCandidate,
                 remoteCandidate, connectivityChecker, frameIoHandler);
             }

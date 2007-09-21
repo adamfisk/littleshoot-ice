@@ -38,13 +38,12 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
      * 
      * @param localCandidate The local address.
      * @param remoteCandidate The remote address.
-     * @param messageVisitorFactory The factory for creating visitors for 
-     * incoming messages.
+     * @param stunIoHandler The {@link IoHandler} for STUN messages.
      * @param iceAgent The top-level ICE agent.
      * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
      * demultiplexing between STUN and another protocol.
      * @param clazz The top-level message class the protocol other than STUN.
-     * @param ioHandler The {@link IoHandler} to use for the other protocol.
+     * @param protocolIoHandler The {@link IoHandler} to use for the other protocol.
      * @param transactionTracker The class that keeps track of STUN 
      * transactions.
      */
@@ -53,12 +52,12 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
         final IoHandler stunIoHandler,
         final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
-        final Class clazz, final IoHandler ioHandler, 
+        final Class clazz, final IoHandler protocolIoHandler, 
         final StunTransactionTracker<StunMessage> transactionTracker)
         {
         super(localCandidate, remoteCandidate, transactionTracker, 
             stunIoHandler, iceAgent, demuxingCodecFactory, clazz, 
-            ioHandler);
+            protocolIoHandler);
         }
 
     @Override

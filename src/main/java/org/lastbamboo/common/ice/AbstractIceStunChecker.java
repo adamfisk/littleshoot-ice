@@ -61,8 +61,7 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
      * @param remoteCandidate The remote address.
      * @param transactionTracker The class that keeps track of STUN 
      * transactions.
-     * @param messageVisitorFactory The factory for creating visitors for 
-     * incoming messages.
+     * @param stunIoHandler The {@link IoHandler} for STUN messages.
      * @param iceAgent The top-level ICE agent.
      * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
      * demultiplexing between STUN and another protocol.
@@ -75,8 +74,7 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
         final StunTransactionTracker<StunMessage> transactionTracker,
-        final IoHandler stunIoHandler,
-        final IceAgent iceAgent, 
+        final IoHandler stunIoHandler, final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
         final Class clazz, final IoHandler protocolIoHandler)
         {
