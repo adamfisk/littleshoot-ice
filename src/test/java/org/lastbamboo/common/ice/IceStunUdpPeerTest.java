@@ -11,6 +11,7 @@ import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.handler.StreamIoHandler;
 import org.apache.mina.transport.socket.nio.DatagramAcceptor;
 import org.apache.mina.transport.socket.nio.DatagramAcceptorConfig;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
@@ -57,7 +58,7 @@ public class IceStunUdpPeerTest
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
         final StunMessageVisitorFactory messageVisitorFactory =
-            new IceStunConnectivityCheckerFactory(iceAgent, 
+            new IceUdpStunConnectivityCheckerFactory(iceAgent, 
                 iceMediaStream, tracker, null);
             
         final IceStunUdpPeer peer1 = 
@@ -157,9 +158,9 @@ public class IceStunUdpPeerTest
                 return clientVisitor;
                 }
 
-            public void onIcmpError()
+            public StunMessageVisitor<StunMessage> createVisitor(IoSession session, StreamIoHandler streamHandler)
                 {
-                Assert.fail("ICMP error!!");
+                return createVisitor(session);
                 }
             };
         
@@ -189,9 +190,9 @@ public class IceStunUdpPeerTest
                 return clientVisitor;
                 }
 
-            public void onIcmpError()
+            public StunMessageVisitor<StunMessage> createVisitor(IoSession session, StreamIoHandler streamHandler)
                 {
-                Assert.fail("ICMP error!!");
+                return createVisitor(session);
                 }
             };
 

@@ -47,13 +47,12 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
      * @param localCandidate The local address.
      * @param remoteCandidate The remote address.
      * @param iceAgent The top-level ICE agent.
-     * @param protocolIoHandler The {@link IoHandler} to use for the other protocol.
+     * @param protocolIoHandler The {@link IoHandler} to use for the other 
+     * protocol.
      */
     public IceTcpStunChecker(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, 
-        final IoHandler stunIoHandler,
-        final IceAgent iceAgent, 
-        final IoSession session,
+        final IceCandidate remoteCandidate, final IoHandler stunIoHandler,
+        final IceAgent iceAgent, final IoSession session,
         final StunTransactionTracker<StunMessage> transactionTracker,
         final IoHandler protocolIoHandler)
         {

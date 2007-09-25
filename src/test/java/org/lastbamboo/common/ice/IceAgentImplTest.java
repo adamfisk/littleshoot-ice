@@ -13,6 +13,7 @@ import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.handler.StreamIoHandler;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.junit.Assert;
@@ -291,6 +292,12 @@ public class IceAgentImplTest
                         }
                     };
                 return visitor;
+                }
+
+            public StunMessageVisitor<StunMessage> createVisitor(
+                final IoSession session, final StreamIoHandler streamHandler)
+                {
+                return createVisitor(session);
                 }
             
             };

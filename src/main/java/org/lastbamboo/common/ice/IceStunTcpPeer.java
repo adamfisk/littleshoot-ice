@@ -3,16 +3,27 @@ package org.lastbamboo.common.ice;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+import org.apache.mina.common.IoHandler;
+import org.apache.mina.handler.StreamIoHandler;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.server.StunServer;
 import org.lastbamboo.common.stun.server.TcpStunServer;
+import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
+import org.lastbamboo.common.tcp.frame.TcpFrame;
+import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IceStunTcpPeer implements StunClient, StunServer
+/**
+ * ICE STUN peer for TCP.  This creates both the client and the server side
+ * of STUN, reusing the same local port for both.
+ *  
+ * @param <T> The type returned by message visiting classes.
+ */
+public class IceStunTcpPeer<T> implements StunClient, StunServer
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -22,15 +33,16 @@ public class IceStunTcpPeer implements StunClient, StunServer
     /**
      * Creates a new ICE STUN UDP peer.
      * 
+     * @param tcpStunClient The TCP STUN client side handler.
      * @param messageVisitorFactory The factory for creating message visitors
      * on the server. 
      * @param controlling Whether or not this agent is controlling.
+     * @param streamIoHandler The {@link IoHandler} for TCP streams.
      */
     public IceStunTcpPeer(final StunClient tcpStunClient, 
-        final StunMessageVisitorFactory messageVisitorFactory,
-        final boolean controlling)
+        final StunMessageVisitorFactory<T> messageVisitorFactory,
+        final boolean controlling, final StreamIoHandler streamIoHandler)
         {
-        
         m_stunClient = tcpStunClient;
         
         // We also add whether we're the controlling agent for thread
@@ -44,9 +56,15 @@ public class IceStunTcpPeer implements StunClient, StunServer
             {
             controllingString = "Not-Controlling";
             }
-        this.m_stunServer = 
-            new TcpStunServer(messageVisitorFactory, controllingString);
         
+        final IoHandler stunIoHandler =
+            new StunIoHandler<T>(messageVisitorFactory);
+        final IoHandler ioHandler = 
+            new DemuxingIoHandler<StunMessage, TcpFrame>(StunMessage.class, 
+                stunIoHandler, TcpFrame.class, streamIoHandler);
+        this.m_stunServer =
+            new TcpStunServer(ioHandler, messageVisitorFactory, 
+                controllingString);
         this.m_stunServer.start(tcpStunClient.getHostAddress());
         }
 

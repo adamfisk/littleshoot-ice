@@ -54,6 +54,8 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
     
     protected final IoConnector m_connector;
 
+    protected final IoHandler m_protocolIoHandler;
+
     /**
      * Creates a new ICE connectivity checker over any transport.
      * 
@@ -80,6 +82,7 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         this.m_transactionTracker = transactionTracker;
         this.m_demuxingIoHandler = new DemuxingIoHandler(StunMessage.class, 
             stunIoHandler, clazz, protocolIoHandler);
+        this.m_protocolIoHandler = protocolIoHandler;
 
         final String controllingString;
         if (iceAgent.isControlling())
@@ -188,5 +191,10 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
     public IoSession getIoSession()
         {
         return this.m_ioSession;
+        }
+    
+    public IoHandler getProtocolIoHandler()
+        {
+        return this.m_protocolIoHandler;
         }
     }

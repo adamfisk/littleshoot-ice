@@ -1,9 +1,8 @@
 package org.lastbamboo.common.ice;
 
-import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.handler.StreamIoHandler;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 
 /**
@@ -21,16 +20,18 @@ public interface IceStunCheckerFactory<T>
      * @param remoteCandidate The remote candidate for a pair.
      * @return The new STUN checking class.
      */
-    IceStunChecker createStunChecker(IceCandidate localCandidate, 
+    IceStunChecker newUdpChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, 
         StunMessageVisitorFactory<T> visitorFactory);
 
-    IceStunChecker createStunChecker(IceCandidate localCandidate, 
-        IceCandidate remoteCandidate, IoHandler ioHandler, 
+    IceStunChecker newTcpChecker(IceCandidate localCandidate, 
+        IceCandidate remoteCandidate, StreamIoHandler ioHandler, 
         StunMessageVisitorFactory<T> messageVisitorFactory);
-
-    IceStunChecker createStunChecker(IceCandidate localCandidate, 
-        IceCandidate remoteCandidate, IoHandler ioHandler, IoSession session, 
+    
+    
+    IceStunChecker newTcpChecker(IceCandidate localCandidate, 
+        IceCandidate remoteCandidate, StreamIoHandler protocolIoHandler, 
+        IoSession ioSession, 
         StunMessageVisitorFactory<T> messageVisitorFactory);
 
     }

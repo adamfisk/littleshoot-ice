@@ -181,6 +181,15 @@ public class IceAgentImpl implements IceAgent
             m_log.debug("Received nominated pair on agent.  Controlling: " + 
                 isControlling()+" pair:\n"+pair);
             }
+        
+        if (!pair.getStunChecker().getIoSession().isConnected())
+            {
+            m_log.error("Pair IoSession is not connected!!!");
+            return;
+            }
+        
+        m_log.debug("Got IoHandler:\n{}", 
+            pair.getStunChecker().getProtocolIoHandler());
         // We now need to set the state of the check list as specified in
         // 8.1.2. Updating States
         final IceCheckListState state = mediaStream.getCheckListState();

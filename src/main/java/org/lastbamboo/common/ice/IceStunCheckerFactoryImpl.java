@@ -3,14 +3,8 @@ package org.lastbamboo.common.ice;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
+import org.apache.mina.handler.StreamIoHandler;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
-import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
-import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
@@ -21,7 +15,8 @@ import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
  * media stream requires its own factory because the checkers are coupled to
  * data for that specific stream.
  */
-public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory<StunMessage>
+public class IceStunCheckerFactoryImpl 
+    implements IceStunCheckerFactory<StunMessage>
     {
 
     private final IceAgent m_iceAgent;
@@ -64,105 +59,49 @@ public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory<StunMess
         m_transactionTracker = transactionTracker;
         }
     
-    public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
+    public IceStunChecker newTcpChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory<StunMessage> visitorFactory)
-        {
-        final IoHandler demuxIoHandler;
-        
-        // TODO: This does not currently handle the changing of roles.
-        if (this.m_iceAgent.isControlling())
-            {
-            demuxIoHandler = this.m_clientDemuxIoHandler;
-            }
-        else
-            {
-            demuxIoHandler = this.m_serverDemuxIoHandler;
-            }
-        
-        
-        return createStunChecker(localCandidate, remoteCandidate, 
-            demuxIoHandler, null, visitorFactory);
-        }
-    
-    public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final IoHandler handler, 
+        final StreamIoHandler protocolIoHandler, 
         final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
         {
-        return createStunChecker(localCandidate, remoteCandidate, handler, null, 
-            messageVisitorFactory);
+        return newTcpChecker(localCandidate, remoteCandidate, protocolIoHandler, 
+            null, messageVisitorFactory);
         }
     
-    public IceStunChecker createStunChecker(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final IoHandler protocolIoHandler,
-        final IoSession ioSession,
+    public IceStunChecker newTcpChecker(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, 
+        final StreamIoHandler protocolIoHandler, final IoSession ioSession,
         final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
         {
         final IoHandler stunIoHandler = 
             new StunIoHandler<StunMessage>(messageVisitorFactory);
-        // Create the checker based on the type of the local candidate.
-        // We'll likely support more candidate types in the future here, such
-        // as relays.
-        final IceCandidateVisitor<IceStunChecker> visitor =
-            new IceCandidateVisitorAdapter<IceStunChecker>()
+        return new IceTcpStunChecker(localCandidate, remoteCandidate,
+            stunIoHandler, m_iceAgent, ioSession, m_transactionTracker, 
+            protocolIoHandler);
+        }
+    
+    public IceStunChecker newUdpChecker(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, 
+        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
+        {
+        final IoHandler protocolIoHandler;
+        
+        // TODO: This does not currently handle the changing of roles.
+        if (this.m_iceAgent.isControlling())
             {
-            
-            // TODO: Add SO support here.
-            
-            // The following TCP passive candidates are a bit tricky
-            // to wrap one's head around at first.  These are local candidates
-            // here can happen when we receive incoming connections on
-            // a passive candidate.  These will frequently produce 
-            // peer reflexive candidates because the remote host is
-            // TCP ACT, and so is using an ephemeral port we don't know
-            // about.  The candidate the TCP ACT remote candidate 
-            // connected to, though, is of course a passive candidate.
-            public IceStunChecker visitTcpRelayPassiveCandidate(
-                final IceTcpRelayPassiveCandidate candidate)
-                {
-                return tcpChecker();
-                }
+            protocolIoHandler = this.m_clientDemuxIoHandler;
+            }
+        else
+            {
+            protocolIoHandler = this.m_serverDemuxIoHandler;
+            }
 
-            public IceStunChecker visitTcpHostPassiveCandidate(
-                final IceTcpHostPassiveCandidate candidate)
-                {
-                return tcpChecker();
-                }
-                
-            public IceStunChecker visitTcpActiveCandidate(
-                final IceTcpActiveCandidate candidate)
-                {
-                return tcpChecker();
-                }
-            public IceStunChecker visitTcpPeerReflexiveCandidate(
-                final IceTcpPeerReflexiveCandidate candidate)
-                {
-                return tcpChecker();
-                }
-            
-            public IceStunChecker visitUdpHostCandidate(
-                final IceUdpHostCandidate candidate)
-                {
-                return udpChecker();
-                }
-            
-            private IceStunChecker udpChecker()
-                {
-
-                return new IceUdpStunChecker(localCandidate, remoteCandidate,
-                    stunIoHandler, m_iceAgent, m_codecFactory, 
-                    m_demuxClass, protocolIoHandler, m_transactionTracker);
-                }
-            
-            private IceStunChecker tcpChecker()
-                {
-                return new IceTcpStunChecker(localCandidate, remoteCandidate,
-                    stunIoHandler, m_iceAgent, ioSession, 
-                    m_transactionTracker, protocolIoHandler);
-                }
-            };
-            
-        return localCandidate.accept(visitor);
+        final IoHandler stunIoHandler =
+            new StunIoHandler<StunMessage>(messageVisitorFactory);
+     
+        return new IceUdpStunChecker(localCandidate, remoteCandidate,
+            stunIoHandler, m_iceAgent, m_codecFactory, 
+            m_demuxClass, protocolIoHandler, m_transactionTracker);
         }
 
     }

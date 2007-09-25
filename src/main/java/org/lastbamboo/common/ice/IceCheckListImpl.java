@@ -141,7 +141,7 @@ public class IceCheckListImpl<T> implements IceCheckList
 
     public void addTriggeredPair(final IceCandidatePair pair)
         {
-        m_log.debug("Adding triggered pair...");
+        m_log.debug("Adding triggered pair: {}", pair);
         synchronized (this)
             {
             this.m_triggeredQueue.add(pair);
@@ -460,11 +460,11 @@ public class IceCheckListImpl<T> implements IceCheckList
                 final TcpFrameIoHandler frameIoHandler = 
                     new TcpFrameIoHandler();
                 final IceStunChecker checker = 
-                    m_checkerFactory.createStunChecker(candidate, 
+                    m_checkerFactory.newTcpChecker(candidate, 
                         remoteCandidate, frameIoHandler, 
                         m_messageVisitorFactory);
                 return new TcpIceCandidatePair(candidate, remoteCandidate,
-                    checker, frameIoHandler);
+                    checker);
                 }
             
             public IceCandidatePair visitUdpHostCandidate(
@@ -472,7 +472,7 @@ public class IceCheckListImpl<T> implements IceCheckList
                 {
                 m_log.debug("Creating STUN checker...");
                 final IceStunChecker checker = 
-                    m_checkerFactory.createStunChecker(candidate, 
+                    m_checkerFactory.newUdpChecker(candidate, 
                         remoteCandidate, m_messageVisitorFactory);
 
                 return new UdpIceCandidatePair(candidate, remoteCandidate, 

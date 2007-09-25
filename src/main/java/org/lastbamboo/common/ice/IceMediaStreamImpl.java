@@ -11,6 +11,7 @@ import java.util.Queue;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.math.RandomUtils;
+import org.apache.mina.handler.StreamIoHandler;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
@@ -22,12 +23,12 @@ import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.client.StunClientFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.Predicate;
 import org.slf4j.Logger;
@@ -61,7 +62,7 @@ public class IceMediaStreamImpl<T> implements IceMediaStream
     public IceMediaStreamImpl(final StunClientFactory<T> stunClientFactory,
         final IceAgent iceAgent, final IceMediaStreamDesc desc, 
         final IceStunCheckerFactory checkerFactory,
-        final StunTransactionTracker<StunMessage> transactionTracker)
+        final StunTransactionTracker<T> transactionTracker)
         {
         this(stunClientFactory, iceAgent, desc, null, checkerFactory, 
             transactionTracker);
@@ -71,19 +72,24 @@ public class IceMediaStreamImpl<T> implements IceMediaStream
         final IceAgent iceAgent, 
         final IceMediaStreamDesc desc, final StunClient udpStunClient, 
         final IceStunCheckerFactory checkerFactory, 
-        final StunTransactionTracker<StunMessage> transactionTracker)
+        final StunTransactionTracker<T> transactionTracker)
         {
         m_iceAgent = iceAgent;
         m_desc = desc;
 
-        final StunMessageVisitorFactory<T> messageVisitorFactory =
-            new IceStunConnectivityCheckerFactory(iceAgent, 
+        final StunMessageVisitorFactory<T> udpMessageVisitorFactory =
+            new IceUdpStunConnectivityCheckerFactory<T>(iceAgent, 
                 this, transactionTracker, checkerFactory);
+        
+        final StreamIoHandler streamIoHandler = new TcpFrameIoHandler();
+        final StunMessageVisitorFactory<T> tcpMessageVisitorFactory =
+            new IceTcpStunConnectivityCheckerFactory<T>(iceAgent, this, 
+                transactionTracker, checkerFactory, streamIoHandler);
         final StunClient udpStunPeer;
         if (udpStunClient == null && desc.isUdp())
             {
             udpStunPeer = 
-                new IceStunUdpPeer(messageVisitorFactory, 
+                new IceStunUdpPeer(udpMessageVisitorFactory, 
                     iceAgent.isControlling());
             }
         else
@@ -92,17 +98,17 @@ public class IceMediaStreamImpl<T> implements IceMediaStream
             }
         
         final StunClient tcpTurnClient = 
-            stunClientFactory.newStunClient(messageVisitorFactory);
+            stunClientFactory.newStunClient(tcpMessageVisitorFactory);
         final StunClient tcpIceClient = 
-            new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 
-                iceAgent.isControlling());
+            new IceStunTcpPeer<T>(tcpTurnClient, tcpMessageVisitorFactory, 
+                iceAgent.isControlling(), streamIoHandler);
         final IceCandidateGatherer gatherer =
             new IceCandidateGathererImpl(tcpIceClient, udpStunPeer, 
                 iceAgent.isControlling(), desc);
         this.m_localCandidates = gatherer.gatherCandidates();
         this.m_checkList = 
-            new IceCheckListImpl(checkerFactory, this.m_localCandidates, 
-                messageVisitorFactory);
+            new IceCheckListImpl<T>(checkerFactory, this.m_localCandidates, 
+                udpMessageVisitorFactory);
         }
 
     public byte[] encodeCandidates()

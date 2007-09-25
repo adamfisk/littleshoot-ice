@@ -141,6 +141,6 @@ public interface IceCandidatePair extends Comparable
      */
     boolean useCandidateSet();
 
-    TcpFrameIoHandler getIoHandler();
+    //TcpFrameIoHandler getIoHandler();
 
     }
