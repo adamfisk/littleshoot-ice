@@ -13,6 +13,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.apache.mina.common.IoServiceListener;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairPriorityCalculator;
@@ -46,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * 
  * See: http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-5.7
  */
-public class IceCheckListImpl<T> implements IceCheckList
+public class IceCheckListImpl implements IceCheckList
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -68,8 +69,10 @@ public class IceCheckListImpl<T> implements IceCheckList
 
     private final IceStunCheckerFactory m_checkerFactory;
 
-    private final StunMessageVisitorFactory<T> 
+    private final StunMessageVisitorFactory 
         m_messageVisitorFactory;
+
+    private final IoServiceListener m_ioServiceListener;
 
     /**
      * Creates a new check list, starting with only local candidates.
@@ -77,16 +80,21 @@ public class IceCheckListImpl<T> implements IceCheckList
      * @param checkerFactory The factory for generating connectivity checker
      * classes. 
      * @param localCandidates The local candidates to use in the check list.
-     * @param messageVisitorFactory 
      */
     public IceCheckListImpl(
         final IceStunCheckerFactory checkerFactory,
         final Collection<IceCandidate> localCandidates, 
-        final StunMessageVisitorFactory<T> messageVisitorFactory)
+        final StunMessageVisitorFactory messageVisitorFactory, 
+        final IoServiceListener ioServiceListener)
         {
         m_checkerFactory = checkerFactory;
         m_localCandidates = localCandidates;
         m_messageVisitorFactory = messageVisitorFactory;
+        if (ioServiceListener == null)
+            {
+            throw new NullPointerException("Null listener");
+            }
+        m_ioServiceListener = ioServiceListener;
         }
     
     public IceCandidatePair removeTopTriggeredPair()
@@ -450,7 +458,6 @@ public class IceCheckListImpl<T> implements IceCheckList
         {
         final IceCandidate localCandidate = pair.getFirst();
         final IceCandidate remoteCandidate = pair.getSecond();
-        
         final IceCandidateVisitor<IceCandidatePair> visitor = 
             new IceCandidateVisitorAdapter<IceCandidatePair>()
             {
@@ -462,7 +469,7 @@ public class IceCheckListImpl<T> implements IceCheckList
                 final IceStunChecker checker = 
                     m_checkerFactory.newTcpChecker(candidate, 
                         remoteCandidate, frameIoHandler, 
-                        m_messageVisitorFactory);
+                        m_messageVisitorFactory, m_ioServiceListener);
                 return new TcpIceCandidatePair(candidate, remoteCandidate,
                     checker);
                 }
@@ -473,7 +480,8 @@ public class IceCheckListImpl<T> implements IceCheckList
                 m_log.debug("Creating STUN checker...");
                 final IceStunChecker checker = 
                     m_checkerFactory.newUdpChecker(candidate, 
-                        remoteCandidate, m_messageVisitorFactory);
+                        remoteCandidate, m_messageVisitorFactory, 
+                        m_ioServiceListener);
 
                 return new UdpIceCandidatePair(candidate, remoteCandidate, 
                     checker);

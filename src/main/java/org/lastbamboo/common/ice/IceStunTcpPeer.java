@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.handler.StreamIoHandler;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.server.StunServer;
@@ -40,7 +41,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
      * @param streamIoHandler The {@link IoHandler} for TCP streams.
      */
     public IceStunTcpPeer(final StunClient tcpStunClient, 
-        final StunMessageVisitorFactory<T> messageVisitorFactory,
+        final StunMessageVisitorFactory messageVisitorFactory,
         final boolean controlling, final StreamIoHandler streamIoHandler)
         {
         m_stunClient = tcpStunClient;
@@ -65,7 +66,13 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
         this.m_stunServer =
             new TcpStunServer(ioHandler, messageVisitorFactory, 
                 controllingString);
-        this.m_stunServer.start(tcpStunClient.getHostAddress());
+        }
+
+    public void connect()
+        {
+        this.m_stunClient.connect();
+        this.m_stunServer.start(m_stunClient.getHostAddress());
+        
         }
 
     public InetSocketAddress getHostAddress()
@@ -113,5 +120,11 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
     public InetSocketAddress getBoundAddress()
         {
         return this.m_stunServer.getBoundAddress();
+        }
+
+    public void addIoServiceListener(IoServiceListener serviceListener)
+        {
+        this.m_stunServer.addIoServiceListener(serviceListener);
+        this.m_stunClient.addIoServiceListener(serviceListener);
         }
     }

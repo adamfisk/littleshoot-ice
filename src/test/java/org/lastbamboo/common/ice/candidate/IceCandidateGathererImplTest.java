@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import junit.framework.TestCase;
 
+import org.apache.mina.common.IoServiceListener;
 import org.lastbamboo.common.ice.IceMediaStreamDesc;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
@@ -78,16 +79,23 @@ public class IceCandidateGathererImplTest extends TestCase
             return null;
             }
 
-        public StunMessage write(BindingRequest request, InetSocketAddress remoteAddress, long rto)
+        public StunMessage write(BindingRequest request, 
+            final InetSocketAddress remoteAddress, long rto)
             {
             // TODO Auto-generated method stub
             return null;
             }
 
-        public InetSocketAddress getLocalAddress()
+        public void addIoServiceListener(IoServiceListener serviceListener)
             {
             // TODO Auto-generated method stub
-            return null;
+            
+            }
+
+        public void connect()
+            {
+            // TODO Auto-generated method stub
+            
             }
     
         }

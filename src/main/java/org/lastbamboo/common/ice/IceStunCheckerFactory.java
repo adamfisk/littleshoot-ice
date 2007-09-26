@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.handler.StreamIoHandler;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
@@ -9,7 +10,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
  * Interface for classes that create new ICE STUN connectivity check classes
  * for different transports. 
  */
-public interface IceStunCheckerFactory<T>
+public interface IceStunCheckerFactory
     {
 
     /**
@@ -18,20 +19,23 @@ public interface IceStunCheckerFactory<T>
      * 
      * @param localCandidate The local candidate for a pair.
      * @param remoteCandidate The remote candidate for a pair.
+     * @param ioServiceListener Listener for MINA IO events.
      * @return The new STUN checking class.
      */
     IceStunChecker newUdpChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, 
-        StunMessageVisitorFactory<T> visitorFactory);
+        StunMessageVisitorFactory visitorFactory, 
+        IoServiceListener ioServiceListener);
 
     IceStunChecker newTcpChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, StreamIoHandler ioHandler, 
-        StunMessageVisitorFactory<T> messageVisitorFactory);
+        StunMessageVisitorFactory messageVisitorFactory,
+        IoServiceListener serviceListener);
     
     
     IceStunChecker newTcpChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, StreamIoHandler protocolIoHandler, 
-        IoSession ioSession, 
-        StunMessageVisitorFactory<T> messageVisitorFactory);
+        IoSession ioSession, StunMessageVisitorFactory messageVisitorFactory,
+        IoServiceListener serviceListener);
 
     }

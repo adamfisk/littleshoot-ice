@@ -52,9 +52,9 @@ public class IceCheckListImplTest extends TestCase
         new StunTransactionTrackerImpl();
         final IceStunCheckerFactory checkerFactory =
             new IceStunCheckerFactoryImpl(agent, codecFactory, 
-                Object.class, clientIoHandlerStub, serverIoHandlerStub, tracker);
+                Object.class, clientIoHandlerStub, tracker);
         final IceCheckList checkList = 
-            new IceCheckListImpl(checkerFactory, localCandidates, null);
+            new IceCheckListImpl(checkerFactory, localCandidates, null, null);
         checkList.formCheckList(remoteCandidates);
         
         final Field pairsField = checkList.getClass().getDeclaredField("m_pairs");

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
@@ -14,15 +15,9 @@ import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
 import org.lastbamboo.common.turn.client.TcpTurnClient;
 import org.lastbamboo.common.turn.client.TurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
-import org.lastbamboo.common.turn.client.TurnConnectionEstablisher;
 import org.lastbamboo.common.turn.client.TurnServerCandidateProvider;
 import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.ConnectionMaintainer;
-import org.lastbamboo.common.util.ConnectionMaintainerImpl;
 import org.lastbamboo.common.util.ConnectionMaintainerListener;
-import org.lastbamboo.common.util.RuntimeIoException;
-import org.lastbamboo.common.util.ThreadUtils;
-import org.lastbamboo.common.util.ThreadUtilsImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
@@ -88,40 +83,14 @@ public class IceTcpTurnClient implements TurnClient
         final ProtocolCodecFactory dataCodecFactory = 
             new DemuxingProtocolCodecFactory(stunCodecFactory, 
                 tcpFramingCodecFactory);
-    
         this.m_turnClient = 
-            new TcpTurnClient(turnClientListener, dataCodecFactory);
-    
-        // Take care of all the connection maintaining code here.
-        final TurnConnectionEstablisher connectionEstablisher = 
-            new TurnConnectionEstablisher(this.m_turnClient);
-        
-        final ThreadUtils threadUtils = new ThreadUtilsImpl();
-        final ConnectionMaintainer<InetSocketAddress> connectionMaintainer =
-            new ConnectionMaintainerImpl<InetSocketAddress, InetSocketAddress>(
-                threadUtils, connectionEstablisher, candidateProvider, 1);
-        
-        connectionMaintainer.start();
-        
-        // Make sure we connect.
-        int connectChecks = 0;
-        while (!this.m_turnClient.isConnected() && connectChecks < 300)
-            {
-            try
-                {
-                Thread.sleep(100);
-                }
-            catch (InterruptedException e)
-                {
-                m_log.error("Thread interrupted??", e);
-                }
-            connectChecks++;
-            }
-        if (!this.m_turnClient.isConnected())
-            {
-            m_log.error("Could not connect to server");
-            throw new RuntimeIoException("Could not connect!!");
-            }
+            new TcpTurnClient(turnClientListener, dataCodecFactory, 
+                candidateProvider);
+        }
+
+    public void connect()
+        {
+        this.m_turnClient.connect();
         }
 
     public InetSocketAddress getHostAddress()
@@ -191,4 +160,8 @@ public class IceTcpTurnClient implements TurnClient
         return this.m_turnClient.isConnected();
         }
 
+    public void addIoServiceListener(final IoServiceListener serviceListener)
+        {
+        this.m_turnClient.addIoServiceListener(serviceListener);
+        }
     }

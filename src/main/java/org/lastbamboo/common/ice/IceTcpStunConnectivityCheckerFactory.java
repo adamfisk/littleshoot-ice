@@ -17,12 +17,11 @@ import org.slf4j.LoggerFactory;
  * @param <T> The type STUN message visitor methods return.
  */
 public class IceTcpStunConnectivityCheckerFactory<T> 
-    implements StunMessageVisitorFactory<T>
+    implements StunMessageVisitorFactory<T, IceMediaStream>
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final IceAgent m_iceAgent;
-    private final IceMediaStream m_iceMediaStream;
     private final StunTransactionTracker<T> m_transactionTracker;
     private final IceStunCheckerFactory m_checkerFactory;
     private final StreamIoHandler m_streamIoHandler;
@@ -32,7 +31,6 @@ public class IceTcpStunConnectivityCheckerFactory<T>
      * Creates a new STUN message visitor factory for ICE.
      * 
      * @param agent The top-level agent. 
-     * @param iceMediaStream The media stream this factory is working for.
      * @param transactionTracker The class that keeps track of STUN 
      * transactions. 
      * @param checkerFactory The class that creates new classes for handling
@@ -40,23 +38,28 @@ public class IceTcpStunConnectivityCheckerFactory<T>
      * @param streamIoHandler The {@link IoHandler} that creates a TCP stream.
      */
     public IceTcpStunConnectivityCheckerFactory(
-        final IceAgent agent, final IceMediaStream iceMediaStream,
+        final IceAgent agent, 
         final StunTransactionTracker<T> transactionTracker,
         final IceStunCheckerFactory checkerFactory,
         final StreamIoHandler streamIoHandler)
         {
         m_iceAgent = agent;
-        m_iceMediaStream = iceMediaStream;
         m_transactionTracker = transactionTracker;
         m_checkerFactory = checkerFactory;
         m_streamIoHandler = streamIoHandler;
         }
 
+    
     public StunMessageVisitor<T> createVisitor(final IoSession session)
         {
-        return new IceTcpStunConnectivityChecker<T>( 
-            this.m_iceAgent, this.m_iceMediaStream, 
-                session, this.m_transactionTracker, this.m_checkerFactory,
-                this, this.m_streamIoHandler);
+        throw new UnsupportedOperationException("Need to pass a media stream");
+        }
+    
+    public StunMessageVisitor<T> createVisitor(final IoSession session, 
+        final IceMediaStream attachment)
+        {
+        return new IceTcpStunConnectivityChecker<T>(this.m_iceAgent, 
+            attachment, session, this.m_transactionTracker, 
+            this.m_checkerFactory, this, this.m_streamIoHandler);
         }
     }

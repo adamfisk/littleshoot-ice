@@ -55,14 +55,14 @@ public class IceUdpStunCheckerTest
         
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
-        final StunMessageVisitorFactory<StunMessage> visitorFactory = 
-            new StunClientMessageVisitorFactory<StunMessage>(tracker);
+        final StunMessageVisitorFactory visitorFactory = 
+            new StunClientMessageVisitorFactory<StunMessage, IceMediaStream>(tracker);
         final StunIoHandler<StunMessage> stunIoHandler =
             new StunIoHandler<StunMessage>(visitorFactory);
         final IceUdpStunChecker checker = 
             new IceUdpStunChecker(localCandidate, remoteCandidate, 
-                stunIoHandler, 
-                iceAgent, codecFactory, Object.class, clientIoHandler, tracker);
+                stunIoHandler, iceAgent, codecFactory, Object.class, 
+                clientIoHandler, tracker, null);
         
         final BindingRequest bindingRequest = new BindingRequest();
         final long rto = 20;

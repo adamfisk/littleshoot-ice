@@ -1,6 +1,7 @@
 package org.lastbamboo.common.ice;
 
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.handler.StreamIoHandler;
@@ -15,14 +16,12 @@ import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
  * media stream requires its own factory because the checkers are coupled to
  * data for that specific stream.
  */
-public class IceStunCheckerFactoryImpl 
-    implements IceStunCheckerFactory<StunMessage>
+public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
     {
 
     private final IceAgent m_iceAgent;
     private final ProtocolCodecFactory m_codecFactory;
-    private final IoHandler m_clientDemuxIoHandler;
-    private final IoHandler m_serverDemuxIoHandler;
+    private final IoHandler m_udpProtocolIoHandler;
     
     /**
      * The top-level class of media messages (non-STUN).
@@ -39,69 +38,54 @@ public class IceStunCheckerFactoryImpl
      * messages.
      * @param demuxClass The {@link IoHandler} we'll use to process sent and
      * received messages.
-     * @param clientDemuxIoHandler The client-side {@link IoHandler} to use
-     * for the media protocol.
-     * @param serverDemuxIoHandler The server-side {@link IoHandler} to use
-     * for the media protocol.
-     * @param transactionTracker 
      */
     public IceStunCheckerFactoryImpl(final IceAgent iceAgent, 
         final ProtocolCodecFactory codecFactory, final Class demuxClass,
-        final IoHandler clientDemuxIoHandler, 
-        final IoHandler serverDemuxIoHandler, 
+        final IoHandler udpProtocolIoHandler, 
         final StunTransactionTracker<StunMessage> transactionTracker)
         {
         m_iceAgent = iceAgent;
         m_codecFactory = codecFactory;
         m_demuxClass = demuxClass;
-        m_clientDemuxIoHandler = clientDemuxIoHandler;
-        m_serverDemuxIoHandler = serverDemuxIoHandler;
+        m_udpProtocolIoHandler = udpProtocolIoHandler;
         m_transactionTracker = transactionTracker;
         }
     
     public IceStunChecker newTcpChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
         final StreamIoHandler protocolIoHandler, 
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
+        final StunMessageVisitorFactory messageVisitorFactory,
+        final IoServiceListener serviceListener)
         {
         return newTcpChecker(localCandidate, remoteCandidate, protocolIoHandler, 
-            null, messageVisitorFactory);
+            null, messageVisitorFactory, serviceListener);
         }
     
     public IceStunChecker newTcpChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
         final StreamIoHandler protocolIoHandler, final IoSession ioSession,
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
+        final StunMessageVisitorFactory messageVisitorFactory,
+        final IoServiceListener serviceListener)
         {
         final IoHandler stunIoHandler = 
             new StunIoHandler<StunMessage>(messageVisitorFactory);
         return new IceTcpStunChecker(localCandidate, remoteCandidate,
             stunIoHandler, m_iceAgent, ioSession, m_transactionTracker, 
-            protocolIoHandler);
+            protocolIoHandler, serviceListener);
         }
     
     public IceStunChecker newUdpChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final StunMessageVisitorFactory<StunMessage> messageVisitorFactory)
+        final StunMessageVisitorFactory messageVisitorFactory,
+        final IoServiceListener ioServiceListener)
         {
-        final IoHandler protocolIoHandler;
-        
-        // TODO: This does not currently handle the changing of roles.
-        if (this.m_iceAgent.isControlling())
-            {
-            protocolIoHandler = this.m_clientDemuxIoHandler;
-            }
-        else
-            {
-            protocolIoHandler = this.m_serverDemuxIoHandler;
-            }
-
         final IoHandler stunIoHandler =
             new StunIoHandler<StunMessage>(messageVisitorFactory);
      
         return new IceUdpStunChecker(localCandidate, remoteCandidate,
             stunIoHandler, m_iceAgent, m_codecFactory, 
-            m_demuxClass, protocolIoHandler, m_transactionTracker);
+            m_demuxClass, this.m_udpProtocolIoHandler, m_transactionTracker,
+            ioServiceListener);
         }
 
     }

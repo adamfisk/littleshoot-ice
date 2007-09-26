@@ -6,6 +6,7 @@ import org.apache.commons.id.uuid.UUID;
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.ThreadModel;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
@@ -32,7 +33,7 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
         LoggerFactory.getLogger(IceUdpStunChecker.class);
     
     private volatile boolean m_icmpError;
-    
+
     /**
      * Creates a new ICE connectivity checker over UDP.
      * 
@@ -53,23 +54,22 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
         final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
         final Class clazz, final IoHandler protocolIoHandler, 
-        final StunTransactionTracker<StunMessage> transactionTracker)
+        final StunTransactionTracker<StunMessage> transactionTracker, 
+        final IoServiceListener ioServiceListener)
         {
         super(localCandidate, remoteCandidate, transactionTracker, 
             stunIoHandler, iceAgent, demuxingCodecFactory, clazz, 
-            protocolIoHandler);
+            protocolIoHandler, ioServiceListener);
         }
 
     @Override
     protected IoConnector createConnector(
         final InetSocketAddress localAddress, 
-        final InetSocketAddress remoteAddress, 
-        final ThreadModel threadModel, 
-        final ProtocolCodecFilter stunFilter, 
-        final IoHandler demuxer)
+        final InetSocketAddress remoteAddress, final ThreadModel threadModel, 
+        final ProtocolCodecFilter stunFilter, final IoHandler demuxer)
         {
         final DatagramConnector connector = new DatagramConnector();
-        
+        connector.addListener(this.m_ioServiceListener);
         final DatagramConnectorConfig cfg = connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
         cfg.setThreadModel(threadModel);

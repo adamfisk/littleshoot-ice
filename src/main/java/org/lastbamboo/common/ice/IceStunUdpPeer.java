@@ -3,6 +3,7 @@ package org.lastbamboo.common.ice;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+import org.apache.mina.common.IoServiceListener;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.server.StunServer;
@@ -57,6 +58,12 @@ public class IceStunUdpPeer implements StunClient, StunServer
             {
             offererOrAnswerer = "Answerer";
             }
+        
+        // NOTE: We're starting the server here before external code has
+        // had the chance to add listeners.  In this case, it will be fine
+        // because the caller cannot have sent the offer or answer until
+        // the listeners are added (or SHOULD not have), so there's not way
+        // of missing any relevant events.
         this.m_stunServer = 
             new UdpStunServer(messageVisitorFactory, offererOrAnswerer);
         
@@ -72,6 +79,12 @@ public class IceStunUdpPeer implements StunClient, StunServer
         
         m_log.debug("Starting STUN client on local address: "+boundAddress);
         this.m_stunClient = new UdpStunClient(boundAddress);
+        }
+    
+
+    public void connect()
+        {
+        this.m_stunClient.connect();
         }
 
     public InetSocketAddress getHostAddress()
@@ -119,5 +132,17 @@ public class IceStunUdpPeer implements StunClient, StunServer
     public InetSocketAddress getBoundAddress()
         {
         return this.m_stunServer.getBoundAddress();
+        }
+
+    public void addIoServiceListener(final IoServiceListener serviceListener)
+        {
+        this.m_stunClient.addIoServiceListener(serviceListener);
+        this.m_stunServer.addIoServiceListener(serviceListener);
+        }
+    
+    @Override
+    public String toString()
+        {
+        return getClass().getSimpleName();
         }
     }

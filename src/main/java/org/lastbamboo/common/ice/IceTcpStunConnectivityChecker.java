@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.handler.StreamIoHandler;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
@@ -14,11 +15,11 @@ public class IceTcpStunConnectivityChecker<T> extends
 
     private final StreamIoHandler m_streamIoHandler;
 
-    public IceTcpStunConnectivityChecker(IceAgent agent, 
+    public IceTcpStunConnectivityChecker(final IceAgent agent, 
         final IceMediaStream iceMediaStream, final IoSession session, 
         final StunTransactionTracker<T> transactionTracker, 
-        final IceStunCheckerFactory<T> checkerFactory, 
-        final StunMessageVisitorFactory<T> stunMessageVisitorFactory,
+        final IceStunCheckerFactory checkerFactory, 
+        final StunMessageVisitorFactory stunMessageVisitorFactory,
         final StreamIoHandler streamHandler)
         {
         super(agent, iceMediaStream, session, transactionTracker, checkerFactory,
@@ -29,7 +30,8 @@ public class IceTcpStunConnectivityChecker<T> extends
     @Override
     protected IceCandidatePair newPair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoSession ioSession, 
-        final StunMessageVisitorFactory<T> messageVisitorFactory)
+        final StunMessageVisitorFactory messageVisitorFactory,
+        final IoServiceListener serviceListener)
         {
         // The request just arrived on an existing TCP session.  We
         // cannot create a new TCP connection from this acceptor to
@@ -39,7 +41,7 @@ public class IceTcpStunConnectivityChecker<T> extends
         final IceStunChecker connectivityChecker =
             this.m_checkerFactory.newTcpChecker(localCandidate,
                 remoteCandidate, this.m_streamIoHandler, ioSession, 
-                messageVisitorFactory);
+                messageVisitorFactory, serviceListener);
 
         return new TcpIceCandidatePair(localCandidate,
             remoteCandidate, connectivityChecker);

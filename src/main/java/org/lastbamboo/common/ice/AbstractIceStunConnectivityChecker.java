@@ -3,6 +3,7 @@ package org.lastbamboo.common.ice;
 import java.net.InetSocketAddress;
 
 import org.apache.commons.id.uuid.UUID;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.TransportType;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
@@ -38,10 +39,10 @@ public abstract class AbstractIceStunConnectivityChecker<T>
 
     private final IoSession m_ioSession;
 
-    private final StunMessageVisitorFactory<T> 
+    private final StunMessageVisitorFactory 
         m_stunMessageVisitorFactory;
 
-    protected final IceStunCheckerFactory<T> m_checkerFactory;
+    protected final IceStunCheckerFactory m_checkerFactory;
 
     /**
      * Creates a new message visitor for the specified session.
@@ -57,8 +58,8 @@ public abstract class AbstractIceStunConnectivityChecker<T>
         final IceAgent agent, final IceMediaStream iceMediaStream,
         final IoSession session, 
         final StunTransactionTracker<T> transactionTracker,
-        final IceStunCheckerFactory<T> checkerFactory, 
-        final StunMessageVisitorFactory<T> stunMessageVisitorFactory)
+        final IceStunCheckerFactory checkerFactory, 
+        final StunMessageVisitorFactory stunMessageVisitorFactory)
         {
         super (transactionTracker);
         m_agent = agent;
@@ -204,9 +205,9 @@ public abstract class AbstractIceStunConnectivityChecker<T>
             {
             m_log.debug("Creating new candidate pair.");
             
-            computedPair = newPair(localCandidate, 
-                remoteCandidate, this.m_ioSession, 
-                this.m_stunMessageVisitorFactory);
+            computedPair = newPair(localCandidate, remoteCandidate, 
+                this.m_ioSession, this.m_stunMessageVisitorFactory,
+                this.m_iceMediaStream);
                 
             // Continue with the rest of ICE section 7.2.1.4, 
             // "Triggered Checks"
@@ -273,6 +274,7 @@ public abstract class AbstractIceStunConnectivityChecker<T>
 
     protected abstract IceCandidatePair newPair(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, IoSession ioSession, 
-        StunMessageVisitorFactory<T> messageVisitorFactory);
+        StunMessageVisitorFactory messageVisitorFactory, 
+        IoServiceListener serviceListener);
     
     }

@@ -14,42 +14,43 @@ import org.slf4j.LoggerFactory;
  * 
  * @param <T> The type STUN message visitor methods return.
  */
-public class IceUdpStunConnectivityCheckerFactory<T> 
-    implements StunMessageVisitorFactory<T>
+public class IceUdpStunConnectivityCheckerFactory<T>
+    implements StunMessageVisitorFactory<T, IceMediaStream>
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final IceAgent m_iceAgent;
-    private final IceMediaStream m_iceMediaStream;
-    private final StunTransactionTracker<T> m_transactionTracker;
+    private final StunTransactionTracker m_transactionTracker;
     private final IceStunCheckerFactory m_checkerFactory;
 
     /**
      * Creates a new STUN message visitor factory for ICE.
      * 
      * @param agent The top-level agent. 
-     * @param iceMediaStream The media stream this factory is working for.
      * @param transactionTracker The class that keeps track of STUN 
      * transactions. 
      * @param checkerFactory The class that creates new classes for handling
      * the lower level transport for checks. 
      */
     public IceUdpStunConnectivityCheckerFactory(
-        final IceAgent agent, final IceMediaStream iceMediaStream,
-        final StunTransactionTracker<T> transactionTracker,
+        final IceAgent agent, final StunTransactionTracker transactionTracker,
         final IceStunCheckerFactory checkerFactory)
         {
         m_iceAgent = agent;
-        m_iceMediaStream = iceMediaStream;
         m_transactionTracker = transactionTracker;
         m_checkerFactory = checkerFactory;
         }
 
     public StunMessageVisitor<T> createVisitor(final IoSession session)
         {
-        return new IceUdpStunConnectivityChecker<T>( 
-            this.m_iceAgent, this.m_iceMediaStream, 
-                session, this.m_transactionTracker, this.m_checkerFactory,
-                this);
+        throw new UnsupportedOperationException("Need to pass a media stream");
         }
+
+    public StunMessageVisitor<T> createVisitor(final IoSession session, 
+        final IceMediaStream attachment)
+        {
+        return new IceUdpStunConnectivityChecker<T>(this.m_iceAgent, attachment, 
+            session, this.m_transactionTracker, this.m_checkerFactory, this);
+        }
+
     }

@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
@@ -11,7 +12,7 @@ public class IceUdpStunConnectivityChecker<T> extends
     AbstractIceStunConnectivityChecker<T>
     {
 
-    public IceUdpStunConnectivityChecker(IceAgent agent, 
+    public IceUdpStunConnectivityChecker(final IceAgent agent, 
         final IceMediaStream iceMediaStream, final IoSession session, 
         final StunTransactionTracker transactionTracker, 
         final IceStunCheckerFactory checkerFactory, 
@@ -22,15 +23,15 @@ public class IceUdpStunConnectivityChecker<T> extends
         }
 
     @Override
-    protected IceCandidatePair newPair(IceCandidate localCandidate, 
+    protected IceCandidatePair newPair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoSession ioSession, 
-        final StunMessageVisitorFactory<T> messageVisitorFactory)
+        final StunMessageVisitorFactory messageVisitorFactory,
+        final IoServiceListener ioServiceListener)
         {
         final IceStunChecker connectivityChecker = 
             this.m_checkerFactory.newUdpChecker(localCandidate, 
-                remoteCandidate, messageVisitorFactory);
+                remoteCandidate, messageVisitorFactory, ioServiceListener);
         return new UdpIceCandidatePair(localCandidate, 
             remoteCandidate, connectivityChecker);
-
         }
     }

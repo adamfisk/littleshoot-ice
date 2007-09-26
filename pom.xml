@@ -37,6 +37,11 @@
             </dependency>
  
         <dependency>
+            <groupId>net.sbbi</groupId>
+            <artifactId>sbbi-upnp</artifactId>
+            </dependency>
+ 
+        <dependency>
             <groupId>org.lastbamboo</groupId>
             <artifactId>lastbamboo-common-offer-answer</artifactId>
             </dependency>

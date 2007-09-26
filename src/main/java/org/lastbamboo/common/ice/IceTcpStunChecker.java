@@ -8,6 +8,7 @@ import org.apache.commons.id.uuid.UUID;
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.RuntimeIOException;
 import org.apache.mina.common.ThreadModel;
@@ -54,15 +55,14 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
         final IceCandidate remoteCandidate, final IoHandler stunIoHandler,
         final IceAgent iceAgent, final IoSession session,
         final StunTransactionTracker<StunMessage> transactionTracker,
-        final IoHandler protocolIoHandler)
+        final IoHandler protocolIoHandler, 
+        final IoServiceListener ioServiceListener)
         {
         super(localCandidate, remoteCandidate, transactionTracker, 
-            stunIoHandler, 
-            iceAgent, createCodecFactory(), TcpFrame.class, 
-            protocolIoHandler);
+            stunIoHandler, iceAgent, createCodecFactory(), TcpFrame.class, 
+            protocolIoHandler, ioServiceListener);
         this.m_ioSession = session;
         }
-    
     
     private static ProtocolCodecFactory createCodecFactory()
         {
@@ -90,6 +90,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             }
         
         final SocketConnector connector = new SocketConnector();
+        connector.addListener(this.m_ioServiceListener);
         
         final SocketConnectorConfig cfg = connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);

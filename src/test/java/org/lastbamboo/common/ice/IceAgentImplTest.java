@@ -13,7 +13,6 @@ import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.handler.StreamIoHandler;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.junit.Assert;
@@ -33,10 +32,8 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
+import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
-import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,45 +58,30 @@ public class IceAgentImplTest
         final IceMediaStreamDesc desc = 
             new IceMediaStreamDesc(false, true, "message", "http", 1);
 
-        final StunClientFactory<StunMessage> stunClientFactory =
-            new StunClientFactory<StunMessage>()
+        final StunClientFactory stunClientFactory = new StunClientFactory()
             {
             public StunClient newStunClient(
-                final StunMessageVisitorFactory<StunMessage> visitorFactory)
+                final StunMessageVisitorFactory visitorFactory)
                 {
                 return StunClientStub.newClient();
                 }
             };
+            
+            
+        final GeneralIceMediaStreamFactory generalStreamFactory =
+            new GeneralIceMediaStreamFactoryImpl();
         
         final IceMediaStreamFactory mediaStreamFactory1 = 
             new IceMediaStreamFactory()
             {
             public IceMediaStream newStream(final IceAgent iceAgent) 
                 {
-                final int hostPort = 65044;
-                final InetSocketAddress serverReflexive =
-                    new InetSocketAddress("53.43.90.1", 2452);
-                final StunClient udpStunClient = 
-                    StunClientStub.newClient(serverReflexive, hostPort);
-                final DemuxableProtocolCodecFactory stunCodecFactory =
-                    new StunDemuxableProtocolCodecFactory();
                 final DemuxableProtocolCodecFactory otherCodecFactory =
                     new StunDemuxableProtocolCodecFactory();
-                final ProtocolCodecFactory codecFactory =
-                    new DemuxingProtocolCodecFactory(stunCodecFactory, 
-                        otherCodecFactory);
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
-                final IoHandler serverIoHandler = new IoHandlerAdapter();
-                final StunTransactionTracker<StunMessage> transactionTracker =
-                    new StunTransactionTrackerImpl();
-    
-                final IceStunCheckerFactory checkerFactory =
-                    new IceStunCheckerFactoryImpl(iceAgent, 
-                        codecFactory, Void.class, clientIoHandler, 
-                        serverIoHandler, transactionTracker);
-                return new IceMediaStreamImpl<StunMessage>(stunClientFactory, 
-                    iceAgent, desc, udpStunClient, checkerFactory, 
-                    transactionTracker);
+                final TurnClientListener delegateListener = null;
+                return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
+                    otherCodecFactory, Void.class, clientIoHandler, delegateListener);
                 }
             };
         
@@ -108,30 +90,12 @@ public class IceAgentImplTest
             {
             public IceMediaStream newStream(final IceAgent iceAgent)
                 {
-                final int hostPort = 48290;
-                final InetSocketAddress serverReflexive =
-                    new InetSocketAddress("21.9.90.1", 9852);
-                final StunClient udpStunClient = 
-                    StunClientStub.newClient(serverReflexive, hostPort);
-                final DemuxableProtocolCodecFactory stunCodecFactory =
-                    new StunDemuxableProtocolCodecFactory();
                 final DemuxableProtocolCodecFactory otherCodecFactory =
                     new StunDemuxableProtocolCodecFactory();
-                final ProtocolCodecFactory codecFactory =
-                    new DemuxingProtocolCodecFactory(stunCodecFactory, 
-                        otherCodecFactory);
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
-                final IoHandler serverIoHandler = new IoHandlerAdapter();
-                final StunTransactionTracker<StunMessage> transactionTracker =
-                    new StunTransactionTrackerImpl();
-    
-                final IceStunCheckerFactory checkerFactory =
-                    new IceStunCheckerFactoryImpl(iceAgent, 
-                        codecFactory, Void.class, clientIoHandler, 
-                        serverIoHandler, transactionTracker);
-                return new IceMediaStreamImpl<StunMessage>(stunClientFactory, 
-                    iceAgent, desc, udpStunClient, checkerFactory, 
-                    transactionTracker);
+                final TurnClientListener delegateListener = null;
+                return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
+                    otherCodecFactory, Void.class, clientIoHandler, delegateListener);
                 }
             };
         final IceMediaFactory iceMediaFactory = new IceMediaFactory()
@@ -269,8 +233,8 @@ public class IceAgentImplTest
         
         connector.getFilterChain().addLast("stunFilter", stunFilter);
         
-        final StunMessageVisitorFactory<StunMessage> visitorFactory =
-            new StunMessageVisitorFactory<StunMessage>()
+        final StunMessageVisitorFactory visitorFactory =
+            new StunMessageVisitorFactory<StunMessage, IceMediaStream>()
             {
 
             public StunMessageVisitor<StunMessage> createVisitor(IoSession session)
@@ -295,7 +259,7 @@ public class IceAgentImplTest
                 }
 
             public StunMessageVisitor<StunMessage> createVisitor(
-                final IoSession session, final StreamIoHandler streamHandler)
+                final IoSession session, final IceMediaStream attachment)
                 {
                 return createVisitor(session);
                 }

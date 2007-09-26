@@ -4,6 +4,8 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Queue;
 
+import org.apache.mina.common.IoService;
+import org.apache.mina.common.IoServiceListener;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
@@ -11,7 +13,7 @@ import org.lastbamboo.common.stun.stack.message.BindingRequest;
 /**
  * A media stream for an ICE agent.
  */
-public interface IceMediaStream
+public interface IceMediaStream extends IoServiceListener
     {
 
     /**
@@ -196,5 +198,12 @@ public interface IceMediaStream
      * @return The {@link Queue} of all nominated pairs for this stream.
      */
     Queue<IceCandidatePair> getNominatedPairs();
+    
+    /**
+     * Starts gathering candidates and executing ICE.
+     * 
+     * @param ioServiceListener The listener for {@link IoService} events.
+     */
+    void start(IoServiceListener ioServiceListener);
     
     }

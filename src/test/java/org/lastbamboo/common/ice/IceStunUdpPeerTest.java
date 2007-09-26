@@ -59,7 +59,7 @@ public class IceStunUdpPeerTest
             new StunTransactionTrackerImpl();
         final StunMessageVisitorFactory messageVisitorFactory =
             new IceUdpStunConnectivityCheckerFactory(iceAgent, 
-                iceMediaStream, tracker, null);
+                tracker, null);
             
         final IceStunUdpPeer peer1 = 
             new IceStunUdpPeer(messageVisitorFactory, true);
@@ -132,7 +132,7 @@ public class IceStunUdpPeerTest
         final AtomicInteger serverRequestsReceived = new AtomicInteger(0);
         final int expectedServerMessages = 60;
         final StunMessageVisitorFactory serverVisitorFactory =
-            new StunMessageVisitorFactory<StunMessage>()
+            new StunMessageVisitorFactory<StunMessage, IceMediaStream>()
             {
 
             public StunMessageVisitor<StunMessage> createVisitor(
@@ -158,7 +158,8 @@ public class IceStunUdpPeerTest
                 return clientVisitor;
                 }
 
-            public StunMessageVisitor<StunMessage> createVisitor(IoSession session, StreamIoHandler streamHandler)
+            public StunMessageVisitor<StunMessage> createVisitor(
+                final IoSession session, final IceMediaStream attachment)
                 {
                 return createVisitor(session);
                 }
@@ -167,7 +168,7 @@ public class IceStunUdpPeerTest
         final AtomicInteger clientRequestsReceived = new AtomicInteger(0);
         final int expectedClientMessages = 300;
         final StunMessageVisitorFactory clientVisitorFactory =
-            new StunMessageVisitorFactory<StunMessage>()
+            new StunMessageVisitorFactory<StunMessage, IceMediaStream>()
             {
             public StunMessageVisitor<StunMessage> createVisitor(IoSession session)
                 {
@@ -190,7 +191,8 @@ public class IceStunUdpPeerTest
                 return clientVisitor;
                 }
 
-            public StunMessageVisitor<StunMessage> createVisitor(IoSession session, StreamIoHandler streamHandler)
+            public StunMessageVisitor<StunMessage> createVisitor(
+                final IoSession session, final IceMediaStream attachment)
                 {
                 return createVisitor(session);
                 }

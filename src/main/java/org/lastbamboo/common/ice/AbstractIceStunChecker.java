@@ -8,6 +8,7 @@ import org.apache.commons.id.uuid.UUID;
 import org.apache.mina.common.ExecutorThreadModel;
 import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.ThreadModel;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
@@ -56,6 +57,8 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
 
     protected final IoHandler m_protocolIoHandler;
 
+    protected final IoServiceListener m_ioServiceListener;
+
     /**
      * Creates a new ICE connectivity checker over any transport.
      * 
@@ -77,11 +80,18 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         final StunTransactionTracker<StunMessage> transactionTracker,
         final IoHandler stunIoHandler, final IceAgent iceAgent, 
         final ProtocolCodecFactory demuxingCodecFactory,
-        final Class clazz, final IoHandler protocolIoHandler)
+        final Class clazz, final IoHandler protocolIoHandler,
+        final IoServiceListener ioServiceListener)
         {
+        if (ioServiceListener == null)
+            {
+            throw new NullPointerException("Null listener");
+            }
+        this.m_ioServiceListener = ioServiceListener;
         this.m_transactionTracker = transactionTracker;
-        this.m_demuxingIoHandler = new DemuxingIoHandler(StunMessage.class, 
-            stunIoHandler, clazz, protocolIoHandler);
+        this.m_demuxingIoHandler = 
+            new DemuxingIoHandler(StunMessage.class, stunIoHandler, clazz, 
+                protocolIoHandler);
         this.m_protocolIoHandler = protocolIoHandler;
 
         final String controllingString;
