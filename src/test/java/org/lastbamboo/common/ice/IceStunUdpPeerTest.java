@@ -1,5 +1,7 @@
 package org.lastbamboo.common.ice;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.util.Collection;
@@ -8,10 +10,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.handler.StreamIoHandler;
 import org.apache.mina.transport.socket.nio.DatagramAcceptor;
 import org.apache.mina.transport.socket.nio.DatagramAcceptorConfig;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
@@ -19,7 +21,8 @@ import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
-import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
+import org.lastbamboo.common.ice.stubs.IceStunCheckerFactoryStub;
+import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
@@ -53,18 +56,18 @@ public class IceStunUdpPeerTest
     public void testIceStunUdpPeers() throws Exception
         {
         final IceAgent iceAgent = new IceAgentStub();
-        final IceMediaStream iceMediaStream = new IceMediaStreamImplStub();
-
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
         final StunMessageVisitorFactory messageVisitorFactory =
             new IceUdpStunConnectivityCheckerFactory(iceAgent, 
-                tracker, null);
+                tracker, new IceStunCheckerFactoryStub());
             
         final IceStunUdpPeer peer1 = 
             new IceStunUdpPeer(messageVisitorFactory, true);
         final IceStunUdpPeer peer2 = 
             new IceStunUdpPeer(messageVisitorFactory, true);
+        peer1.connect();
+        peer2.connect();
         
         final InetSocketAddress address1 = peer1.getHostAddress();
         final InetSocketAddress address2 = peer2.getHostAddress();
@@ -95,8 +98,13 @@ public class IceStunUdpPeerTest
         // ports -- the separate connectivity checkers take care of that.
         final UdpStunClient stunClient1 = new UdpStunClient();
         final UdpStunClient stunClient2 = new UdpStunClient();
+
+        stunClient1.connect();
+        stunClient2.connect();
         final InetSocketAddress localAddress1 = stunClient1.getHostAddress();
         final InetSocketAddress localAddress2 = stunClient2.getHostAddress();
+        assertNotNull(localAddress1);
+        assertNotNull(localAddress2);
         
         for (int i = 0; i < 4; i++)
             {

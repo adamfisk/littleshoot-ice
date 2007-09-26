@@ -30,6 +30,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final StunClient m_stunClient;
     private final StunServer m_stunServer;
+    private final UpnpInternetGatewayDeviceManager m_upnpManager;
     
     /**
      * Creates a new ICE STUN UDP peer.
@@ -42,9 +43,11 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
      */
     public IceStunTcpPeer(final StunClient tcpStunClient, 
         final StunMessageVisitorFactory messageVisitorFactory,
-        final boolean controlling, final StreamIoHandler streamIoHandler)
+        final boolean controlling, final StreamIoHandler streamIoHandler,
+        final UpnpInternetGatewayDeviceManager upnpManager)
         {
         m_stunClient = tcpStunClient;
+        m_upnpManager = upnpManager;
         
         // We also add whether we're the controlling agent for thread
         // naming here just to make log reading easier.
@@ -72,9 +75,9 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
         {
         this.m_stunClient.connect();
         this.m_stunServer.start(m_stunClient.getHostAddress());
-        
+        //this.m_upnpManager.mapAddress(m_stunClient.getHostAddress());
         }
-
+    
     public InetSocketAddress getHostAddress()
         {
         return this.m_stunClient.getHostAddress();
@@ -126,5 +129,10 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
         {
         this.m_stunServer.addIoServiceListener(serviceListener);
         this.m_stunClient.addIoServiceListener(serviceListener);
+        }
+
+    public void close()
+        {
+        //this.m_upnpManager.unmapAddress(this.m_stunClient.getHostAddress());
         }
     }

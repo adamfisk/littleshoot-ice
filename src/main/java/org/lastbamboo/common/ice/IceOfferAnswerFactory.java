@@ -37,7 +37,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
         return createMediaOfferer();
         }
     
-    public MediaOfferAnswer createAnswerer(final ByteBuffer offer) throws IOException
+    public MediaOfferAnswer createAnswerer(final ByteBuffer offer) 
+        throws IOException
         {
         final IceAgent agent = new IceAgentImpl( 
             this.m_mediaStreamFactory, false, this.m_mediaFactory);

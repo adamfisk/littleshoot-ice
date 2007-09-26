@@ -310,7 +310,6 @@ public class IceMediaStreamImpl implements IceMediaStream
         
         return null;
         }
-    
 
     /**
      * Checks if the new pair matches any pair the media stream already 
@@ -524,7 +523,7 @@ public class IceMediaStreamImpl implements IceMediaStream
     public void sessionCreated(final IoSession session)
         {
         m_log.debug("Setting media stream on session");
-        session.setAttribute("ICE_STREAM", this);
+        session.setAttribute("STUN_HELPER", this);
         }
 
     public void sessionDestroyed(final IoSession session)

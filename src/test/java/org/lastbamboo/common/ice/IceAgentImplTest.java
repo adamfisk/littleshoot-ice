@@ -81,7 +81,8 @@ public class IceAgentImplTest
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final TurnClientListener delegateListener = null;
                 return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, Void.class, clientIoHandler, delegateListener);
+                    otherCodecFactory, Void.class, clientIoHandler, 
+                    delegateListener, new UpnpInternetGatewayDeviceManagerImpl());
                 }
             };
         
@@ -95,7 +96,8 @@ public class IceAgentImplTest
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final TurnClientListener delegateListener = null;
                 return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, Void.class, clientIoHandler, delegateListener);
+                    otherCodecFactory, Void.class, clientIoHandler, 
+                    delegateListener, new UpnpInternetGatewayDeviceManagerImpl());
                 }
             };
         final IceMediaFactory iceMediaFactory = new IceMediaFactory()
@@ -174,13 +176,13 @@ public class IceAgentImplTest
         synchronized (offererCompleted)
             {
             if (!offererCompleted.get())
-                offererCompleted.wait(4000);
+                offererCompleted.wait(16000);
             }
         
         synchronized (answererCompleted)
             {
             if (!answererCompleted.get())
-                answererCompleted.wait(4000);
+                answererCompleted.wait(16000);
             }
         
         Assert.assertTrue("Did not complete offer", offererCompleted.get());

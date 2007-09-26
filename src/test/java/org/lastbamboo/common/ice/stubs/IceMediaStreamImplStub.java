@@ -8,6 +8,7 @@ import java.util.Queue;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoService;
 import org.apache.mina.common.IoServiceConfig;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceCheckListState;
 import org.lastbamboo.common.ice.IceMediaStream;
@@ -165,6 +166,12 @@ public class IceMediaStreamImplStub implements IceMediaStream
         }
 
     public void sessionDestroyed(IoSession session)
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void start(IoServiceListener ioServiceListener)
         {
         // TODO Auto-generated method stub
         

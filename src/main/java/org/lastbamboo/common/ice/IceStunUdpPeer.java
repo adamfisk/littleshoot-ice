@@ -140,9 +140,17 @@ public class IceStunUdpPeer implements StunClient, StunServer
         this.m_stunServer.addIoServiceListener(serviceListener);
         }
     
+
+    public void close()
+        {
+        this.m_stunClient.close();
+        this.m_stunServer.close();
+        }
+    
     @Override
     public String toString()
         {
         return getClass().getSimpleName();
         }
+
     }

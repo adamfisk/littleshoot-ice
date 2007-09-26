@@ -11,6 +11,7 @@ import junit.framework.TestCase;
 
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoHandlerAdapter;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.IceAgent;
 import org.lastbamboo.common.ice.IceCheckList;
@@ -20,6 +21,7 @@ import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.IceStunCheckerFactoryImpl;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
+import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
 import org.lastbamboo.common.ice.stubs.ProtocolCodecFactoryStub;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
@@ -49,12 +51,14 @@ public class IceCheckListImplTest extends TestCase
         IoHandler clientIoHandlerStub = new IoHandlerAdapter();
         IoHandler serverIoHandlerStub = new IoHandlerAdapter();
         final StunTransactionTracker<StunMessage> tracker = 
-        new StunTransactionTrackerImpl();
+            new StunTransactionTrackerImpl();
         final IceStunCheckerFactory checkerFactory =
             new IceStunCheckerFactoryImpl(agent, codecFactory, 
                 Object.class, clientIoHandlerStub, tracker);
+        final IoServiceListener ioServiceListener = new IoServiceListenerStub();
         final IceCheckList checkList = 
-            new IceCheckListImpl(checkerFactory, localCandidates, null, null);
+            new IceCheckListImpl(checkerFactory, localCandidates, null, 
+                ioServiceListener);
         checkList.formCheckList(remoteCandidates);
         
         final Field pairsField = checkList.getClass().getDeclaredField("m_pairs");

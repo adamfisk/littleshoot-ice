@@ -43,7 +43,8 @@ public class IceUdpStunConnectivityCheckerFactory<T>
 
     public StunMessageVisitor<T> createVisitor(final IoSession session)
         {
-        throw new UnsupportedOperationException("Need to pass a media stream");
+        return new IceUdpStunConnectivityChecker<T>(this.m_iceAgent, null, 
+            session, this.m_transactionTracker, this.m_checkerFactory, this);
         }
 
     public StunMessageVisitor<T> createVisitor(final IoSession session, 

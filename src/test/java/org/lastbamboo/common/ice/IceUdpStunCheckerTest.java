@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
+import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
 import org.lastbamboo.common.stun.client.StunClientMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
@@ -62,7 +63,7 @@ public class IceUdpStunCheckerTest
         final IceUdpStunChecker checker = 
             new IceUdpStunChecker(localCandidate, remoteCandidate, 
                 stunIoHandler, iceAgent, codecFactory, Object.class, 
-                clientIoHandler, tracker, null);
+                clientIoHandler, tracker, new IoServiceListenerStub());
         
         final BindingRequest bindingRequest = new BindingRequest();
         final long rto = 20;
