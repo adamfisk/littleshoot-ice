@@ -34,8 +34,7 @@ public class GeneralIceMediaStreamFactoryImpl
         final IceMediaStreamDesc streamDesc, final IceAgent iceAgent, 
         final DemuxableProtocolCodecFactory protocolCodecFactory, 
         final Class<T> protocolMessageClass, final IoHandler protocolIoHandler,
-        final TurnClientListener delegateTurnClientListener,
-        final UpnpInternetGatewayDeviceManager upnpManager)
+        final TurnClientListener delegateTurnClientListener)
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
@@ -94,7 +93,7 @@ public class GeneralIceMediaStreamFactoryImpl
                 new IceTcpTurnClient(turnClientListener);
             tcpStunPeer = 
                 new IceStunTcpPeer(tcpTurnClient, tcpMessageVisitorFactory, 
-                    iceAgent.isControlling(), streamIoHandler, upnpManager);
+                    iceAgent.isControlling(), streamIoHandler);
             }
         else
             {

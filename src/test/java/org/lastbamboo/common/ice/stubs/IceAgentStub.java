@@ -168,4 +168,10 @@ public class IceAgentStub implements IceAgent
         
         }
 
+    public void close()
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
     }

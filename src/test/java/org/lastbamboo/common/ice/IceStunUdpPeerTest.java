@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -18,11 +17,11 @@ import org.apache.mina.transport.socket.nio.DatagramAcceptor;
 import org.apache.mina.transport.socket.nio.DatagramAcceptorConfig;
 import org.apache.mina.transport.socket.nio.DatagramConnector;
 import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IceStunCheckerFactoryStub;
-import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
@@ -46,6 +45,21 @@ public class IceStunUdpPeerTest
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
+    private IceStunUdpPeer m_peer1;
+    private IceStunUdpPeer m_peer2;
+    
+    
+    @After public void close()
+        {
+        if (this.m_peer1 != null)
+            {
+            this.m_peer1.close();
+            }
+        if (this.m_peer2 != null)
+            {
+            this.m_peer2.close();
+            }
+        }
     
     /**
      * Tests BOTH the client and server side of STUN UDP peers.
@@ -62,15 +76,13 @@ public class IceStunUdpPeerTest
             new IceUdpStunConnectivityCheckerFactory(iceAgent, 
                 tracker, new IceStunCheckerFactoryStub());
             
-        final IceStunUdpPeer peer1 = 
-            new IceStunUdpPeer(messageVisitorFactory, true);
-        final IceStunUdpPeer peer2 = 
-            new IceStunUdpPeer(messageVisitorFactory, true);
-        peer1.connect();
-        peer2.connect();
+        this.m_peer1 = new IceStunUdpPeer(messageVisitorFactory, true);
+        this.m_peer2 = new IceStunUdpPeer(messageVisitorFactory, true);
+        m_peer1.connect();
+        m_peer2.connect();
         
-        final InetSocketAddress address1 = peer1.getHostAddress();
-        final InetSocketAddress address2 = peer2.getHostAddress();
+        final InetSocketAddress address1 = m_peer1.getHostAddress();
+        final InetSocketAddress address2 = m_peer2.getHostAddress();
         
         Assert.assertFalse(address1.equals(address2));
         m_log.debug("Sending STUN request to: "+address2);

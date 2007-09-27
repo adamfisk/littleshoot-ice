@@ -30,7 +30,6 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final StunClient m_stunClient;
     private final StunServer m_stunServer;
-    private final UpnpInternetGatewayDeviceManager m_upnpManager;
     
     /**
      * Creates a new ICE STUN UDP peer.
@@ -43,11 +42,9 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
      */
     public IceStunTcpPeer(final StunClient tcpStunClient, 
         final StunMessageVisitorFactory messageVisitorFactory,
-        final boolean controlling, final StreamIoHandler streamIoHandler,
-        final UpnpInternetGatewayDeviceManager upnpManager)
+        final boolean controlling, final StreamIoHandler streamIoHandler)
         {
         m_stunClient = tcpStunClient;
-        m_upnpManager = upnpManager;
         
         // We also add whether we're the controlling agent for thread
         // naming here just to make log reading easier.

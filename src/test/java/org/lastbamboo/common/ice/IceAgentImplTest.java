@@ -82,7 +82,7 @@ public class IceAgentImplTest
                 final TurnClientListener delegateListener = null;
                 return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
                     otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener, new UpnpInternetGatewayDeviceManagerImpl());
+                    delegateListener);
                 }
             };
         
@@ -97,7 +97,7 @@ public class IceAgentImplTest
                 final TurnClientListener delegateListener = null;
                 return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
                     otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener, new UpnpInternetGatewayDeviceManagerImpl());
+                    delegateListener);
                 }
             };
         final IceMediaFactory iceMediaFactory = new IceMediaFactory()

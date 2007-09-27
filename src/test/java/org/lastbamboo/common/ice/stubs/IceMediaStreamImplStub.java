@@ -177,4 +177,10 @@ public class IceMediaStreamImplStub implements IceMediaStream
         
         }
 
+    public void close()
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
     }

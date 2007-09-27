@@ -10,7 +10,6 @@ public interface GeneralIceMediaStreamFactory
     <T> IceMediaStream newIceMediaStream(IceMediaStreamDesc streamDesc,
         IceAgent iceAgent, DemuxableProtocolCodecFactory rudpCodecFactory, 
         Class<T> name, IoHandler protocolIoHandler, 
-        TurnClientListener delegateListener,
-        UpnpInternetGatewayDeviceManager upnpManager);
+        TurnClientListener delegateListener);
 
     }
