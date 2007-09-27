@@ -134,5 +134,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
     public void close()
         {
         //this.m_upnpManager.unmapAddress(this.m_stunClient.getHostAddress());
+        this.m_stunClient.close();
+        this.m_stunServer.close();
         }
     }
