@@ -254,8 +254,8 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
     public int compareTo(final Object obj)
         {
         final AbstractIceCandidate other = (AbstractIceCandidate) obj;
-        final Long priority1 = new Long(m_priority);
-        final Long priority2 = new Long(other.getPriority());
+        final Long priority1 = Long.valueOf(m_priority);
+        final Long priority2 = Long.valueOf(other.getPriority());
         final int priorityComparison = priority1.compareTo(priority2);
         if (priorityComparison != 0)
             {

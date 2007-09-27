@@ -193,7 +193,7 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         synchronized (m_requestLock)
             {
             this.m_idsToResponses.put(request.getTransactionId(), response);
-            m_requestLock.notify();
+            m_requestLock.notifyAll();
             }
         return null;
         }

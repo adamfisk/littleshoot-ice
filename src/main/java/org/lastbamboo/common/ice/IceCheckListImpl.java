@@ -110,7 +110,7 @@ public class IceCheckListImpl implements IceCheckList
             synchronized (this)
                 {
                 m_log.debug("State changed to: {}", state);
-                this.notify();
+                this.notifyAll();
                 }
             }
         }

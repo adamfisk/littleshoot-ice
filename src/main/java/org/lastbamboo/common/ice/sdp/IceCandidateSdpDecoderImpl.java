@@ -168,9 +168,8 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
             IceTransportProtocol.toTransport(transportString);
         if (transportProtocol == null)
             {
-            LOG.warn("Unrecognized transport: "+transportProtocol);
-            throw new IllegalArgumentException(
-                "Unrecognized transport: "+transportProtocol);
+            LOG.warn("Null transport");
+            throw new NullPointerException("Null transport");
             }
         
         final int priority = Integer.parseInt(scanner.next());

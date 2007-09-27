@@ -32,8 +32,6 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
     private static final Logger m_log = 
         LoggerFactory.getLogger(IceUdpStunChecker.class);
     
-    private volatile boolean m_icmpError;
-
     /**
      * Creates a new ICE connectivity checker over UDP.
      * 
@@ -125,14 +123,9 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
             long waitTime = 0L;
 
             while (!m_idsToResponses.containsKey(id) && requests < 7 &&
-                !this.m_transactionCancelled && !this.m_icmpError)
+                !this.m_transactionCancelled)
                 {
                 waitIfNoResponse(bindingRequest, waitTime);
-                if (this.m_icmpError)
-                    {
-                    m_log.debug("ICMP error -- breaking");
-                    break;
-                    }
                 
                 // See draft-ietf-behave-rfc3489bis-06.txt section 7.1.  We
                 // continually send the same request until we receive a 
@@ -151,7 +144,7 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
             // Now we wait for 1.6 seconds after the last request was sent.
             // If we still don't receive a response, then the transaction 
             // has failed.  
-            if (!this.m_transactionCancelled && !this.m_icmpError)
+            if (!this.m_transactionCancelled)
                 {
                 waitIfNoResponse(bindingRequest, 1600);
                 }
