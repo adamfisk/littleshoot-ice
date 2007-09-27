@@ -115,7 +115,7 @@ public class IceAgentImpl implements IceAgent
     public void setControlling(final boolean controlling)
         {
         m_log.warn("Setting controlling to: "+controlling);
-        this.m_controlling = controlling;
+        //this.m_controlling = controlling;
         }
     
     public void recomputePairPriorities()

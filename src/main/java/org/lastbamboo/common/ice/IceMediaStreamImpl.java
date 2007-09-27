@@ -113,7 +113,7 @@ public class IceMediaStreamImpl implements IceMediaStream
         // TODO: We currently skip this step because it eliminates our extra
         // UDP candidates for trying to cross NATs with port and address
         // dependent mapping.
-        //processPairGroups();
+        processPairGroups();
         
         final IceCheckScheduler scheduler = 
             new IceCheckSchedulerImpl(this.m_iceAgent, this, m_checkList);
