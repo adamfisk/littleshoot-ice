@@ -26,10 +26,10 @@ public class IceRoleCheckerImpl implements IceRoleChecker
     public BindingErrorResponse checkAndRepairRoles(
         final BindingRequest request, final IceAgent agent)
         {
-        final Map<StunAttributeType, StunAttribute> attributes = 
+        final Map<StunAttributeType, StunAttribute> remoteAttributes = 
             request.getAttributes();
-        if (!attributes.containsKey(StunAttributeType.ICE_CONTROLLED) &&
-            !attributes.containsKey(StunAttributeType.ICE_CONTROLLING))
+        if (!remoteAttributes.containsKey(StunAttributeType.ICE_CONTROLLED) &&
+            !remoteAttributes.containsKey(StunAttributeType.ICE_CONTROLLING))
             {
             m_log.warn("No control information.  Old ICE implementation?");
             // The agent may have implemented a previous version of ICE.
@@ -41,11 +41,11 @@ public class IceRoleCheckerImpl implements IceRoleChecker
         // the remote host indicated in the request they also think they're 
         // controlling.
         else if (agent.isControlling() &&
-            attributes.containsKey(StunAttributeType.ICE_CONTROLLING))
+            remoteAttributes.containsKey(StunAttributeType.ICE_CONTROLLING))
             {
-            m_log.debug("We both think we're controlling...");
+            m_log.warn("We both think we're controlling...");
             final IceControllingAttribute attribute = 
-                (IceControllingAttribute) attributes.get(
+                (IceControllingAttribute) remoteAttributes.get(
                     StunAttributeType.ICE_CONTROLLING);
             if (weWin(agent, attribute.getTieBreaker()))
                 {
@@ -61,12 +61,12 @@ public class IceRoleCheckerImpl implements IceRoleChecker
         
         // Otherwise, handle the case where we both think we're controlled.
         else if (!agent.isControlling() && 
-            attributes.containsKey(StunAttributeType.ICE_CONTROLLED))
+            remoteAttributes.containsKey(StunAttributeType.ICE_CONTROLLED))
             {
-            m_log.debug("We both think we're controlled...");
+            m_log.warn("We both think we're controlled...");
             m_log.debug("Transaction ID: {}", request.getTransactionId());
             final IceControlledAttribute attribute = 
-                (IceControlledAttribute) attributes.get(
+                (IceControlledAttribute) remoteAttributes.get(
                     StunAttributeType.ICE_CONTROLLED);
             if (weWin(agent, attribute.getTieBreaker()))
                 {
