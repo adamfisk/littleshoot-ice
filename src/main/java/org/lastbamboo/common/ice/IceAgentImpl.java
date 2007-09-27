@@ -329,4 +329,16 @@ public class IceAgentImpl implements IceAgent
             }
         return topPriorityPair;
         }
+
+    public void close()
+        {
+        // Close all the media streams.
+        synchronized (this.m_mediaStreams)
+            {
+            for (final IceMediaStream stream : this.m_mediaStreams)
+                {
+                stream.close();
+                }
+            }
+        }
     }

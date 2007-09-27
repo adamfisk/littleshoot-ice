@@ -205,5 +205,10 @@ public interface IceMediaStream extends IoServiceListener
      * @param ioServiceListener The listener for {@link IoService} events.
      */
     void start(IoServiceListener ioServiceListener);
+
+    /**
+     * Perform any necessary close operations for the media stream.
+     */
+    void close();
     
     }

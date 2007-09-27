@@ -75,7 +75,6 @@ public class IceMediaStreamImpl implements IceMediaStream
         m_checkerFactory = checkerFactory;
         m_messageVisitorFactory = messageVisitorFactory;
         }
-    
 
     public void start(final IoServiceListener ioServiceListener)
         {
@@ -536,6 +535,11 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         }
 
+    public void close()
+        {
+        this.m_gatherer.close();
+        }
+    
     @Override
     public String toString()
         {

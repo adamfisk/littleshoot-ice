@@ -16,4 +16,9 @@ public interface IceCandidateGatherer
      */
     Collection<IceCandidate> gatherCandidates();
 
+    /**
+     * Close any resources associated with the gatherer.
+     */
+    void close();
+
     }

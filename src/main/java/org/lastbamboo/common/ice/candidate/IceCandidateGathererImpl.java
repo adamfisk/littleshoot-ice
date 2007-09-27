@@ -25,9 +25,9 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
 
     private final StunClient m_iceTcpStunPeer;
 
-    private final boolean m_controlling;
-
     private final StunClient m_iceUdpStunPeer;
+    
+    private final boolean m_controlling;
 
     private final IceMediaStreamDesc m_desc;
 
@@ -268,5 +268,17 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             }
         
         return candidates;
+        }
+
+    public void close()
+        {
+        if (this.m_iceTcpStunPeer != null)
+            {
+            this.m_iceTcpStunPeer.close();
+            }
+        if (this.m_iceUdpStunPeer != null)
+            {
+            this.m_iceUdpStunPeer.close();
+            }
         }
     }
