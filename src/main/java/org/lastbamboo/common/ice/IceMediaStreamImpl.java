@@ -163,7 +163,10 @@ public class IceMediaStreamImpl implements IceMediaStream
                 componentId, this.m_iceAgent.isControlling(), priority);
             }
 
-        this.m_remoteCandidates.add(prc);
+        synchronized (this.m_remoteCandidates)
+            {
+            this.m_remoteCandidates.add(prc);
+            }
         return prc;
         }
 
@@ -258,7 +261,10 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void addLocalCandidate(final IceCandidate localCandidate)
         {
-        this.m_localCandidates.add(localCandidate);
+        synchronized (this.m_localCandidates)
+            {
+            this.m_localCandidates.add(localCandidate);
+            }
         }
 
     public IceCandidate getLocalCandidate(final InetSocketAddress localAddress,
