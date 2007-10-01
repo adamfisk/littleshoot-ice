@@ -216,42 +216,6 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             new IceTcpHostPassiveCandidate(hostAddress, this.m_controlling);
         candidates.add(hostCandidate);
         
-        /*
-        final Collection<IceCandidate> candidates = 
-            new LinkedList<IceCandidate>();
-        final InetSocketAddress relayAddress = 
-            this.m_iceTcpStunPeer.getRelayAddress();
-        
-        final InetSocketAddress baseSocketAddress = 
-            this.m_iceTcpStunPeer.getHostAddress();
-        final InetAddress baseRelayAddress = baseSocketAddress.getAddress();
-
-        // For relayed candidates, the related address is the mapped address.
-        final InetSocketAddress relatedAddress = 
-            this.m_iceTcpStunPeer.getServerReflexiveAddress();
-        
-        final InetAddress stunServerAddress =
-            this.m_iceTcpStunPeer.getStunServerAddress();
-        // Add the relay candidate.  Note that for relay candidates, the base
-        // candidate is the relay candidate itself. 
-        final IceTcpRelayPassiveCandidate candidate = 
-            new IceTcpRelayPassiveCandidate(relayAddress, 
-                stunServerAddress, relatedAddress.getAddress(), 
-                relatedAddress.getPort(), this.m_controlling);
-        candidates.add(candidate);
-        
-        //final IceTcpServer tcpServer = new IceTcpServerImpl();
-        //tcpServer.start();
-        
-        //final int port = ShootConstants.HTTP_PORT;
-        final InetSocketAddress address = 
-            new InetSocketAddress(baseRelayAddress, tcpServer.getPort());
-        final IceTcpHostPassiveCandidate hostCandidate = 
-            new IceTcpHostPassiveCandidate(address, 
-                this.m_controlling);
-        candidates.add(hostCandidate);
-        */
-        
         // Add the active candidate.
         try
             {
