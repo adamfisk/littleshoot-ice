@@ -18,12 +18,9 @@ import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.ice.stubs.StunClientStub;
 import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
-import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.client.StunClientFactory;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
@@ -57,16 +54,6 @@ public class IceAgentImplTest
         {
         final IceMediaStreamDesc desc = 
             new IceMediaStreamDesc(false, true, "message", "http", 1);
-
-        final StunClientFactory stunClientFactory = new StunClientFactory()
-            {
-            public StunClient newStunClient(
-                final StunMessageVisitorFactory visitorFactory)
-                {
-                return StunClientStub.newClient();
-                }
-            };
-            
             
         final GeneralIceMediaStreamFactory generalStreamFactory =
             new GeneralIceMediaStreamFactoryImpl();
