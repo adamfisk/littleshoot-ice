@@ -119,7 +119,11 @@ public class IceAgentImplTest
             {
             public void onOfferAnswerComplete(final MediaOfferAnswer offerAnswer)
                 {
-                offererCompleted.set(true);
+                synchronized (offererCompleted)
+                    {
+                    offererCompleted.set(true);
+                    offererCompleted.notifyAll();
+                    }
                 }
             };
         final OfferAnswerListener answererStateListener =
@@ -127,7 +131,11 @@ public class IceAgentImplTest
             {
             public void onOfferAnswerComplete(final MediaOfferAnswer offerAnswer)
                 {
-                answererCompleted.set(true);
+                synchronized (answererCompleted)
+                    {
+                    answererCompleted.set(true);
+                    answererCompleted.notifyAll();
+                    }
                 }
             };
 
