@@ -141,6 +141,12 @@ public interface IceCandidatePair extends Comparable
      */
     boolean useCandidateSet();
 
-    //TcpFrameIoHandler getIoHandler();
+    /**
+     * Returns whether or not this pair has already been nominated.
+     * 
+     * @return <code>true</code> if the pair has been nominated, otherwise
+     * <code>false</code>.
+     */
+    boolean isNominated();
 
     }

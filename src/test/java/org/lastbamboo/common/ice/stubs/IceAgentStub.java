@@ -48,7 +48,7 @@ public class IceAgentStub implements IceAgent
         
         }
 
-    public void onValidPairsForAllComponents(IceMediaStream mediaStream)
+    public void checkValidPairsForAllComponents(IceMediaStream mediaStream)
         {
         // TODO Auto-generated method stub
         

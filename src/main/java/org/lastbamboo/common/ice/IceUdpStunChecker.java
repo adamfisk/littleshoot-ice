@@ -20,6 +20,7 @@ import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.util.RuntimeIoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,8 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
      * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
      * demultiplexing between STUN and another protocol.
      * @param clazz The top-level message class the protocol other than STUN.
-     * @param protocolIoHandler The {@link IoHandler} to use for the other protocol.
+     * @param protocolIoHandler The {@link IoHandler} to use for the other 
+     * protocol.
      * @param transactionTracker The class that keeps track of STUN 
      * transactions.
      */
@@ -67,6 +69,10 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
         final InetSocketAddress remoteAddress, final ThreadModel threadModel, 
         final ProtocolCodecFilter stunFilter, final IoHandler demuxer)
         {
+        if (this.m_ioSession != null)
+            {
+            throw new RuntimeIoException("IoSession already set...");
+            }
         final DatagramConnector connector = new DatagramConnector();
         connector.addListener(this.m_ioServiceListener);
         final DatagramConnectorConfig cfg = connector.getDefaultConfig();
@@ -94,7 +100,8 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
             {
             // I've seen this happen when the local address is already bound
             // for some reason (clearly without SO_REUSEADDRESS somehow).
-            m_log.error("Could not get the session -- look at the CAUSE!!!", e);
+            m_log.error("Could not create session from "+ localAddress +" to "+
+                remoteAddress+" -- look at the CAUSE!!!", e);
             throw e;
             }
         }
@@ -112,6 +119,12 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
         if (bindingRequest == null)
             {
             throw new NullPointerException("Null Binding Request");
+            }
+        
+        if (this.m_closed || this.m_ioSession.isClosing())
+            {
+            m_log.debug("Already closed");
+            return new CanceledStunMessage();
             }
         
         // This method will retransmit the same request multiple times because
@@ -185,5 +198,4 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
                 }
             }
         }
-    
     }

@@ -126,4 +126,9 @@ public interface IceCheckList
      * otherwise <code>false</code>.
      */
     boolean matchesAny(Predicate<IceCandidatePair> pred);
+
+    /**
+     * Close all candidates pair connections.
+     */
+    void close();
     }

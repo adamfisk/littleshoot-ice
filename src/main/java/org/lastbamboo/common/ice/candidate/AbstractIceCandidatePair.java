@@ -1,6 +1,8 @@
 package org.lastbamboo.common.ice.candidate;
 
 import org.lastbamboo.common.ice.IceStunChecker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -9,21 +11,23 @@ import org.lastbamboo.common.ice.IceStunChecker;
 public abstract class AbstractIceCandidatePair implements IceCandidatePair
     {
 
+    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    
     private final IceCandidate m_localCandidate;
     private final IceCandidate m_remoteCandidate;
-    private long m_priority;
+    private volatile long m_priority;
     private volatile IceCandidatePairState m_state;
     private final String m_foundation;
     private final int m_componentId;
-    private boolean m_nominated = false;
+    private volatile boolean m_nominated = false;
     protected final IceStunChecker m_stunChecker;
-    private boolean m_nominateOnSuccess = false;
+    private volatile boolean m_nominateOnSuccess = false;
     
     /**
      * Flag indicating whether or not this pair should include the 
      * USE CANDIDATE attribute in its Binding Requests during checks.
      */
-    private boolean m_useCandidate = false;
+    private volatile boolean m_useCandidate = false;
 
     /**
      * Creates a new pair.
@@ -125,7 +129,16 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     
     public void setState(final IceCandidatePairState state)
         {
+        if (this.m_nominated)
+            {
+            m_log.debug("Trying to change the state of a nominated pair to: {}", 
+                state);
+            }
         this.m_state = state;
+        if (state == IceCandidatePairState.FAILED)
+            {
+            getStunChecker().close();
+            }
         }
     
     public int getComponentId()
@@ -136,6 +149,11 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     public void nominate()
         {
         this.m_nominated = true;
+        }
+    
+    public boolean isNominated()
+        {
+        return this.m_nominated;
         }
     
     public IceStunChecker getStunChecker()

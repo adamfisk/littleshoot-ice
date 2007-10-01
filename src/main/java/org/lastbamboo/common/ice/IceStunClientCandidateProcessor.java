@@ -387,17 +387,11 @@ public class IceStunClientCandidateProcessor
         
         // 1) Tell the media stream to update pair states as a result of 
         // a valid pair.  
-        // This also handles nominated flag changes specified in 
-        // "7.1.2.2.4. Updating the Nominated Flag" and check list and timer
-        // state issues from "7.1.2.3. Check List and Timer State Updates"
         this.m_mediaStream.updatePairStates(pairToAdd, this.m_pair, 
             useCandidate);
     
-        // 2) Tell the ICE agent to unfreeze check lists for other media 
-        // streams.
-        this.m_iceAgent.onUnfreezeCheckLists(m_mediaStream);
-        
-        this.m_iceAgent.onValidPairsForAllComponents(m_mediaStream);
+        // 2) 
+        this.m_iceAgent.checkValidPairsForAllComponents(m_mediaStream);
         
         // Tell the ICE agent to consider this valid pair if it was not just
         // nominated.  Nominated pairs have already been considered as valid

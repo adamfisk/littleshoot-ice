@@ -174,6 +174,12 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             {
             throw new NullPointerException("Null Binding Request");
             }
+
+        if (this.m_closed || this.m_ioSession.isClosing())
+            {
+            m_log.debug("Already closed");
+            return new CanceledStunMessage();
+            }
         
         // This method will retransmit the same request multiple times because
         // it's being sent unreliably.  All of these requests will be 

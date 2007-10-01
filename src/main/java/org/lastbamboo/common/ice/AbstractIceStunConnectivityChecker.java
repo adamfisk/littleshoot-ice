@@ -78,6 +78,7 @@ public abstract class AbstractIceStunConnectivityChecker<T>
         final IceRoleChecker checker = new IceRoleCheckerImpl();
         final BindingErrorResponse errorResponse = 
             checker.checkAndRepairRoles(request, this.m_agent);
+        m_log.debug("Checked role conflict...");
         
         if (errorResponse != null)
             {
@@ -89,6 +90,7 @@ public abstract class AbstractIceStunConnectivityChecker<T>
             {
             // We now implement the remaining sections 7.2.1 following 7.2.1.1 
             // since we're returning a success response.
+            m_log.debug("Processing no role conflict...");
             processNoRoleConflict(request);
             }
         return null;

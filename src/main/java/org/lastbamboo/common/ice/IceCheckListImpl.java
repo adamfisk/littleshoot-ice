@@ -152,6 +152,10 @@ public class IceCheckListImpl implements IceCheckList
         m_log.debug("Adding triggered pair: {}", pair);
         synchronized (this)
             {
+            if (pair.isNominated())
+                {
+                m_log.debug("Adding already nominated pair: {}", pair);
+                }
             this.m_triggeredQueue.add(pair);
             }
         }
@@ -595,7 +599,6 @@ public class IceCheckListImpl implements IceCheckList
 
     public void removeWaitingAndFrozenPairs(final IceCandidatePair pair)
         {
-        // Lock the whole check list.
         synchronized (this)
             {
             for (final Iterator<IceCandidatePair> iter = m_pairs.iterator(); 
@@ -608,6 +611,7 @@ public class IceCheckListImpl implements IceCheckList
                     case FROZEN:
                         // Fall through.
                     case WAITING:
+                        curPair.getStunChecker().close();
                         iter.remove();
                         break;
                     case IN_PROGRESS:
@@ -634,6 +638,7 @@ public class IceCheckListImpl implements IceCheckList
                     case FROZEN:
                         // Fall through.
                     case WAITING:
+                        curPair.getStunChecker().close();
                         iter.remove();
                         break;
                     case IN_PROGRESS:
@@ -684,5 +689,19 @@ public class IceCheckListImpl implements IceCheckList
             final CollectionUtils utils = new CollectionUtilsImpl();
             utils.forAllDo(pairs, closure);
             }
+        }
+
+    public void close()
+        {
+        final Closure<IceCandidatePair> close = new Closure<IceCandidatePair>()
+            {
+            public void execute(final IceCandidatePair pair)
+                {
+                pair.getStunChecker().close();
+                }
+            };
+        
+        executeOnPairs(close);
+        executeOnPairs(this.m_triggeredQueue, close);
         }
     }

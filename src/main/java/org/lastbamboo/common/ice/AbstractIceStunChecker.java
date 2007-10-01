@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.id.uuid.UUID;
+import org.apache.mina.common.CloseFuture;
 import org.apache.mina.common.ExecutorThreadModel;
 import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoHandler;
@@ -58,6 +59,8 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
     protected final IoHandler m_protocolIoHandler;
 
     protected final IoServiceListener m_ioServiceListener;
+
+    protected volatile boolean m_closed = false;
 
     /**
      * Creates a new ICE connectivity checker over any transport.
@@ -206,5 +209,17 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
     public IoHandler getProtocolIoHandler()
         {
         return this.m_protocolIoHandler;
+        }
+    
+    public void close()
+        {
+        if (this.m_ioSession == null)
+            {
+            m_log.debug("Can't close null session");
+            return;
+            }
+        final CloseFuture future = this.m_ioSession.close();
+        future.join();
+        this.m_closed = true;
         }
     }

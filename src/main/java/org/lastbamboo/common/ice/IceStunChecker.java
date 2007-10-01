@@ -37,4 +37,9 @@ public interface IceStunChecker
     
     IoHandler getProtocolIoHandler();
 
+    /**
+     * Close any connections associated with the checker.
+     */
+    void close();
+
     }

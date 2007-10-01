@@ -84,7 +84,7 @@ public class IceAgentImpl implements IceAgent
         this.m_offerAnswerListener.onOfferAnswerComplete(this);
         }
     
-    public void onValidPairsForAllComponents(final IceMediaStream mediaStream)
+    public void checkValidPairsForAllComponents(final IceMediaStream mediaStream)
         {
         // See ICE section 7.1.2.2.3.  This indicates the media stream has a
         // valid pair for all it's components.  That event can potentially 
@@ -99,6 +99,10 @@ public class IceAgentImpl implements IceAgent
         // Specified in ICE section 7.1.2.3.
         // TODO: We only currently handle a single media stream, so we don't
         // unfreeze any other streams for now!!
+        
+        // We need to check if all pairs for the check list for the media
+        // stream are in either the Failed or Succeeded state.  If they are,
+        // then we need to go grouping etc of other check lists.
         }
 
     public long calculateDelay(final int Ta_i)
@@ -114,6 +118,7 @@ public class IceAgentImpl implements IceAgent
 
     public void setControlling(final boolean controlling)
         {
+        Thread.dumpStack();
         m_log.warn("Setting controlling to: "+controlling);
         //this.m_controlling = controlling;
         }
@@ -293,6 +298,11 @@ public class IceAgentImpl implements IceAgent
             final Queue<IceCandidatePair> validPairs = 
                 mediaStream.getValidPairs();
             final IceCandidatePair pair = validPairs.peek();
+            if (pair.isNominated())
+                {
+                m_log.error("Pair already nominated!!!");
+                return;
+                }
             
             /*
             if (mediaStream.hasHigherPriorityPendingPair(pair))

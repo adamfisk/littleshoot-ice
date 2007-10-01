@@ -77,7 +77,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
         final InetSocketAddress boundAddress = 
             this.m_stunServer.getBoundAddress();
         
-        m_log.debug("Starting STUN client on local address: "+boundAddress);
+        m_log.debug("Starting STUN client on local address: {}",boundAddress);
         this.m_stunClient = new UdpStunClient(boundAddress);
         }
     

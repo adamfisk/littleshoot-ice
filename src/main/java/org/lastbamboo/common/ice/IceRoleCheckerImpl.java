@@ -26,6 +26,13 @@ public class IceRoleCheckerImpl implements IceRoleChecker
     public BindingErrorResponse checkAndRepairRoles(
         final BindingRequest request, final IceAgent agent)
         {
+        m_log.debug("Checking roles...");
+        if (fromOurselves(agent, request))
+            {
+            m_log.error("Received a request from ourselves..");
+            throw new IllegalArgumentException("Request from ourselves!!!");
+            }
+        m_log.debug("Not from ourselves...");
         final Map<StunAttributeType, StunAttribute> remoteAttributes = 
             request.getAttributes();
         if (!remoteAttributes.containsKey(StunAttributeType.ICE_CONTROLLED) &&
@@ -82,6 +89,41 @@ public class IceRoleCheckerImpl implements IceRoleChecker
         
         // Otherwise, there was no conflict.  This is the normal case.
         return null;
+        }
+
+    private boolean fromOurselves(final IceAgent agent, 
+        final BindingRequest request)
+        {
+        final Map<StunAttributeType, StunAttribute> remoteAttributes = 
+            request.getAttributes();
+        final byte[] tieBreaker;
+        if (remoteAttributes.containsKey(StunAttributeType.ICE_CONTROLLED))
+            {
+            final IceControlledAttribute attribute = 
+                (IceControlledAttribute) remoteAttributes.get(
+                    StunAttributeType.ICE_CONTROLLED);
+            tieBreaker = attribute.getTieBreaker();
+            }
+        else 
+            {
+            final IceControllingAttribute attribute = 
+                (IceControllingAttribute) remoteAttributes.get(
+                    StunAttributeType.ICE_CONTROLLING);
+            if (attribute == null)
+                {
+                // This can often happen during tests.  If it happens in
+                // production, though, this will get sent to our servers.
+                m_log.error("No controlling attribute");
+                return false;
+                }
+            tieBreaker = attribute.getTieBreaker();
+            }
+        
+        final BigInteger localTieBreaker = 
+            new BigInteger(agent.getTieBreaker());
+        final BigInteger remoteTieBreaker = new BigInteger(tieBreaker);
+        
+        return localTieBreaker.equals(remoteTieBreaker);
         }
 
     private BindingErrorResponse createErrorResponse(

@@ -54,12 +54,14 @@ public interface IceAgent extends MediaOfferAnswer
     long calculateDelay(int Ta_i);
     
     /**
-     * Notifies the listener that the media stream now has a valid pair for
-     * all components of the media stream.
+     * Notifies the listener that the media stream may have valid pairs for
+     * all components of a given media stream, possibly requiring changing 
+     * states of other streams, as specified in part 2 of ICE section 
+     * 7.1.2.2.3. "Updating Pair States".
      * 
      * @param mediaStream The media stream.
      */
-    void onValidPairsForAllComponents(IceMediaStream mediaStream);
+    void checkValidPairsForAllComponents(IceMediaStream mediaStream);
 
     /**
      * Tells the listener to unfreeze any other check lists.

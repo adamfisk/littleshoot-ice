@@ -78,11 +78,11 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void start(final IoServiceListener ioServiceListener)
         {
-        this.m_localCandidates = this.m_gatherer.gatherCandidates();
         if (ioServiceListener == null)
             {
-            throw new NullPointerException("Null media stream.");
+            throw new NullPointerException("Null service listener.");
             }
+        this.m_localCandidates = this.m_gatherer.gatherCandidates();
         this.m_checkList = 
             new IceCheckListImpl(this.m_checkerFactory, this.m_localCandidates, 
                 this.m_messageVisitorFactory, ioServiceListener);
@@ -162,11 +162,29 @@ public class IceMediaStreamImpl implements IceMediaStream
                 componentId, this.m_iceAgent.isControlling(), priority);
             }
 
+        addRemoteCandidate(prc);
+
+        return prc;
+        }
+
+    private void addRemoteCandidate(final IceCandidate candidate)
+        {
         synchronized (this.m_remoteCandidates)
             {
-            this.m_remoteCandidates.add(prc);
+            final int remotePort = candidate.getSocketAddress().getPort();
+            synchronized (this.m_localCandidates)
+                {
+                for (final IceCandidate local : this.m_localCandidates)
+                    {
+                    final int localPort = local.getSocketAddress().getPort();
+                    if (remotePort == localPort)
+                        {
+                        m_log.error("Remote port equals local port!!");
+                        }
+                    }
+                }
+            this.m_remoteCandidates.add(candidate);
             }
-        return prc;
         }
 
     /**
@@ -460,10 +478,6 @@ public class IceMediaStreamImpl implements IceMediaStream
                 }
             };
         this.m_checkList.executeOnPairs(closure);
-        
-        
-        // TODO:  We only currently have a single component, so we call this
-        // each time.  We need to implement ICE section 7.1.2.2.3, part 2.
         }
 
     public void addTriggeredCheck(final IceCandidatePair pair)
@@ -537,6 +551,7 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void close()
         {
+        this.m_checkList.close();
         this.m_gatherer.close();
         }
     
