@@ -120,12 +120,14 @@ public class IceStunUdpPeerTest
         
         for (int i = 0; i < 4; i++)
             {
-            final StunMessage msg1 = stunClient1.write(new BindingRequest(), address2);
+            final StunMessage msg1 = 
+                stunClient1.write(new BindingRequest(), address2);
             final InetSocketAddress mappedAddress1 = msg1.accept(visitor);
             Assert.assertEquals("Mapped address should equal the local address", 
                 localAddress1, mappedAddress1);
             
-            final StunMessage msg2 = stunClient2.write(new BindingRequest(), address1);
+            final StunMessage msg2 = 
+                stunClient2.write(new BindingRequest(), address1);
             final InetSocketAddress mappedAddress2 = msg2.accept(visitor);
             Assert.assertEquals("Mapped address should equal the local address", 
                 localAddress2, mappedAddress2);
