@@ -8,6 +8,7 @@ import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.RuntimeIOException;
 import org.apache.mina.common.ThreadModel;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -76,16 +77,26 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
         m_log.debug("Connecting from "+localAddress+" to "+remoteAddress);
         final ConnectFuture cf = 
             connector.connect(remoteAddress, localAddress, demuxer);
-        cf.join();
-        final IoSession session = cf.getSession();
         
-        if (session == null)
+        cf.join();
+        try
             {
-            m_log.error("Could not create session from "+
-                localAddress +" to "+remoteAddress);
+            final IoSession session = cf.getSession();
+            if (session == null)
+                {
+                m_log.error("Could not create session from "+
+                    localAddress +" to "+remoteAddress);
+                }
+            this.m_ioSession = session;
+            return connector;
             }
-        this.m_ioSession = session;
-        return connector;
+        catch (final RuntimeIOException e)
+            {
+            // I've seen this happen when the local address is already bound
+            // for some reason (clearly without SO_REUSEADDRESS somehow).
+            m_log.error("Could not get the session -- look at the CAUSE!!!", e);
+            throw e;
+            }
         }
 
     @Override
