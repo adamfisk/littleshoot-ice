@@ -162,6 +162,10 @@ public class IceAgentImplTest
         final Collection<IceMediaStream> streams = answerer.getMediaStreams();
         Assert.assertEquals(1, streams.size());
         
+        // We sleep here to simulate network latency.  Otherwise checks are
+        // constantly in the "In Progress" state and keep resetting themselves.
+        // This sleep should make that happen less often.
+        Thread.sleep(200);
         offerer.processAnswer(ByteBuffer.wrap(answer), offererStateListener);
         
         //final Socket sock = offerer.createSocket();

@@ -25,7 +25,7 @@ public class IceMediaStreamImplStub implements IceMediaStream
 
         }
 
-    public void addTriggeredCheck(IceCandidatePair pair)
+    public void addTriggeredPair(IceCandidatePair pair)
         {
         // TODO Auto-generated method stub
 

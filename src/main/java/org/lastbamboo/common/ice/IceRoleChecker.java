@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 
@@ -15,10 +16,11 @@ public interface IceRoleChecker
      * 
      * @param request The incoming Binding Request.
      * @param agent The ICE agent.
+     * @param ioSession The session the request arrived on. 
      * @return A {@link BindingErrorResponse}, or <code>null</code> if no
      * roles need repairing.
      */
     BindingErrorResponse checkAndRepairRoles(BindingRequest request, 
-        IceAgent agent);
+        IceAgent agent, IoSession ioSession);
 
     }

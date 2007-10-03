@@ -22,11 +22,20 @@ public interface IceStunCheckerFactory
      * @param ioServiceListener Listener for MINA IO events.
      * @return The new STUN checking class.
      */
+    /*
     IceStunChecker newUdpChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, 
         StunMessageVisitorFactory visitorFactory, 
         IoServiceListener ioServiceListener);
-
+        
+    
+    IceStunChecker newUdpChecker(IceCandidate localCandidate, 
+        IceCandidate remoteCandidate, IoSession ioSession, 
+        StunMessageVisitorFactory messageVisitorFactory, 
+        IoServiceListener ioServiceListener);
+*/
+    
+    /*
     IceStunChecker newTcpChecker(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, StreamIoHandler ioHandler, 
         StunMessageVisitorFactory messageVisitorFactory,
@@ -37,5 +46,10 @@ public interface IceStunCheckerFactory
         IceCandidate remoteCandidate, StreamIoHandler protocolIoHandler, 
         IoSession ioSession, StunMessageVisitorFactory messageVisitorFactory,
         IoServiceListener serviceListener);
+        */
 
+
+    IceStunChecker newChecker(IoSession session);
+
+    
     }

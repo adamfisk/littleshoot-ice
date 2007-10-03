@@ -10,7 +10,7 @@ import org.lastbamboo.common.util.Predicate;
 /**
  * Interface for ICE check lists. 
  */
-public interface IceCheckList
+public interface IceCheckList 
     {
 
     /**

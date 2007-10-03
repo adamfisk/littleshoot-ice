@@ -1,32 +1,15 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.transport;
 
-import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 import org.apache.commons.id.uuid.UUID;
-import org.apache.mina.common.ConnectFuture;
-import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
-import org.apache.mina.common.RuntimeIOException;
-import org.apache.mina.common.ThreadModel;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.transport.socket.nio.SocketConnector;
-import org.apache.mina.transport.socket.nio.SocketConnectorConfig;
-import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.tcp.frame.TcpFrame;
-import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
-import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
-import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +34,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
      * @param protocolIoHandler The {@link IoHandler} to use for the other 
      * protocol.
      */
+    /*
     public IceTcpStunChecker(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoHandler stunIoHandler,
         final IceAgent iceAgent, final IoSession session,
@@ -60,10 +44,18 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
         {
         super(localCandidate, remoteCandidate, transactionTracker, 
             stunIoHandler, iceAgent, createCodecFactory(), TcpFrame.class, 
-            protocolIoHandler, ioServiceListener);
-        this.m_ioSession = session;
+            protocolIoHandler, ioServiceListener, session);
+        }
+        */
+    
+    public IceTcpStunChecker(final IoSession session,
+            final StunTransactionTracker<StunMessage> transactionTracker)
+        {
+        super(session, transactionTracker);
         }
     
+    
+    /*
     private static ProtocolCodecFactory createCodecFactory()
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
@@ -80,8 +72,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
     protected IoConnector createConnector(
         final InetSocketAddress localAddress, 
         final InetSocketAddress remoteAddress,
-        final ThreadModel threadModel, final ProtocolCodecFilter stunFilter, 
-        final IoHandler demuxer)
+        final ThreadModel threadModel, final ProtocolCodecFilter stunFilter)
         {
         if (this.m_connector != null) 
             {
@@ -104,13 +95,6 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
     protected boolean connect()
         {
         m_log.debug("Establishing TCP connection...");
-        if (this.m_ioSession != null)
-            {
-            // We might be performing a second check to verify a nominated
-            // pair, for example.
-            m_log.debug("Already connected");
-            return true;
-            }
         final InetAddress address = this.m_remoteAddress.getAddress();
         final int connectTimeout;
         // If the address is on the local network, we should be able to 
@@ -139,8 +123,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             {
             connectTimeout = 12000;
             }
-        
-        
+
         // TODO: We don't currently support TCP-SO, so we don't bind to the 
         // local port.
         final ConnectFuture cf = 
@@ -165,6 +148,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             return false;
             }
         }
+        */
 
     @Override
     protected StunMessage writeInternal(
@@ -196,14 +180,14 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
         m_log.debug("Waiting for lock...");
         synchronized (m_requestLock)
             {   
-            this.m_transactionCancelled = false;
+            this.m_transactionCanceled = false;
             m_log.debug("Sending Binding Request...");
             this.m_ioSession.write(bindingRequest);
             
             // Now we wait for 1.6 seconds after the last request was sent.
             // If we still don't receive a response, then the transaction 
             // has failed.  
-            if (!this.m_transactionCancelled)
+            if (!this.m_transactionCanceled)
                 {
                 waitIfNoResponse(bindingRequest, 7900);
                 }
@@ -218,7 +202,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
                 return response;
                 }
             
-            if (this.m_transactionCancelled)
+            if (this.m_transactionCanceled)
                 {
                 m_log.debug("The transaction was cancelled!");
                 return new CanceledStunMessage();

@@ -1,9 +1,10 @@
 package org.lastbamboo.common.ice;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.Map;
 
 import org.apache.commons.id.uuid.UUID;
-import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.TransportType;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
@@ -14,8 +15,10 @@ import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
+import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
+import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
+import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @param <T> The type STUN message visitor methods return.
  */
-public abstract class AbstractIceStunConnectivityChecker<T>
+public final class IceStunConnectivityCheckerImpl<T>
     extends StunClientMessageVisitor<T>
     {
 
@@ -38,11 +41,10 @@ public abstract class AbstractIceStunConnectivityChecker<T>
     private final IceMediaStream m_iceMediaStream;
 
     private final IoSession m_ioSession;
+    
+    private final ExistingSessionIceCandidatePairFactory m_candidatePairFactory;
 
-    private final StunMessageVisitorFactory 
-        m_stunMessageVisitorFactory;
-
-    protected final IceStunCheckerFactory m_checkerFactory;
+    private final IceBindingRequestTracker m_bindingRequestTracker;
 
     /**
      * Creates a new message visitor for the specified session.
@@ -50,34 +52,54 @@ public abstract class AbstractIceStunConnectivityChecker<T>
      * @param agent The top-level ICE agent.
      * @param iceMediaStream The media stream this STUN processor is working 
      * for. 
-     * @param stunMessageVisitorFactory 
      * @param checkerFactory The factory for creating new classes for 
      * performing connectivity checks.
+     * @param bindingRequestTracker Tracks Binding Requests we've already
+     * processed.
      */
-    public AbstractIceStunConnectivityChecker(
+    public IceStunConnectivityCheckerImpl(
         final IceAgent agent, final IceMediaStream iceMediaStream,
         final IoSession session, 
         final StunTransactionTracker<T> transactionTracker,
         final IceStunCheckerFactory checkerFactory, 
-        final StunMessageVisitorFactory stunMessageVisitorFactory)
+        final IceBindingRequestTracker bindingRequestTracker)
         {
         super (transactionTracker);
         m_agent = agent;
         m_iceMediaStream = iceMediaStream;
         m_ioSession = session;
-        m_checkerFactory = checkerFactory;
-        m_stunMessageVisitorFactory = stunMessageVisitorFactory;
+        m_bindingRequestTracker = bindingRequestTracker;
+        m_candidatePairFactory = 
+            new ExistingSessionIceCandidatePairFactoryImpl(checkerFactory);
         }
 
     public T visitBindingRequest(final BindingRequest request)
         {
         m_log.debug("Visiting Binding Request message: {}", request);
+        if (this.m_bindingRequestTracker.recentlyProcessed(request))
+            {
+            m_log.debug("We've recently processed the request -- ignoring " +
+                "duplicate");
+            return null;
+            }
+        this.m_bindingRequestTracker.add(request);
+        
+        // We occasionally see requests from ourselves in tests where the
+        // NAT has funky hairpinning support.  We check if the request is one
+        // we just sent and ignore it if so.
+        if (fromOurselves(this.m_agent, request))
+            {
+            m_log.error("Received a request from us on: {}", this.m_ioSession);
+            return null;
+            }
+        m_log.debug("Not from ourselves...");
         // We need to check ICE controlling and controlled roles for conflicts.
         // This implements:
         // 7.2.1.1.  Detecting and Repairing Role Conflicts
         final IceRoleChecker checker = new IceRoleCheckerImpl();
         final BindingErrorResponse errorResponse = 
-            checker.checkAndRepairRoles(request, this.m_agent);
+            checker.checkAndRepairRoles(request, this.m_agent, 
+                this.m_ioSession);
         m_log.debug("Checked role conflict...");
         
         if (errorResponse != null)
@@ -182,21 +204,22 @@ public abstract class AbstractIceStunConnectivityChecker<T>
                 case FROZEN:
                     m_log.debug("Adding triggered check for previously " +
                         "frozen or waiting pair:\n{}",existingPair);
-                    this.m_iceMediaStream.addTriggeredCheck(existingPair);
+                    this.m_iceMediaStream.addTriggeredPair(existingPair);
                     break;
                 case IN_PROGRESS:
                     // We need to cancel the in-progress transaction.  
                     // This just means we won't re-submit requests and will
                     // not treat the lack of response as a failure.
+                    m_log.debug("Canceling in progress transaction...");
                     existingPair.cancelStunTransaction();
                 
                     // Add the pair to the triggered check queue.
                     existingPair.setState(IceCandidatePairState.WAITING);
-                    this.m_iceMediaStream.addTriggeredCheck(existingPair);
+                    this.m_iceMediaStream.addTriggeredPair(existingPair);
                     break;
                 case FAILED:
                     existingPair.setState(IceCandidatePairState.WAITING);
-                    this.m_iceMediaStream.addTriggeredCheck(existingPair);
+                    this.m_iceMediaStream.addTriggeredPair(existingPair);
                     break;
                 case SUCCEEDED:
                     // Nothing more to do.
@@ -208,8 +231,7 @@ public abstract class AbstractIceStunConnectivityChecker<T>
             m_log.debug("Creating new candidate pair.");
             
             computedPair = newPair(localCandidate, remoteCandidate, 
-                this.m_ioSession, this.m_stunMessageVisitorFactory,
-                this.m_iceMediaStream);
+                this.m_ioSession);
                 
             // Continue with the rest of ICE section 7.2.1.4, 
             // "Triggered Checks"
@@ -231,7 +253,7 @@ public abstract class AbstractIceStunConnectivityChecker<T>
             // and add a triggered check.
             this.m_iceMediaStream.addPair(computedPair);
             computedPair.setState(IceCandidatePairState.WAITING);
-            this.m_iceMediaStream.addTriggeredCheck(computedPair);
+            this.m_iceMediaStream.addTriggeredPair(computedPair);
             
             // TODO: We should be handling the username fragment and
             // password for the triggered check.
@@ -273,10 +295,46 @@ public abstract class AbstractIceStunConnectivityChecker<T>
                 }
             }
         }
+    
 
-    protected abstract IceCandidatePair newPair(IceCandidate localCandidate, 
-        IceCandidate remoteCandidate, IoSession ioSession, 
-        StunMessageVisitorFactory messageVisitorFactory, 
-        IoServiceListener serviceListener);
+    private boolean fromOurselves(final IceAgent agent, 
+        final BindingRequest request)
+        {
+        final Map<StunAttributeType, StunAttribute> remoteAttributes = 
+            request.getAttributes();
+        final byte[] remoteTieBreaker;
+        if (remoteAttributes.containsKey(StunAttributeType.ICE_CONTROLLED))
+            {
+            final IceControlledAttribute attribute = 
+                (IceControlledAttribute) remoteAttributes.get(
+                    StunAttributeType.ICE_CONTROLLED);
+            remoteTieBreaker = attribute.getTieBreaker();
+            }
+        else 
+            {
+            final IceControllingAttribute attribute = 
+                (IceControllingAttribute) remoteAttributes.get(
+                    StunAttributeType.ICE_CONTROLLING);
+            if (attribute == null)
+                {
+                // This can often happen during tests.  If it happens in
+                // production, though, this will get sent to our servers.
+                m_log.error("No controlling attribute");
+                return false;
+                }
+            remoteTieBreaker = attribute.getTieBreaker();
+            }
+        
+        final byte[] localTieBreaker = agent.getTieBreaker().toByteArray();
+        
+        return Arrays.equals(localTieBreaker, remoteTieBreaker);
+        }
+
+    private IceCandidatePair newPair(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, final IoSession ioSession)
+        {
+        return this.m_candidatePairFactory.newPair(localCandidate, 
+            remoteCandidate, ioSession);
+        }
     
     }

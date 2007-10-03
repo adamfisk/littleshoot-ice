@@ -1,6 +1,13 @@
 package org.lastbamboo.common.ice.candidate;
 
+import java.net.InetSocketAddress;
+
+import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunChecker;
+import org.lastbamboo.common.ice.IceStunCheckerFactory;
+import org.lastbamboo.common.ice.util.IceConnector;
+import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +27,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final String m_foundation;
     private final int m_componentId;
     private volatile boolean m_nominated = false;
-    protected final IceStunChecker m_stunChecker;
+    protected volatile IceStunChecker m_currentStunChecker;
     private volatile boolean m_nominateOnSuccess = false;
     
     /**
@@ -29,21 +36,76 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      */
     private volatile boolean m_useCandidate = false;
 
+    protected IoSession m_ioSession;
+
+    private final IceStunCheckerFactory m_stunCheckerFactory;
+
+    private final IceConnector m_connector;
+    
+    /**
+     * Creates a new pair without an existing connection between the endpoints.
+     * 
+     * @param localCandidate The local candidate.
+     * @param remoteCandidate The candidate from the remote agent.
+     */
+    public AbstractIceCandidatePair(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, 
+        final IceStunCheckerFactory stunCheckerFactory,
+        final IceConnector iceConnector)
+        {
+        this(localCandidate, remoteCandidate, 
+            IceCandidatePairPriorityCalculator.calculatePriority(
+                localCandidate, remoteCandidate), stunCheckerFactory,
+            iceConnector);
+        }
+
+    /**
+     * Creates a new pair with an existing connection between the endpoints.
+     * 
+     * @param localCandidate The local candidate.
+     * @param remoteCandidate The candidate from the remote agent.
+     * @param priority The priority of the pair.
+     */
+    public AbstractIceCandidatePair(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, final long priority,
+        final IceStunCheckerFactory stunCheckerFactory,
+        final IceConnector iceConnector)
+        {
+        this(localCandidate, remoteCandidate, priority, null, 
+            stunCheckerFactory, iceConnector);
+        }
+    
     /**
      * Creates a new pair.
      * 
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
-     * @param stunChecker The class that performs STUN checks for this pair.
+     * @param ioSession The {@link IoSession} connecting to the two endpoints.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, 
-        final IceStunChecker stunChecker)
+        final IceCandidate remoteCandidate, final IoSession ioSession,
+        final IceStunCheckerFactory stunCheckerFactory)
         {
         this(localCandidate, remoteCandidate, 
             IceCandidatePairPriorityCalculator.calculatePriority(
                 localCandidate, remoteCandidate),
-            stunChecker);
+            ioSession, stunCheckerFactory, null);
+        }
+
+    /**
+     * Creates a new pair.
+     * 
+     * @param localCandidate The local candidate.
+     * @param remoteCandidate The candidate from the remote agent.
+     * @param ioSession The {@link IoSession} connecting to the two endpoints.
+     */
+    public AbstractIceCandidatePair(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, final long priority,
+        final IoSession ioSession,  
+        final IceStunCheckerFactory stunCheckerFactory)
+        {
+        this(localCandidate, remoteCandidate, priority,
+            ioSession, stunCheckerFactory, null);
         }
 
     /**
@@ -52,14 +114,17 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
      * @param priority The priority of the pair.
-     * @param stunChecker The class that performs STUN checks for this pair.
+     * @param ioSession The {@link IoSession} connecting to the two endpoints.
      */
-    public AbstractIceCandidatePair(final IceCandidate localCandidate, 
+    private AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final long priority,
-        final IceStunChecker stunChecker)
+        final IoSession ioSession, 
+        final IceStunCheckerFactory stunCheckerFactory,
+        final IceConnector iceConnector)
         {
         m_localCandidate = localCandidate;
         m_remoteCandidate = remoteCandidate;
+        m_ioSession = ioSession;
         
         // Note both candidates always have the same component ID, so we just
         // choose one for the pair.
@@ -68,7 +133,32 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         m_state = IceCandidatePairState.FROZEN;
         m_foundation = String.valueOf(localCandidate.getFoundation()) + 
             String.valueOf(remoteCandidate.getFoundation());
-        this.m_stunChecker = stunChecker;
+        this.m_stunCheckerFactory = stunCheckerFactory;
+        this.m_connector = iceConnector;
+        }
+    
+    public StunMessage check(final BindingRequest request, final long rto)
+        {
+        if (this.m_ioSession == null)
+            {
+            final InetSocketAddress localAddress = 
+                this.m_localCandidate.getSocketAddress();
+            final InetSocketAddress remoteAddress = 
+                this.m_remoteCandidate.getSocketAddress();
+            this.m_ioSession = 
+                this.m_connector.connect(localAddress, remoteAddress);
+            }
+        
+        this.m_currentStunChecker = 
+            this.m_stunCheckerFactory.newChecker(this.m_ioSession);
+        
+        // We set the state here instead of in the check list scheduler
+        // because it's more precise and because the schedule doesn't perform
+        // a subsequent check until after this check has executed, so it won't
+        // think a pair is waiting for frozen twice in a row (as opposed to
+        // in progress).
+        setState(IceCandidatePairState.IN_PROGRESS);
+        return this.m_currentStunChecker.write(request, rto);
         }
     
     public void useCandidate()
@@ -93,7 +183,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     
     public void cancelStunTransaction()
         {
-        this.m_stunChecker.cancelTransaction();
+        this.m_currentStunChecker.cancelTransaction();
         }
     
     public void recomputePriority()
@@ -137,7 +227,8 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         this.m_state = state;
         if (state == IceCandidatePairState.FAILED)
             {
-            getStunChecker().close();
+            m_log.debug("Setting state to failed, closing checker");
+            this.m_currentStunChecker.close();
             }
         }
     
@@ -156,9 +247,17 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         return this.m_nominated;
         }
     
-    public IceStunChecker getStunChecker()
+    public void close()
         {
-        return m_stunChecker;
+        if (this.m_currentStunChecker !=  null)
+            {
+            this.m_currentStunChecker.close();
+            }
+        }
+    
+    public IoSession getIoSession()
+        {
+        return this.m_ioSession;
         }
     
     @Override

@@ -1,16 +1,15 @@
 package org.lastbamboo.common.ice.stubs;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.Queue;
-import java.util.Random;
 
 import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.IceAgent;
 import org.lastbamboo.common.ice.IceMediaStream;
 import org.lastbamboo.common.ice.IceState;
+import org.lastbamboo.common.ice.IceTieBreaker;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
@@ -22,12 +21,11 @@ import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 public class IceAgentStub implements IceAgent
     {
     
-    private final byte[] m_tieBreaker = 
-        new BigInteger(64, new Random()).toByteArray();
 
-    public byte[] getTieBreaker()
+
+    public IceTieBreaker getTieBreaker()
         {
-        return m_tieBreaker;
+        return new IceTieBreaker();
         }
 
     public boolean isControlling()

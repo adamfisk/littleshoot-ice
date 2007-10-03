@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -21,7 +22,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
-import org.lastbamboo.common.ice.stubs.IceStunCheckerFactoryStub;
+import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
@@ -35,6 +36,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.NetworkUtils;
+import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,14 +72,26 @@ public class IceStunUdpPeerTest
     public void testIceStunUdpPeers() throws Exception
         {
         final IceAgent iceAgent = new IceAgentStub();
-        final StunTransactionTracker<StunMessage> tracker = 
+        final ProtocolCodecFactory demuxingCodecFactory =
+            new StunProtocolCodecFactory();
+        final StunTransactionTracker<StunMessage> transactionTracker =
             new StunTransactionTrackerImpl();
-        final StunMessageVisitorFactory messageVisitorFactory =
-            new IceUdpStunConnectivityCheckerFactory(iceAgent, 
-                tracker, new IceStunCheckerFactoryStub());
-            
-        this.m_peer1 = new IceStunUdpPeer(messageVisitorFactory, true);
-        this.m_peer2 = new IceStunUdpPeer(messageVisitorFactory, true);
+    
+        final IceStunCheckerFactory checkerFactory =
+            new IceStunCheckerFactoryImpl(transactionTracker);
+        final StunMessageVisitorFactory udpMessageVisitorFactory =
+            new IceStunConnectivityCheckerFactoryImpl<StunMessage>(iceAgent, 
+                transactionTracker, checkerFactory);
+        final IoHandler stunIoHandler = 
+            new StunIoHandler<StunMessage>(udpMessageVisitorFactory, 
+                new IceMediaStreamImplStub());
+        final IoHandler udpIoHandler = 
+            new DemuxingIoHandler<StunMessage, Object>(
+                StunMessage.class, stunIoHandler, Object.class, 
+                new IoHandlerAdapter());
+        
+        this.m_peer1 = new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true);
+        this.m_peer2 = new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true);
         m_peer1.connect();
         m_peer2.connect();
         

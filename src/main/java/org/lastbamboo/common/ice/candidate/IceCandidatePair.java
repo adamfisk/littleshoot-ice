@@ -1,8 +1,9 @@
 package org.lastbamboo.common.ice.candidate;
 
-import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunChecker;
-import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
+import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.StunMessage;
 
 /**
  * Interface for a pair of ICE candidates.
@@ -16,7 +17,7 @@ public interface IceCandidatePair extends Comparable
      * 
      * @return The ICE STUN connectivity checker for this pair.
      */
-    IceStunChecker getStunChecker();
+    //IceStunChecker getStunChecker();
 
     /**
      * Accessor for the local candidate for the pair.
@@ -148,5 +149,11 @@ public interface IceCandidatePair extends Comparable
      * <code>false</code>.
      */
     boolean isNominated();
+
+    StunMessage check(BindingRequest request, long rto);
+
+    void close();
+
+    IoSession getIoSession();
 
     }

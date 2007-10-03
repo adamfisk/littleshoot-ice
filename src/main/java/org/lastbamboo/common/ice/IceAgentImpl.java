@@ -1,15 +1,14 @@
 package org.lastbamboo.common.ice;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.common.support.ByteBufferHexDumper;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
@@ -46,7 +45,7 @@ public class IceAgentImpl implements IceAgent
     /**
      * The tie breaker to use when both agents think they're controlling.
      */
-    private final byte[] m_tieBreaker;
+    private final IceTieBreaker m_tieBreaker;
 
     private final IceMediaStream m_mediaStream;
 
@@ -71,8 +70,11 @@ public class IceAgentImpl implements IceAgent
         {
         this.m_controlling = controlling;
         this.m_iceMediaFactory = iceMediaFactory;
-        this.m_tieBreaker = new BigInteger(64, new Random()).toByteArray();
-        
+        this.m_tieBreaker = new IceTieBreaker();
+                
+        m_log.debug("Created agent with tie breaker: "+
+            ByteBufferHexDumper.getHexdump(
+                ByteBuffer.wrap(this.m_tieBreaker.toByteArray())));
         // TODO: We only currently support a single media stream!!
         this.m_mediaStream = mediaStreamFactory.newStream(this);
         this.m_mediaStreams.add(this.m_mediaStream);
@@ -128,7 +130,7 @@ public class IceAgentImpl implements IceAgent
         this.m_mediaStream.recomputePairPriorities(this.m_controlling);
         }
     
-    public byte[] getTieBreaker()
+    public IceTieBreaker getTieBreaker()
         {
         return m_tieBreaker;
         }
@@ -186,15 +188,7 @@ public class IceAgentImpl implements IceAgent
             m_log.debug("Received nominated pair on agent.  Controlling: " + 
                 isControlling()+" pair:\n"+pair);
             }
-        
-        if (!pair.getStunChecker().getIoSession().isConnected())
-            {
-            m_log.error("Pair IoSession is not connected!!!");
-            return;
-            }
-        
-        m_log.debug("Got IoHandler:\n{}", 
-            pair.getStunChecker().getProtocolIoHandler());
+
         // We now need to set the state of the check list as specified in
         // 8.1.2. Updating States
         final IceCheckListState state = mediaStream.getCheckListState();
@@ -316,7 +310,7 @@ public class IceAgentImpl implements IceAgent
                 m_log.debug("Repeating check that produced the valid pair " +
                     "using USE-CANDIDATE");
                 pair.useCandidate();
-                mediaStream.addTriggeredCheck(pair);
+                mediaStream.addTriggeredPair(pair);
                 }
             }
         }

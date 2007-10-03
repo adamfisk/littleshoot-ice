@@ -3,7 +3,9 @@ package org.lastbamboo.common.ice;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoServiceListener;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.server.StunServer;
@@ -40,23 +42,23 @@ public class IceStunUdpPeer implements StunClient, StunServer
     /**
      * Creates a new ICE STUN UDP peer.
      * 
-     * @param messageVisitorFactory The factory for creating message visitors
-     * on the server. 
      * @param controlling Whether or not this agent is controlling.
      */
-    public IceStunUdpPeer(final StunMessageVisitorFactory messageVisitorFactory,
+    public IceStunUdpPeer(
+        final ProtocolCodecFactory demuxingCodecFactory, 
+        final IoHandler demuxingIoHandler,
         final boolean controlling)
         {
-        // We also add whether we're the offerer or answerer for thread
+        // We also add whether we're controlling for thread
         // naming here just to make log reading easier.
-        final String offererOrAnswerer;
+        final String controllingString;
         if (controlling)
             {
-            offererOrAnswerer = "Offerer";
+            controllingString = "Controlling";
             }
         else
             {
-            offererOrAnswerer = "Answerer";
+            controllingString = "Not-Controlling";
             }
         
         // NOTE: We're starting the server here before external code has
@@ -65,7 +67,8 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // the listeners are added (or SHOULD not have), so there's not way
         // of missing any relevant events.
         this.m_stunServer = 
-            new UdpStunServer(messageVisitorFactory, offererOrAnswerer);
+            new UdpStunServer(demuxingCodecFactory, 
+                    demuxingIoHandler, controllingString);
         
         // We pass null here so the server binds to any available port.
         // We use that as both the acceptor port and the local port for the 

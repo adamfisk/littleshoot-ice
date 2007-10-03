@@ -23,6 +23,8 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     private final IceCheckList m_checkList;
     private final IceMediaStream m_mediaStream;
     private final IceAgent m_agent;
+    private final IceCandidatePairFactory m_pairFactory;
+    private final ExistingSessionIceCandidatePairFactory m_existingSessionPairFactory;
 
     /**
      * Creates a new scheduler for the specified pairs.
@@ -30,13 +32,18 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
      * @param agent The top-level ICE agent.
      * @param stream The media stream.
      * @param checkList The check list.
+     * @param pairFactory Factory for creating ICE candidate pairs. 
      */
     public IceCheckSchedulerImpl(final IceAgent agent, 
-        final IceMediaStream stream, final IceCheckList checkList)
+        final IceMediaStream stream, final IceCheckList checkList, 
+        final IceCandidatePairFactory pairFactory,
+        final ExistingSessionIceCandidatePairFactory existingSessionIPairFactory)
         {
         m_agent = agent;
         m_mediaStream = stream;
         m_checkList = checkList;
+        m_pairFactory = pairFactory;
+        m_existingSessionPairFactory = existingSessionIPairFactory;
         }
 
     public void scheduleChecks()
@@ -113,11 +120,10 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
 
     private void performCheck(final IceCandidatePair pair)
         {
-        pair.setState(IceCandidatePairState.IN_PROGRESS);
         final IceCandidate local = pair.getLocalCandidate();
         final IceCandidateVisitor<IoSession> visitor = 
-            new IceStunClientCandidateProcessor(m_agent, 
-                m_mediaStream, pair);
+            new IceStunClientCandidateProcessor(m_agent, m_mediaStream, pair,
+                this.m_existingSessionPairFactory, this.m_pairFactory);
         local.accept(visitor);
         }
 

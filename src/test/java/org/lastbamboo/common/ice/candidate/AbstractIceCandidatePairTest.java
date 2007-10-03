@@ -8,6 +8,8 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.apache.mina.common.IoSession;
+import org.lastbamboo.common.ice.stubs.IoSessionStub;
 import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 
 /**
@@ -30,7 +32,7 @@ public class AbstractIceCandidatePairTest extends TestCase
         final IceCandidate tcpRemote = 
             new IceTcpActiveCandidate(tcpRemoteAddress, false);
         final TcpIceCandidatePair tcpPair = 
-            new TcpIceCandidatePair(tcpLocal, tcpRemote, null);
+            new TcpIceCandidatePair(tcpLocal, tcpRemote, new IoSessionStub(), null);
         
         final InetAddress stunServerAddress = 
             InetAddress.getByName("64.2.1.86");
@@ -44,7 +46,7 @@ public class AbstractIceCandidatePairTest extends TestCase
             new IceUdpHostCandidate(udpRemoteAddress, false);
         
         final UdpIceCandidatePair udpPair =
-            new UdpIceCandidatePair(udpLocal, udpRemote, null);
+            new UdpIceCandidatePair(udpLocal, udpRemote, new IoSessionStub(), null);
 
         final List<IceCandidatePair> pairs = new LinkedList<IceCandidatePair>();
         pairs.add(udpPair);

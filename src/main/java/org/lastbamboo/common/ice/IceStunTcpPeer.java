@@ -5,15 +5,17 @@ import java.net.InetSocketAddress;
 
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoServiceListener;
-import org.apache.mina.handler.StreamIoHandler;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.server.StunServer;
 import org.lastbamboo.common.stun.server.TcpStunServer;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
+import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrame;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +40,10 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
      * @param messageVisitorFactory The factory for creating message visitors
      * on the server. 
      * @param controlling Whether or not this agent is controlling.
-     * @param streamIoHandler The {@link IoHandler} for TCP streams.
      */
     public IceStunTcpPeer(final StunClient tcpStunClient, 
         final StunMessageVisitorFactory messageVisitorFactory,
-        final boolean controlling, final StreamIoHandler streamIoHandler)
+        final boolean controlling)
         {
         m_stunClient = tcpStunClient;
         
@@ -58,14 +59,15 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
             controllingString = "Not-Controlling";
             }
         
+        final ProtocolCodecFactory codecFactory = 
+            new StunProtocolCodecFactory();
         final IoHandler stunIoHandler =
             new StunIoHandler<T>(messageVisitorFactory);
         final IoHandler ioHandler = 
             new DemuxingIoHandler<StunMessage, TcpFrame>(StunMessage.class, 
-                stunIoHandler, TcpFrame.class, streamIoHandler);
+                stunIoHandler, TcpFrame.class, new TcpFrameIoHandler());
         this.m_stunServer =
-            new TcpStunServer(ioHandler, messageVisitorFactory, 
-                controllingString);
+            new TcpStunServer(codecFactory, ioHandler, controllingString);
         }
 
     public void connect()

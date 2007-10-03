@@ -1,8 +1,8 @@
 package org.lastbamboo.common.ice.candidate;
 
 import org.apache.mina.common.IoSession;
-import org.lastbamboo.common.ice.IceStunChecker;
-import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
+import org.lastbamboo.common.ice.IceStunCheckerFactory;
+import org.lastbamboo.common.ice.util.IceConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,28 +21,33 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
      * 
      * @param localCandidate The local candidate.
      * @param remoteCandidate The remote candidate.
-     * @param connectivityChecker The connectivity checker to use.
      */
     public UdpIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
-        final IceStunChecker connectivityChecker)
+        final IceStunCheckerFactory stunCheckerFactory, 
+        final IceConnector connector)
         {
-        super(localCandidate, remoteCandidate, connectivityChecker);
+        super(localCandidate, remoteCandidate, stunCheckerFactory, connector);
         }
-
-    public IoSession getIoSession()
+    
+    /**
+     * Pair of UDP ICE candidates.  This constructor uses an existing 
+     * connectivity checker.
+     * 
+     * @param localCandidate The local candidate.
+     * @param remoteCandidate The remote candidate.
+     * @param ioSession The {@link IoSession} connecting to the two endpoints.
+     */
+    public UdpIceCandidatePair(final IceCandidate localCandidate, 
+        final IceCandidate remoteCandidate, final IoSession ioSession,
+        final IceStunCheckerFactory stunCheckerFactory)
         {
-        return this.m_stunChecker.getIoSession();
+        super(localCandidate, remoteCandidate, ioSession, stunCheckerFactory);
         }
 
     public <T> T accept(final IceCandidatePairVisitor<T> visitor)
         {
         return visitor.visitUdpIceCandidatePair(this);
-        }
-
-    public TcpFrameIoHandler getIoHandler()
-        {
-        return null;
         }
 
     }

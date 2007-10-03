@@ -2,19 +2,19 @@ package org.lastbamboo.common.ice;
 
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
-import org.apache.mina.handler.StreamIoHandler;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
+import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
-import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.turn.client.TcpFrameTurnClientListener;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
+import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,47 +33,40 @@ public class GeneralIceMediaStreamFactoryImpl
     public <T> IceMediaStream newIceMediaStream(
         final IceMediaStreamDesc streamDesc, final IceAgent iceAgent, 
         final DemuxableProtocolCodecFactory protocolCodecFactory, 
-        final Class<T> protocolMessageClass, final IoHandler protocolIoHandler,
+        final Class<T> protocolMessageClass, 
+        final IoHandler udpProtocolIoHandler,
         final TurnClientListener delegateTurnClientListener)
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
-        final ProtocolCodecFactory codecFactory = 
+        final ProtocolCodecFactory demuxingCodecFactory = 
             new DemuxingProtocolCodecFactory(
                 stunCodecFactory, protocolCodecFactory);
         final StunTransactionTracker<StunMessage> transactionTracker =
             new StunTransactionTrackerImpl();
 
         final IceStunCheckerFactory checkerFactory =
-            new IceStunCheckerFactoryImpl(iceAgent, 
-                codecFactory, protocolMessageClass, protocolIoHandler, 
-                transactionTracker);
-        final StunMessageVisitorFactory udpMessageVisitorFactory =
-            new IceUdpStunConnectivityCheckerFactory<StunMessage>(iceAgent, 
-                transactionTracker, checkerFactory);
+            new IceStunCheckerFactoryImpl(transactionTracker);
         
-        /*
+        final StunMessageVisitorFactory udpMessageVisitorFactory =
+            new IceStunConnectivityCheckerFactoryImpl<StunMessage>(iceAgent, 
+                transactionTracker, checkerFactory);
         final IoHandler stunIoHandler = 
             new StunIoHandler<StunMessage>(udpMessageVisitorFactory);
-        
-        
         final IoHandler udpIoHandler = 
             new DemuxingIoHandler<StunMessage, T>(
                 StunMessage.class, stunIoHandler, protocolMessageClass, 
-                protocolIoHandler);
-        */
+                udpProtocolIoHandler);
 
-        final StreamIoHandler streamIoHandler = new TcpFrameIoHandler();
         final StunMessageVisitorFactory tcpMessageVisitorFactory =
-            new IceTcpStunConnectivityCheckerFactory<StunMessage>(iceAgent, 
-                transactionTracker, checkerFactory, streamIoHandler);
-        
+            new IceStunConnectivityCheckerFactoryImpl<StunMessage>(iceAgent, 
+                transactionTracker, checkerFactory);
         
         final StunClient udpStunPeer;
         if (streamDesc.isUdp())
             {
             udpStunPeer = 
-                new IceStunUdpPeer(udpMessageVisitorFactory, 
+                new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler,
                     iceAgent.isControlling());
             }
         else
@@ -93,7 +86,7 @@ public class GeneralIceMediaStreamFactoryImpl
                 new IceTcpTurnClient(turnClientListener);
             tcpStunPeer = 
                 new IceStunTcpPeer(tcpTurnClient, tcpMessageVisitorFactory, 
-                    iceAgent.isControlling(), streamIoHandler);
+                    iceAgent.isControlling());
             }
         else
             {
@@ -106,7 +99,7 @@ public class GeneralIceMediaStreamFactoryImpl
         
         final IceMediaStreamImpl stream = new IceMediaStreamImpl(iceAgent, 
             streamDesc, gatherer, checkerFactory, tcpMessageVisitorFactory, 
-            udpMessageVisitorFactory);
+            demuxingCodecFactory, udpIoHandler);
         
         if (tcpStunPeer != null)
             {

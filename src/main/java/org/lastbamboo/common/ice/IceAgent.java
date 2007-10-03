@@ -39,7 +39,7 @@ public interface IceAgent extends MediaOfferAnswer
      * 
      * @return The role conflict tie-breaker for this agent.
      */
-    byte[] getTieBreaker();
+    IceTieBreaker getTieBreaker();
 
     /**
      * Calculates the delay in milliseconds to use before initiating a new

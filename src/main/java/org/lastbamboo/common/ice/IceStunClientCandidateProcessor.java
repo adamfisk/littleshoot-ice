@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
 import org.apache.mina.common.IoSession;
@@ -13,8 +14,6 @@ import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
-import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
@@ -50,6 +49,10 @@ public class IceStunClientCandidateProcessor
 
     private final IceMediaStream m_mediaStream;
 
+    private final ExistingSessionIceCandidatePairFactory m_existingSessionPairFactory;
+
+    private final IceCandidatePairFactory m_pairFactory;
+
     /**
      * Creates a new connectiviy checker for a single UDP pair.
      * 
@@ -58,11 +61,15 @@ public class IceStunClientCandidateProcessor
      * @param udpPair The candidate pair.
      */
     public IceStunClientCandidateProcessor(final IceAgent iceAgent, 
-        final IceMediaStream iceMediaStream, final IceCandidatePair udpPair)
+        final IceMediaStream iceMediaStream, final IceCandidatePair udpPair,
+        final ExistingSessionIceCandidatePairFactory existingSessionPairFactory,
+        final IceCandidatePairFactory pairFactory)
         {
         m_iceAgent = iceAgent;
         m_mediaStream = iceMediaStream;
         m_pair = udpPair;
+        m_existingSessionPairFactory = existingSessionPairFactory;
+        m_pairFactory = pairFactory; 
         }
     
     
@@ -111,7 +118,7 @@ public class IceStunClientCandidateProcessor
         final StunAttribute controlling;
         
         // The agent uses the same tie-breaker throughout the session.
-        final byte[] tieBreaker = m_iceAgent.getTieBreaker();
+        final IceTieBreaker tieBreaker = m_iceAgent.getTieBreaker();
         
         // We use a separate variable here because we need to know what
         // we sent in the case of error responses, and the data in the
@@ -119,11 +126,11 @@ public class IceStunClientCandidateProcessor
         final boolean isControlling = m_iceAgent.isControlling();
         if (isControlling)
             {
-            controlling = new IceControllingAttribute(tieBreaker);
+            controlling = new IceControllingAttribute(tieBreaker.toByteArray());
             }
         else
             {
-            controlling = new IceControlledAttribute(tieBreaker);
+            controlling = new IceControlledAttribute(tieBreaker.toByteArray());
             }
         
         // TODO: Add CREDENTIALS attribute.
@@ -143,13 +150,15 @@ public class IceStunClientCandidateProcessor
             includedUseCandidate = false;
             }
         
-        final IceStunChecker checker = this.m_pair.getStunChecker();
+        //final IceStunChecker checker = this.m_pair.getStunChecker();
         
         // TODO: Obtain RTO properly.
         final long rto = 20L;
         
         m_log.debug("Writing Binding Request: {}", request);
-        final StunMessage response = checker.write(request, rto);
+        //final StunMessage response = checker.write(request, rto);
+        
+        final StunMessage response = this.m_pair.check(request, rto);
         
         final StunMessageVisitor<IceCandidate> visitor = 
             new StunMessageVisitorAdapter<IceCandidate>()
@@ -240,7 +249,7 @@ public class IceStunClientCandidateProcessor
                 // Note that we queue up a triggered check always here,
                 // assuming that the role change was actually correct.
                 m_pair.setState(IceCandidatePairState.WAITING);
-                m_mediaStream.addTriggeredCheck(m_pair);
+                m_mediaStream.addTriggeredPair(m_pair);
                 
                 return null;
                 }
@@ -259,7 +268,7 @@ public class IceStunClientCandidateProcessor
             public IceCandidate visitCanceledMessage(
                 final CanceledStunMessage message)
                 {
-                m_log.debug("Transaction was cancelled...");
+                m_log.debug("Transaction was canceled...");
                 // The outgoing message was canceled.  This can happen when
                 // we received a pair that generated a triggered check on 
                 // a STUN server.  In this case, we don't treat it as a failure
@@ -281,7 +290,7 @@ public class IceStunClientCandidateProcessor
         final IceCandidate newLocalCandidate = response.accept(visitor);
         if (newLocalCandidate == null)
             {
-            m_log.debug("Check failed or was cancelled -- should happen " +
+            m_log.debug("Check failed or was canceled -- should happen " +
                 "quite often");
             return null;
             }
@@ -344,12 +353,17 @@ public class IceStunClientCandidateProcessor
                 // remote candidate.  In that case, the priority is taken as the
                 // value of the PRIORITY attribute in the Binding Request which
                 // triggered the check that just completed.
+                //final IceStunChecker checker;
                 if (this.m_mediaStream.hasRemoteCandidate(remoteAddress, 
                     remoteCandidate.isUdp()))
                     {
                     // It's not a triggered check, so use the original 
                     // candidate's priority, or, i.e., use the original 
                     // candidate.
+                    final IoSession ioSession = this.m_pair.getIoSession(); 
+                    
+                    pairToAdd = this.m_existingSessionPairFactory.newPair(newLocalCandidate, 
+                        remoteCandidate, ioSession);
                     }
                 else
                     {
@@ -361,36 +375,22 @@ public class IceStunClientCandidateProcessor
                     // the remote candidate we started with and change the
                     // priority here?
                     remoteCandidate.setPriority(bindingRequestPriority);
+                    pairToAdd = this.m_pairFactory.newPair(newLocalCandidate, 
+                        remoteCandidate);
                     }
                 
                 m_log.debug("Creating new pair...");
-                
-                // We use the connectivity checker of the original pair here.
-                // If the local candidate is peer reflexive, it still has the
-                // same base as the original local candidate, so the 
-                // connectivity checker will be identical.
-                if (newLocalCandidate.isUdp())
-                    {
-                    pairToAdd = new UdpIceCandidatePair(newLocalCandidate, 
-                        remoteCandidate, this.m_pair.getStunChecker());
-                    }
-                else
-                    {
-                    pairToAdd = new TcpIceCandidatePair(newLocalCandidate, 
-                        remoteCandidate, this.m_pair.getStunChecker());
-                    }
                 }
             }
         m_mediaStream.addValidPair(pairToAdd);
         
         // 7.1.2.2.3.  Updating Pair States
         
-        // 1) Tell the media stream to update pair states as a result of 
+        // Tell the media stream to update pair states as a result of 
         // a valid pair.  
         this.m_mediaStream.updatePairStates(pairToAdd, this.m_pair, 
             useCandidate);
     
-        // 2) 
         this.m_iceAgent.checkValidPairsForAllComponents(m_mediaStream);
         
         // Tell the ICE agent to consider this valid pair if it was not just

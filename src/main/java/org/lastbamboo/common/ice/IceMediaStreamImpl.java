@@ -16,6 +16,7 @@ import org.apache.mina.common.IoService;
 import org.apache.mina.common.IoServiceConfig;
 import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
@@ -23,6 +24,9 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
+import org.lastbamboo.common.ice.transport.IceTcpConnector;
+import org.lastbamboo.common.ice.util.IceConnector;
+import org.lastbamboo.common.ice.util.IceUdpConnector;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
@@ -59,21 +63,29 @@ public class IceMediaStreamImpl implements IceMediaStream
         new LinkedList<IceCandidate>();
     private final IceCandidateGatherer m_gatherer;
     private final IceStunCheckerFactory m_checkerFactory;
-    private final StunMessageVisitorFactory m_messageVisitorFactory;
+    private final StunMessageVisitorFactory m_tcpMessageVisitorFactory;
+    private IceCandidatePairFactoryImpl m_candidatePairFactory;
+    private final ProtocolCodecFactory m_demuxingCodecFactory;
+    private final IoHandler m_udpDemuxingIoHandler;
+    private final ExistingSessionIceCandidatePairFactoryImpl m_existingSessionPairFactory;
     
-
     public IceMediaStreamImpl(final IceAgent iceAgent, 
         final IceMediaStreamDesc streamDesc, 
         final IceCandidateGatherer gatherer,
         final IceStunCheckerFactory checkerFactory,
-        final StunMessageVisitorFactory messageVisitorFactory, 
-        final StunMessageVisitorFactory udpMessageVisitorFactory)
+        final StunMessageVisitorFactory tcpMessageVisitorFactory, 
+        final ProtocolCodecFactory protocolCodecFactory,
+        final IoHandler udpDemuxingIoHandler)
         {
         m_iceAgent = iceAgent;
         m_desc = streamDesc;
         m_gatherer = gatherer;
         m_checkerFactory = checkerFactory;
-        m_messageVisitorFactory = messageVisitorFactory;
+        m_tcpMessageVisitorFactory = tcpMessageVisitorFactory;
+        m_demuxingCodecFactory = protocolCodecFactory;
+        m_udpDemuxingIoHandler = udpDemuxingIoHandler;
+        this.m_existingSessionPairFactory =
+            new ExistingSessionIceCandidatePairFactoryImpl(this.m_checkerFactory);
         }
 
     public void start(final IoServiceListener ioServiceListener)
@@ -83,9 +95,21 @@ public class IceMediaStreamImpl implements IceMediaStream
             throw new NullPointerException("Null service listener.");
             }
         this.m_localCandidates = this.m_gatherer.gatherCandidates();
+        
+        final IceConnector udpConnector = 
+            new IceUdpConnector(ioServiceListener, this.m_demuxingCodecFactory,
+                this.m_udpDemuxingIoHandler, this.m_iceAgent.isControlling());
+        final IceConnector tcpConnector =
+            new IceTcpConnector(ioServiceListener, 
+                this.m_tcpMessageVisitorFactory, 
+                this.m_iceAgent.isControlling());
+        this.m_candidatePairFactory = 
+            new IceCandidatePairFactoryImpl(
+                this.m_checkerFactory, udpConnector, tcpConnector);
+        
         this.m_checkList = 
-            new IceCheckListImpl(this.m_checkerFactory, this.m_localCandidates, 
-                this.m_messageVisitorFactory, ioServiceListener);
+            new IceCheckListImpl(m_candidatePairFactory, 
+                this.m_localCandidates);
         }
 
     public byte[] encodeCandidates()
@@ -115,7 +139,8 @@ public class IceMediaStreamImpl implements IceMediaStream
         processPairGroups();
         
         final IceCheckScheduler scheduler = 
-            new IceCheckSchedulerImpl(this.m_iceAgent, this, m_checkList);
+            new IceCheckSchedulerImpl(this.m_iceAgent, this, m_checkList,
+                m_candidatePairFactory, this.m_existingSessionPairFactory);
         scheduler.scheduleChecks();
 
         m_checkList.check();
@@ -171,18 +196,6 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         synchronized (this.m_remoteCandidates)
             {
-            final int remotePort = candidate.getSocketAddress().getPort();
-            synchronized (this.m_localCandidates)
-                {
-                for (final IceCandidate local : this.m_localCandidates)
-                    {
-                    final int localPort = local.getSocketAddress().getPort();
-                    if (remotePort == localPort)
-                        {
-                        m_log.error("Remote port equals local port!!");
-                        }
-                    }
-                }
             this.m_remoteCandidates.add(candidate);
             }
         }
@@ -480,7 +493,7 @@ public class IceMediaStreamImpl implements IceMediaStream
         this.m_checkList.executeOnPairs(closure);
         }
 
-    public void addTriggeredCheck(final IceCandidatePair pair)
+    public void addTriggeredPair(final IceCandidatePair pair)
         {
         this.m_checkList.addTriggeredPair(pair);
         }

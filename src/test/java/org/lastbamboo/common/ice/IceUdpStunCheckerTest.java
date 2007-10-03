@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoHandlerAdapter;
+import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,6 +12,9 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
+import org.lastbamboo.common.ice.transport.IceUdpStunChecker;
+import org.lastbamboo.common.ice.util.IceConnector;
+import org.lastbamboo.common.ice.util.IceUdpConnector;
 import org.lastbamboo.common.stun.client.StunClientMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
@@ -22,6 +26,7 @@ import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
+import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 
 /**
  * Test for the ICE connectivity checker. 
@@ -60,10 +65,24 @@ public class IceUdpStunCheckerTest
             new StunClientMessageVisitorFactory<StunMessage, IceMediaStream>(tracker);
         final StunIoHandler<StunMessage> stunIoHandler =
             new StunIoHandler<StunMessage>(visitorFactory);
+        
+        final IoHandler demuxingIoHandler =
+            new DemuxingIoHandler<StunMessage, Object>(
+                StunMessage.class, stunIoHandler, Object.class, 
+                clientIoHandler);
+        final IceConnector connector = 
+            new IceUdpConnector(new IoServiceListenerStub(), codecFactory, 
+                demuxingIoHandler, true);
+        final IoSession ioSession = 
+            connector.connect(new InetSocketAddress(4932), remoteAddress);
+        final IceUdpStunChecker checker = 
+            new IceUdpStunChecker(ioSession, tracker);
+        /*
         final IceUdpStunChecker checker = 
             new IceUdpStunChecker(localCandidate, remoteCandidate, 
                 stunIoHandler, iceAgent, codecFactory, Object.class, 
                 clientIoHandler, tracker, new IoServiceListenerStub());
+                */
         
         final BindingRequest bindingRequest = new BindingRequest();
         final long rto = 20;

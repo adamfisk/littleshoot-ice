@@ -90,7 +90,7 @@ public interface IceMediaStream extends IoServiceListener
      * 
      * @param pair The pair to add.
      */
-    void addTriggeredCheck(IceCandidatePair pair);
+    void addTriggeredPair(IceCandidatePair pair);
 
     /**
      * Recomputes the priorities of pairs in checklists.  This can happen,

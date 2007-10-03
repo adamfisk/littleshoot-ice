@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.Map;
 
 import org.apache.commons.id.uuid.UUID;
+import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
@@ -24,15 +25,10 @@ public class IceRoleCheckerImpl implements IceRoleChecker
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
     public BindingErrorResponse checkAndRepairRoles(
-        final BindingRequest request, final IceAgent agent)
+        final BindingRequest request, final IceAgent agent, 
+        final IoSession ioSession)
         {
         m_log.debug("Checking roles...");
-        if (fromOurselves(agent, request))
-            {
-            m_log.error("Received a request from ourselves..");
-            throw new IllegalArgumentException("Request from ourselves!!!");
-            }
-        m_log.debug("Not from ourselves...");
         final Map<StunAttributeType, StunAttribute> remoteAttributes = 
             request.getAttributes();
         if (!remoteAttributes.containsKey(StunAttributeType.ICE_CONTROLLED) &&
@@ -54,7 +50,7 @@ public class IceRoleCheckerImpl implements IceRoleChecker
             final IceControllingAttribute attribute = 
                 (IceControllingAttribute) remoteAttributes.get(
                     StunAttributeType.ICE_CONTROLLING);
-            if (weWin(agent, attribute.getTieBreaker()))
+            if (weWin(agent, new BigInteger(attribute.getTieBreaker())))
                 {
                 // We retain our role and send an error response.
                 return createErrorResponse(request);
@@ -75,7 +71,7 @@ public class IceRoleCheckerImpl implements IceRoleChecker
             final IceControlledAttribute attribute = 
                 (IceControlledAttribute) remoteAttributes.get(
                     StunAttributeType.ICE_CONTROLLED);
-            if (weWin(agent, attribute.getTieBreaker()))
+            if (weWin(agent, new BigInteger(attribute.getTieBreaker())))
                 {
                 agent.setControlling(true);
                 agent.recomputePairPriorities();
@@ -91,41 +87,6 @@ public class IceRoleCheckerImpl implements IceRoleChecker
         return null;
         }
 
-    private boolean fromOurselves(final IceAgent agent, 
-        final BindingRequest request)
-        {
-        final Map<StunAttributeType, StunAttribute> remoteAttributes = 
-            request.getAttributes();
-        final byte[] tieBreaker;
-        if (remoteAttributes.containsKey(StunAttributeType.ICE_CONTROLLED))
-            {
-            final IceControlledAttribute attribute = 
-                (IceControlledAttribute) remoteAttributes.get(
-                    StunAttributeType.ICE_CONTROLLED);
-            tieBreaker = attribute.getTieBreaker();
-            }
-        else 
-            {
-            final IceControllingAttribute attribute = 
-                (IceControllingAttribute) remoteAttributes.get(
-                    StunAttributeType.ICE_CONTROLLING);
-            if (attribute == null)
-                {
-                // This can often happen during tests.  If it happens in
-                // production, though, this will get sent to our servers.
-                m_log.error("No controlling attribute");
-                return false;
-                }
-            tieBreaker = attribute.getTieBreaker();
-            }
-        
-        final BigInteger localTieBreaker = 
-            new BigInteger(agent.getTieBreaker());
-        final BigInteger remoteTieBreaker = new BigInteger(tieBreaker);
-        
-        return localTieBreaker.equals(remoteTieBreaker);
-        }
-
     private BindingErrorResponse createErrorResponse(
         final BindingRequest request)
         {
@@ -139,13 +100,10 @@ public class IceRoleCheckerImpl implements IceRoleChecker
         }
 
     private boolean weWin(final IceAgent agent, 
-        final byte[] remoteTieBreakerBytes)
+        final BigInteger remoteTieBreaker)
         {
         final BigInteger localTieBreaker = 
-            new BigInteger(agent.getTieBreaker());
-        final BigInteger remoteTieBreaker = 
-            new BigInteger(remoteTieBreakerBytes);
-    
+            new BigInteger(agent.getTieBreaker().toByteArray());
         return NumberUtils.isBiggerOrEqual(localTieBreaker, remoteTieBreaker);
         }
 

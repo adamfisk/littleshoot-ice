@@ -13,13 +13,11 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.mina.common.IoServiceListener;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairPriorityCalculator;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
-import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
@@ -29,10 +27,6 @@ import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
-import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
-import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.CollectionUtils;
 import org.lastbamboo.common.util.CollectionUtilsImpl;
@@ -67,12 +61,15 @@ public class IceCheckListImpl implements IceCheckList
 
     private final Collection<IceCandidate> m_localCandidates;
 
-    private final IceStunCheckerFactory m_checkerFactory;
+    //private final IceStunCheckerFactory m_checkerFactory;
 
-    private final StunMessageVisitorFactory 
-        m_messageVisitorFactory;
+    //private final StunMessageVisitorFactory m_tcpMessageVisitorFactory;
 
-    private final IoServiceListener m_ioServiceListener;
+    //private final IoServiceListener m_ioServiceListener;
+
+    //private final StunMessageVisitorFactory m_udpMessageVisitorFactory;
+
+    private final IceCandidatePairFactory m_iceCandidatePairFactory;
 
     /**
      * Creates a new check list, starting with only local candidates.
@@ -82,19 +79,23 @@ public class IceCheckListImpl implements IceCheckList
      * @param localCandidates The local candidates to use in the check list.
      */
     public IceCheckListImpl(
-        final IceStunCheckerFactory checkerFactory,
-        final Collection<IceCandidate> localCandidates, 
-        final StunMessageVisitorFactory messageVisitorFactory, 
-        final IoServiceListener ioServiceListener)
+        final IceCandidatePairFactory candidatePairFactory,
+        final Collection<IceCandidate> localCandidates) 
         {
-        m_checkerFactory = checkerFactory;
-        m_localCandidates = localCandidates;
-        m_messageVisitorFactory = messageVisitorFactory;
-        if (ioServiceListener == null)
-            {
-            throw new NullPointerException("Null listener");
-            }
-        m_ioServiceListener = ioServiceListener;
+        //m_checkerFactory = checkerFactory;
+        this.m_iceCandidatePairFactory = candidatePairFactory;
+        this.m_localCandidates = localCandidates;
+        //m_tcpMessageVisitorFactory = tcpMessageVisitorFactory;
+        //m_udpMessageVisitorFactory = udpMessageVisitorFactory;
+        //if (ioServiceListener == null)
+          //  {
+            //throw new NullPointerException("Null listener");
+            //}
+        //m_ioServiceListener = ioServiceListener;
+        
+        //this.m_iceCandidatePairFactory = new IceCandidatePairFactoryImpl(
+          //  checkerFactory, tcpMessageVisitorFactory, udpMessageVisitorFactory, 
+            //ioServiceListener);
         }
     
     public IceCandidatePair removeTopTriggeredPair()
@@ -149,11 +150,18 @@ public class IceCheckListImpl implements IceCheckList
 
     public void addTriggeredPair(final IceCandidatePair pair)
         {
-        m_log.debug("Adding triggered pair: {}", pair);
+        m_log.debug("Adding triggered pair:\n{}", pair);
         synchronized (this)
             {
             if (pair.isNominated())
                 {
+                // This can happen when we receive a Binding Request on an 
+                // existing pair that's already in progress.  In that case,
+                // we cancel the in progress transaction and add a triggered
+                // pair.  
+                //
+                // This is inconsequential, simply an odd case to take note of.
+                //Thread.dumpStack();
                 m_log.debug("Adding already nominated pair: {}", pair);
                 }
             this.m_triggeredQueue.add(pair);
@@ -228,13 +236,13 @@ public class IceCheckListImpl implements IceCheckList
                 }
             }
         
-        m_log.debug("Pairs before conversion: {}", pairs);
+        m_log.debug("Pairs before conversion: {}", pairs.size());
         
         // Convert server reflexive local candidates to their base and remove
         // pairs with TCP passive local candidates.
         final List<Pair<IceCandidate, IceCandidate>> convertedPairs = 
             convertPairs(pairs);
-        m_log.debug("Pairs after conversion:  {}", convertedPairs);
+        m_log.debug("Pairs after conversion:  {}", convertedPairs.size());
         
         final Comparator<Pair<IceCandidate, IceCandidate>> comparator =
             new Comparator<Pair<IceCandidate, IceCandidate>>()
@@ -369,14 +377,14 @@ public class IceCheckListImpl implements IceCheckList
             public Pair<IceCandidate, IceCandidate> visitTcpHostPassiveCandidate(
                 final IceTcpHostPassiveCandidate candidate)
                 {
-                // Ignore all TCP passive local candidates.
+                // Ignore all TCP passive candidates.
                 return null;
                 }
 
             public Pair<IceCandidate, IceCandidate> visitTcpRelayPassiveCandidate(
                 final IceTcpRelayPassiveCandidate candidate)
                 {
-                // Ignore all TCP passive local candidates.
+                // Ignore all TCP passive candidates.
                 return null;
                 }
 
@@ -403,6 +411,10 @@ public class IceCheckListImpl implements IceCheckList
             public Pair<IceCandidate, IceCandidate> visitUdpPeerReflexiveCandidate(
                 final IceUdpPeerReflexiveCandidate candidate)
                 {
+                // This can happen when the answerer starts checks before the
+                // offerer has received the answer.  The offerer might get
+                // a peer reflexive candidate before it's had a chance to form
+                // its checklist.
                 return pair;
                 }
 
@@ -462,38 +474,10 @@ public class IceCheckListImpl implements IceCheckList
         {
         final IceCandidate localCandidate = pair.getFirst();
         final IceCandidate remoteCandidate = pair.getSecond();
-        final IceCandidateVisitor<IceCandidatePair> visitor = 
-            new IceCandidateVisitorAdapter<IceCandidatePair>()
-            {
-            public IceCandidatePair visitTcpActiveCandidate(
-                final IceTcpActiveCandidate candidate)
-                {
-                final TcpFrameIoHandler frameIoHandler = 
-                    new TcpFrameIoHandler();
-                final IceStunChecker checker = 
-                    m_checkerFactory.newTcpChecker(candidate, 
-                        remoteCandidate, frameIoHandler, 
-                        m_messageVisitorFactory, m_ioServiceListener);
-                return new TcpIceCandidatePair(candidate, remoteCandidate,
-                    checker);
-                }
-            
-            public IceCandidatePair visitUdpHostCandidate(
-                final IceUdpHostCandidate candidate)
-                {
-                m_log.debug("Creating STUN checker...");
-                final IceStunChecker checker = 
-                    m_checkerFactory.newUdpChecker(candidate, 
-                        remoteCandidate, m_messageVisitorFactory, 
-                        m_ioServiceListener);
-
-                return new UdpIceCandidatePair(candidate, remoteCandidate, 
-                    checker);
-                }
-            };
-        
-        return localCandidate.accept(visitor);
+        return m_iceCandidatePairFactory.newPair(localCandidate, 
+            remoteCandidate);
         }
+    
 
     private static boolean shouldPair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
@@ -611,7 +595,7 @@ public class IceCheckListImpl implements IceCheckList
                     case FROZEN:
                         // Fall through.
                     case WAITING:
-                        curPair.getStunChecker().close();
+                        curPair.close();
                         iter.remove();
                         break;
                     case IN_PROGRESS:
@@ -638,7 +622,7 @@ public class IceCheckListImpl implements IceCheckList
                     case FROZEN:
                         // Fall through.
                     case WAITING:
-                        curPair.getStunChecker().close();
+                        curPair.close();
                         iter.remove();
                         break;
                     case IN_PROGRESS:
@@ -697,7 +681,7 @@ public class IceCheckListImpl implements IceCheckList
             {
             public void execute(final IceCandidatePair pair)
                 {
-                pair.getStunChecker().close();
+                pair.close();
                 }
             };
         
