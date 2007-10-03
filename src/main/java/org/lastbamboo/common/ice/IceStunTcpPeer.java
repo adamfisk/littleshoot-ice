@@ -2,21 +2,28 @@ package org.lastbamboo.common.ice;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoService;
+import org.apache.mina.common.IoServiceConfig;
 import org.apache.mina.common.IoServiceListener;
+import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.server.StunServer;
 import org.lastbamboo.common.stun.server.TcpStunServer;
+import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
-import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrame;
+import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
+import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
+import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,12 +33,14 @@ import org.slf4j.LoggerFactory;
  *  
  * @param <T> The type returned by message visiting classes.
  */
-public class IceStunTcpPeer<T> implements StunClient, StunServer
+public class IceStunTcpPeer<T> implements StunClient, StunServer, 
+    IoServiceListener
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final StunClient m_stunClient;
     private final StunServer m_stunServer;
+    private final TcpFrameIoHandler m_streamIoHandler = new TcpFrameIoHandler();
     
     /**
      * Creates a new ICE STUN UDP peer.
@@ -59,15 +68,23 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
             controllingString = "Not-Controlling";
             }
         
-        final ProtocolCodecFactory codecFactory = 
-            new StunProtocolCodecFactory();
+        final DemuxableProtocolCodecFactory stunCodecFactory =
+            new StunDemuxableProtocolCodecFactory();
+        final DemuxableProtocolCodecFactory tcpFramingCodecFactory =
+            new TcpFrameCodecFactory();
+        final ProtocolCodecFactory demuxingCodecFactory = 
+            new DemuxingProtocolCodecFactory(stunCodecFactory, 
+                tcpFramingCodecFactory);
+        
         final IoHandler stunIoHandler =
             new StunIoHandler<T>(messageVisitorFactory);
         final IoHandler ioHandler = 
             new DemuxingIoHandler<StunMessage, TcpFrame>(StunMessage.class, 
-                stunIoHandler, TcpFrame.class, new TcpFrameIoHandler());
+                stunIoHandler, TcpFrame.class, m_streamIoHandler);
         this.m_stunServer =
-            new TcpStunServer(codecFactory, ioHandler, controllingString);
+            new TcpStunServer(demuxingCodecFactory, ioHandler, 
+                controllingString);
+        this.m_stunServer.addIoServiceListener(this);
         }
 
     public void connect()
@@ -124,7 +141,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
         return this.m_stunServer.getBoundAddress();
         }
 
-    public void addIoServiceListener(IoServiceListener serviceListener)
+    public void addIoServiceListener(final IoServiceListener serviceListener)
         {
         this.m_stunServer.addIoServiceListener(serviceListener);
         this.m_stunClient.addIoServiceListener(serviceListener);
@@ -135,5 +152,28 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer
         //this.m_upnpManager.unmapAddress(this.m_stunClient.getHostAddress());
         this.m_stunClient.close();
         this.m_stunServer.close();
+        }
+
+    public void serviceActivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config)
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void serviceDeactivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config)
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void sessionCreated(final IoSession session)
+        {
+        session.setAttribute("STUN_ATTRIBUTE_2", this.m_streamIoHandler);
+        }
+
+    public void sessionDestroyed(IoSession session)
+        {
+        // TODO Auto-generated method stub
+        
         }
     }

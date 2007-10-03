@@ -3,9 +3,9 @@ package org.lastbamboo.common.ice;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import org.lastbamboo.common.stun.client.UdpStunClient;
-
 import junit.framework.TestCase;
+
+import org.lastbamboo.common.stun.client.UdpStunClient;
 
 /**
  * Quick test to check how the local NAT is assigning ports to new external
@@ -19,7 +19,7 @@ public class IceNatPortMappingTest extends TestCase
         final String[] servers = 
             {
             "stun.fwdnet.net",   
-            "stun01.sipphone.com",
+            //"stun01.sipphone.com",
             "stun.xten.net"
             };
         

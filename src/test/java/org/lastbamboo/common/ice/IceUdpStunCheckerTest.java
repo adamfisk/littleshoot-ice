@@ -8,9 +8,6 @@ import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
-import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
-import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
 import org.lastbamboo.common.ice.transport.IceUdpStunChecker;
 import org.lastbamboo.common.ice.util.IceConnector;
@@ -25,8 +22,8 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
-import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
+import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 
 /**
  * Test for the ICE connectivity checker. 
@@ -51,18 +48,13 @@ public class IceUdpStunCheckerTest
                 otherCodecFactory);
         final IoHandler clientIoHandler = new IoHandlerAdapter();
         
-        final IceCandidate localCandidate =
-            new IceUdpHostCandidate(new InetSocketAddress(4932), true);
         final InetSocketAddress remoteAddress =
-            new InetSocketAddress("stun01.sipphone.com", 3478);
-        final IceCandidate remoteCandidate =
-            new IceUdpHostCandidate(remoteAddress, false);
-        final IceAgent iceAgent = new IceAgentStub();
+            new InetSocketAddress("stun.fwdnet.net", 3478);
         
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
         final StunMessageVisitorFactory visitorFactory = 
-            new StunClientMessageVisitorFactory<StunMessage, IceMediaStream>(tracker);
+            new StunClientMessageVisitorFactory<StunMessage>(tracker);
         final StunIoHandler<StunMessage> stunIoHandler =
             new StunIoHandler<StunMessage>(visitorFactory);
         

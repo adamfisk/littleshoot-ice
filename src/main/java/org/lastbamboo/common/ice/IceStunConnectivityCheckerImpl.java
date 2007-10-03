@@ -50,23 +50,22 @@ public final class IceStunConnectivityCheckerImpl<T>
      * Creates a new message visitor for the specified session.
      * 
      * @param agent The top-level ICE agent.
-     * @param iceMediaStream The media stream this STUN processor is working 
-     * for. 
      * @param checkerFactory The factory for creating new classes for 
      * performing connectivity checks.
      * @param bindingRequestTracker Tracks Binding Requests we've already
      * processed.
      */
     public IceStunConnectivityCheckerImpl(
-        final IceAgent agent, final IceMediaStream iceMediaStream,
-        final IoSession session, 
+        final IceAgent agent, final IoSession session, 
         final StunTransactionTracker<T> transactionTracker,
         final IceStunCheckerFactory checkerFactory, 
         final IceBindingRequestTracker bindingRequestTracker)
         {
         super (transactionTracker);
         m_agent = agent;
-        m_iceMediaStream = iceMediaStream;
+        m_iceMediaStream = 
+            (IceMediaStream) session.getAttribute(
+                IceMediaStream.class.getSimpleName());
         m_ioSession = session;
         m_bindingRequestTracker = bindingRequestTracker;
         m_candidatePairFactory = 
@@ -230,8 +229,8 @@ public final class IceStunConnectivityCheckerImpl<T>
             {
             m_log.debug("Creating new candidate pair.");
             
-            computedPair = newPair(localCandidate, remoteCandidate, 
-                this.m_ioSession);
+            computedPair = this.m_candidatePairFactory.newPair(localCandidate, 
+                remoteCandidate, this.m_ioSession);
                 
             // Continue with the rest of ICE section 7.2.1.4, 
             // "Triggered Checks"
@@ -328,13 +327,6 @@ public final class IceStunConnectivityCheckerImpl<T>
         final byte[] localTieBreaker = agent.getTieBreaker().toByteArray();
         
         return Arrays.equals(localTieBreaker, remoteTieBreaker);
-        }
-
-    private IceCandidatePair newPair(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final IoSession ioSession)
-        {
-        return this.m_candidatePairFactory.newPair(localCandidate, 
-            remoteCandidate, ioSession);
         }
     
     }

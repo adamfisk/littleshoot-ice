@@ -235,10 +235,11 @@ public class IceAgentImplTest
         connector.getFilterChain().addLast("stunFilter", stunFilter);
         
         final StunMessageVisitorFactory visitorFactory =
-            new StunMessageVisitorFactory<StunMessage, IceMediaStream>()
+            new StunMessageVisitorFactory<StunMessage>()
             {
 
-            public StunMessageVisitor<StunMessage> createVisitor(IoSession session)
+            public StunMessageVisitor<StunMessage> createVisitor(
+                final IoSession session)
                 {
                 final StunMessageVisitor<StunMessage> visitor = 
                     new StunMessageVisitorAdapter<StunMessage>()
@@ -258,13 +259,6 @@ public class IceAgentImplTest
                     };
                 return visitor;
                 }
-
-            public StunMessageVisitor<StunMessage> createVisitor(
-                final IoSession session, final IceMediaStream attachment)
-                {
-                return createVisitor(session);
-                }
-            
             };
         final IoHandler ioHandler = 
             new StunIoHandler<StunMessage>(visitorFactory);

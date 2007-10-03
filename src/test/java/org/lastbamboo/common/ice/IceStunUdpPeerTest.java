@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoHandlerAdapter;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -23,6 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
+import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
@@ -83,15 +85,24 @@ public class IceStunUdpPeerTest
             new IceStunConnectivityCheckerFactoryImpl<StunMessage>(iceAgent, 
                 transactionTracker, checkerFactory);
         final IoHandler stunIoHandler = 
-            new StunIoHandler<StunMessage>(udpMessageVisitorFactory, 
-                new IceMediaStreamImplStub());
+            new StunIoHandler<StunMessage>(udpMessageVisitorFactory);
         final IoHandler udpIoHandler = 
             new DemuxingIoHandler<StunMessage, Object>(
                 StunMessage.class, stunIoHandler, Object.class, 
                 new IoHandlerAdapter());
         
+        final IoServiceListener serviceListener = new IoServiceListenerStub()
+            {
+            public void sessionCreated(final IoSession session)
+                {
+                session.setAttribute(IceMediaStream.class.getSimpleName(), 
+                    new IceMediaStreamImplStub());
+                }
+            };
         this.m_peer1 = new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true);
         this.m_peer2 = new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true);
+        this.m_peer1.addIoServiceListener(serviceListener);
+        this.m_peer2.addIoServiceListener(serviceListener);
         m_peer1.connect();
         m_peer2.connect();
         
@@ -168,7 +179,7 @@ public class IceStunUdpPeerTest
         final AtomicInteger serverRequestsReceived = new AtomicInteger(0);
         final int expectedServerMessages = 60;
         final StunMessageVisitorFactory serverVisitorFactory =
-            new StunMessageVisitorFactory<StunMessage, IceMediaStream>()
+            new StunMessageVisitorFactory<StunMessage>()
             {
 
             public StunMessageVisitor<StunMessage> createVisitor(
@@ -193,20 +204,15 @@ public class IceStunUdpPeerTest
                     };
                 return clientVisitor;
                 }
-
-            public StunMessageVisitor<StunMessage> createVisitor(
-                final IoSession session, final IceMediaStream attachment)
-                {
-                return createVisitor(session);
-                }
             };
         
         final AtomicInteger clientRequestsReceived = new AtomicInteger(0);
         final int expectedClientMessages = 300;
         final StunMessageVisitorFactory clientVisitorFactory =
-            new StunMessageVisitorFactory<StunMessage, IceMediaStream>()
+            new StunMessageVisitorFactory<StunMessage>()
             {
-            public StunMessageVisitor<StunMessage> createVisitor(IoSession session)
+            public StunMessageVisitor<StunMessage> createVisitor(
+                final IoSession session)
                 {
                 final StunMessageVisitor<StunMessage> clientVisitor = 
                     new StunMessageVisitorAdapter<StunMessage>()
@@ -225,12 +231,6 @@ public class IceStunUdpPeerTest
                         }
                     };
                 return clientVisitor;
-                }
-
-            public StunMessageVisitor<StunMessage> createVisitor(
-                final IoSession session, final IceMediaStream attachment)
-                {
-                return createVisitor(session);
                 }
             };
 

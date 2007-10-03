@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class IceStunConnectivityCheckerFactoryImpl<T> implements
-    StunMessageVisitorFactory<T, IceMediaStream>
+    StunMessageVisitorFactory<T>
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -29,16 +29,9 @@ public class IceStunConnectivityCheckerFactoryImpl<T> implements
 
     public StunMessageVisitor<T> createVisitor(final IoSession session)
         {
-        // This can get called during testing.
-        return createVisitor(session, null);
-        }
-
-    public StunMessageVisitor<T> createVisitor(final IoSession session, 
-        final IceMediaStream attachment)
-        {
         m_log.debug("Creating new message visitor for session: {}", session);
         return new IceStunConnectivityCheckerImpl<T>(this.m_iceAgent, 
-            attachment, session, this.m_transactionTracker, 
+            session, this.m_transactionTracker, 
             this.m_checkerFactory, m_bindingRequestTracker);
         }
 

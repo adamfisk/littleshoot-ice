@@ -4,6 +4,7 @@ import java.net.Socket;
 
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
+import org.lastbamboo.common.ice.transport.IceTcpConnector;
 import org.lastbamboo.common.ice.util.IceConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,9 +55,7 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
     
     public Socket getSocket()
         {
-        //return this.m_tcpFrameIoHandler.getSocket();
-        //return ((TcpFrameIoHandler)((IceTcpStunChecker)m_currentStunChecker).getProtocolIoHandler()).getSocket();
-        return null;
+        return ((IceTcpConnector)this.m_iceConnector).getStreamIoHandler().getSocket();
         }
 
     public <T> T accept(final IceCandidatePairVisitor<T> visitor)

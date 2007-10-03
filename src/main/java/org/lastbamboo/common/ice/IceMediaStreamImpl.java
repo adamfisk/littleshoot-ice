@@ -555,7 +555,7 @@ public class IceMediaStreamImpl implements IceMediaStream
     public void sessionCreated(final IoSession session)
         {
         m_log.debug("Setting media stream on session");
-        session.setAttribute("STUN_HELPER", this);
+        session.setAttribute(IceMediaStream.class.getSimpleName(), this);
         }
 
     public void sessionDestroyed(final IoSession session)

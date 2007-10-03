@@ -40,7 +40,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
 
     private final IceStunCheckerFactory m_stunCheckerFactory;
 
-    private final IceConnector m_connector;
+    protected final IceConnector m_iceConnector;
     
     /**
      * Creates a new pair without an existing connection between the endpoints.
@@ -134,7 +134,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         m_foundation = String.valueOf(localCandidate.getFoundation()) + 
             String.valueOf(remoteCandidate.getFoundation());
         this.m_stunCheckerFactory = stunCheckerFactory;
-        this.m_connector = iceConnector;
+        this.m_iceConnector = iceConnector;
         }
     
     public StunMessage check(final BindingRequest request, final long rto)
@@ -146,7 +146,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             final InetSocketAddress remoteAddress = 
                 this.m_remoteCandidate.getSocketAddress();
             this.m_ioSession = 
-                this.m_connector.connect(localAddress, remoteAddress);
+                this.m_iceConnector.connect(localAddress, remoteAddress);
             }
         
         this.m_currentStunChecker = 

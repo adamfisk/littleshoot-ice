@@ -48,20 +48,16 @@ public class GeneralIceMediaStreamFactoryImpl
         final IceStunCheckerFactory checkerFactory =
             new IceStunCheckerFactoryImpl(transactionTracker);
         
-        final StunMessageVisitorFactory udpMessageVisitorFactory =
+        final StunMessageVisitorFactory messageVisitorFactory =
             new IceStunConnectivityCheckerFactoryImpl<StunMessage>(iceAgent, 
                 transactionTracker, checkerFactory);
         final IoHandler stunIoHandler = 
-            new StunIoHandler<StunMessage>(udpMessageVisitorFactory);
+            new StunIoHandler<StunMessage>(messageVisitorFactory);
         final IoHandler udpIoHandler = 
             new DemuxingIoHandler<StunMessage, T>(
                 StunMessage.class, stunIoHandler, protocolMessageClass, 
                 udpProtocolIoHandler);
 
-        final StunMessageVisitorFactory tcpMessageVisitorFactory =
-            new IceStunConnectivityCheckerFactoryImpl<StunMessage>(iceAgent, 
-                transactionTracker, checkerFactory);
-        
         final StunClient udpStunPeer;
         if (streamDesc.isUdp())
             {
@@ -80,12 +76,12 @@ public class GeneralIceMediaStreamFactoryImpl
         if (streamDesc.isTcp())
             {
             final TurnClientListener turnClientListener =
-                new TcpFrameTurnClientListener(tcpMessageVisitorFactory, 
+                new TcpFrameTurnClientListener(messageVisitorFactory, 
                     delegateTurnClientListener);
             final StunClient tcpTurnClient = 
                 new IceTcpTurnClient(turnClientListener);
             tcpStunPeer = 
-                new IceStunTcpPeer(tcpTurnClient, tcpMessageVisitorFactory, 
+                new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 
                     iceAgent.isControlling());
             }
         else
@@ -98,7 +94,7 @@ public class GeneralIceMediaStreamFactoryImpl
                 iceAgent.isControlling(), streamDesc);
         
         final IceMediaStreamImpl stream = new IceMediaStreamImpl(iceAgent, 
-            streamDesc, gatherer, checkerFactory, tcpMessageVisitorFactory, 
+            streamDesc, gatherer, checkerFactory, messageVisitorFactory, 
             demuxingCodecFactory, udpIoHandler);
         
         if (tcpStunPeer != null)

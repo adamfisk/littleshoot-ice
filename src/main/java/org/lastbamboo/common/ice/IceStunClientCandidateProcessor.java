@@ -1,6 +1,5 @@
 package org.lastbamboo.common.ice;
 
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
 import org.apache.mina.common.IoSession;
@@ -362,8 +361,8 @@ public class IceStunClientCandidateProcessor
                     // candidate.
                     final IoSession ioSession = this.m_pair.getIoSession(); 
                     
-                    pairToAdd = this.m_existingSessionPairFactory.newPair(newLocalCandidate, 
-                        remoteCandidate, ioSession);
+                    pairToAdd = this.m_existingSessionPairFactory.newPair(
+                        newLocalCandidate, remoteCandidate, ioSession);
                     }
                 else
                     {

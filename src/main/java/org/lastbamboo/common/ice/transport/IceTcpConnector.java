@@ -34,16 +34,26 @@ public class IceTcpConnector implements IceConnector
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final IoServiceListener m_ioServiceListener;
-    private final StunMessageVisitorFactory m_messageVisitorFactory;
     private final boolean m_controlling;
+    private final DemuxingIoHandler<StunMessage, TcpFrame> m_demuxingIoHandler;
+    private final TcpFrameIoHandler m_streamIoHandler;
 
     public IceTcpConnector(final IoServiceListener ioServiceListener, 
         final StunMessageVisitorFactory messageVisitorFactory, 
         final boolean controlling)
         {
         m_ioServiceListener = ioServiceListener;
-        m_messageVisitorFactory = messageVisitorFactory;
         m_controlling = controlling;
+        // TODO: We don't currently support TCP-SO, so we don't bind to the 
+        // local port.
+        final IoHandler stunIoHandler = 
+            new StunIoHandler<StunMessage>(messageVisitorFactory);
+
+        this.m_streamIoHandler = new TcpFrameIoHandler();
+        this.m_demuxingIoHandler = 
+            new DemuxingIoHandler<StunMessage, TcpFrame>(
+                StunMessage.class, stunIoHandler, 
+                TcpFrame.class, m_streamIoHandler);
         }
 
     public IoSession connect(final InetSocketAddress localAddress,
@@ -66,12 +76,12 @@ public class IceTcpConnector implements IceConnector
             new DemuxingProtocolCodecFactory(stunCodecFactory, 
                 tcpFramingCodecFactory);
         
-        final ProtocolCodecFilter stunFilter = 
+        final ProtocolCodecFilter demuxingFilter = 
             new ProtocolCodecFilter(demuxingCodecFactory);
         
         cfg.setThreadModel(threadModel);
         
-        connector.getFilterChain().addLast("stunFilter", stunFilter);
+        connector.getFilterChain().addLast("demuxingFilter", demuxingFilter);
 
         m_log.debug("Establishing TCP connection...");
         final InetAddress address = remoteAddress.getAddress();
@@ -103,18 +113,8 @@ public class IceTcpConnector implements IceConnector
             connectTimeout = 12000;
             }
         
-        // TODO: We don't currently support TCP-SO, so we don't bind to the 
-        // local port.
-        final IoHandler stunIoHandler = 
-            new StunIoHandler<StunMessage>(this.m_messageVisitorFactory);
-        
-        // TODO: I don't think we can create the StreamIoHandler here.
-        final IoHandler demuxingIoHandler = 
-            new DemuxingIoHandler<StunMessage, TcpFrame>(
-                StunMessage.class, stunIoHandler, 
-                TcpFrame.class, new TcpFrameIoHandler());
         final ConnectFuture cf = 
-            connector.connect(remoteAddress, demuxingIoHandler);
+            connector.connect(remoteAddress, this.m_demuxingIoHandler);
         cf.join(connectTimeout);
         try
             {
@@ -133,6 +133,11 @@ public class IceTcpConnector implements IceConnector
             m_log.debug("Reason for no connection: ", e);
             throw e;
             }
+        }
+
+    public TcpFrameIoHandler getStreamIoHandler()
+        {
+        return m_streamIoHandler;
         }
 
     }

@@ -12,7 +12,6 @@ import org.lastbamboo.common.stun.server.StunServer;
 import org.lastbamboo.common.stun.server.UdpStunServer;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,10 +43,8 @@ public class IceStunUdpPeer implements StunClient, StunServer
      * 
      * @param controlling Whether or not this agent is controlling.
      */
-    public IceStunUdpPeer(
-        final ProtocolCodecFactory demuxingCodecFactory, 
-        final IoHandler demuxingIoHandler,
-        final boolean controlling)
+    public IceStunUdpPeer(final ProtocolCodecFactory demuxingCodecFactory, 
+        final IoHandler demuxingIoHandler, final boolean controlling)
         {
         // We also add whether we're controlling for thread
         // naming here just to make log reading easier.
@@ -68,7 +65,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // of missing any relevant events.
         this.m_stunServer = 
             new UdpStunServer(demuxingCodecFactory, 
-                    demuxingIoHandler, controllingString);
+                demuxingIoHandler, controllingString);
         
         // We pass null here so the server binds to any available port.
         // We use that as both the acceptor port and the local port for the 
