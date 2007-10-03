@@ -61,41 +61,19 @@ public class IceCheckListImpl implements IceCheckList
 
     private final Collection<IceCandidate> m_localCandidates;
 
-    //private final IceStunCheckerFactory m_checkerFactory;
-
-    //private final StunMessageVisitorFactory m_tcpMessageVisitorFactory;
-
-    //private final IoServiceListener m_ioServiceListener;
-
-    //private final StunMessageVisitorFactory m_udpMessageVisitorFactory;
-
     private final IceCandidatePairFactory m_iceCandidatePairFactory;
 
     /**
      * Creates a new check list, starting with only local candidates.
      * 
-     * @param checkerFactory The factory for generating connectivity checker
-     * classes. 
      * @param localCandidates The local candidates to use in the check list.
      */
     public IceCheckListImpl(
         final IceCandidatePairFactory candidatePairFactory,
         final Collection<IceCandidate> localCandidates) 
         {
-        //m_checkerFactory = checkerFactory;
         this.m_iceCandidatePairFactory = candidatePairFactory;
         this.m_localCandidates = localCandidates;
-        //m_tcpMessageVisitorFactory = tcpMessageVisitorFactory;
-        //m_udpMessageVisitorFactory = udpMessageVisitorFactory;
-        //if (ioServiceListener == null)
-          //  {
-            //throw new NullPointerException("Null listener");
-            //}
-        //m_ioServiceListener = ioServiceListener;
-        
-        //this.m_iceCandidatePairFactory = new IceCandidatePairFactoryImpl(
-          //  checkerFactory, tcpMessageVisitorFactory, udpMessageVisitorFactory, 
-            //ioServiceListener);
         }
     
     public IceCandidatePair removeTopTriggeredPair()
@@ -647,6 +625,20 @@ public class IceCheckListImpl implements IceCheckList
             {
             final CollectionUtils utils = new CollectionUtilsImpl();
             return utils.selectFirst(this.m_pairs, pred);
+            }
+        }
+    
+    public IceCandidatePair selectAnyPair(final Predicate<IceCandidatePair> pred)
+        {
+        synchronized (this)
+            {
+            final CollectionUtils utils = new CollectionUtilsImpl();
+            final IceCandidatePair pair = utils.selectFirst(this.m_pairs, pred);
+            if (pair != null)
+                {
+                return pair;
+                }
+            return utils.selectFirst(this.m_triggeredQueue, pred);
             }
         }
 

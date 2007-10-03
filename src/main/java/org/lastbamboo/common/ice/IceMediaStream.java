@@ -114,10 +114,25 @@ public interface IceMediaStream extends IoServiceListener
      * know about, it's typically a new peer reflexive candidate.
      * 
      * @param remoteAddress The remote address to check.
+     * @param isUdp Whether or not the candidate is UDP.
      * @return <code>true</code> if the address matches the address of a 
      * remote candidate we already know about, otherwise <code>false</code>.
      */
     boolean hasRemoteCandidate(InetSocketAddress remoteAddress, boolean isUdp);
+   
+    /**
+     * Checks whether or not the specified remote address matches any of
+     * the addresses of remote candidates.  This is typically used when
+     * checking for peer reflexive candidates.  If it's an address we don't 
+     * know about, it's typically a new peer reflexive candidate.
+     * 
+     * @param remoteAddress The remote address to check.
+     * @param isUdp Whether or not the candidate is UDP.
+     * @return <code>true</code> if the address matches the address of a 
+     * remote candidate we already know about, otherwise <code>false</code>.
+     */
+    boolean hasRemoteCandidateInSdp(InetSocketAddress remoteAddress, 
+        boolean isUdp);
 
     /**
      * Adds a peer reflexive candidate to the list of remote candidates.
@@ -210,5 +225,5 @@ public interface IceMediaStream extends IoServiceListener
      * Perform any necessary close operations for the media stream.
      */
     void close();
-    
+
     }

@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 import org.apache.mina.common.IoSession;
@@ -7,12 +8,17 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceCandidateType;
+import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceTcpServerReflexiveSoCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
+import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
@@ -165,13 +171,17 @@ public class IceStunClientCandidateProcessor
             
             @Override
             public IceCandidate visitBindingSuccessResponse(
-                final BindingSuccessResponse sbr)
+                final BindingSuccessResponse bsr)
                 {
                 // Now check the mapped address and see if it matches
                 // any of the local candidates we know about.  If it 
-                // does not, it's a new peer reflexive candidate. 
+                // does not, it's a new peer reflexive candidate.
+                //
+                // We use the mapped address of the response as the local
+                // candidate address for the new pair, as specified in 
+                // 7.1.2.2.2.
                 final InetSocketAddress mappedAddress = 
-                    sbr.getMappedAddress();
+                    bsr.getMappedAddress();
                 final IceCandidate matchingCandidate = 
                     m_mediaStream.getLocalCandidate(mappedAddress, 
                         localCandidate.isUdp());
@@ -187,7 +197,7 @@ public class IceStunClientCandidateProcessor
                     // from the pair, i.e. the candidate we're visiting.
                     
                     // We use the PRIORITY from the Binding Request, as
-                    // specified in section 7.1.2.2.1. and 7.1.2.2.2.
+                    // specified in section 7.1.2.2.1. and 7.1.2.2.2.  
                     final IceCandidate prc;
                     if (localCandidate.isUdp())
                         {
@@ -301,17 +311,28 @@ public class IceStunClientCandidateProcessor
         }
     
     /**
-     * Processes a successful response to a check.
+     * Processes a successful response to a check.  This is specified in 
+     * ICE section 7.1.2.2 at:
      * 
-     * @param newLocalCandidate The calculated local candidate.  This can be 
-     * peer reflexive.
+     * <p>
+     * http://tools.ietf.org/html/draft-ietf-mmusic-ice-18#section-7.1.2.2
+     * <p>
+     * 
+     * Note we always know the source IP and port and destination IP and port
+     * are correct here because we're using a MINA UDP socket that's 
+     * "connected", meaning it only accepts data from that single IP address
+     * and port.
+     * 
+     * @param localCandidate The calculated local candidate.  This can be 
+     * peer reflexive, but it also could just be the candidate of the original
+     * pair we just issued a check for.
      * @param remoteCandidate The remote candidate from the original pair.
      * @param useCandidate Whether the Binding Request included the 
      * USE-CANDIDATE attribute.
      * @param bindingRequestPriority The priority of the Binding Request.
      * @return The generated {@link IoSession}.
      */
-    private IoSession processSuccess(final IceCandidate newLocalCandidate, 
+    private IoSession processSuccess(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final boolean useCandidate, 
         final long bindingRequestPriority)
         {
@@ -320,14 +341,14 @@ public class IceStunClientCandidateProcessor
             remoteCandidate.getSocketAddress();
         
         final InetSocketAddress newLocalAddress = 
-            newLocalCandidate.getSocketAddress();
+            localCandidate.getSocketAddress();
         
-        final IceCandidatePair pairToAdd;
+        final IceCandidatePair pairToAddToValidList;
         if (equalsOriginalPair(this.m_pair, newLocalAddress, remoteAddress))
             {
             // Just add the original pair;
             m_log.debug("Using original pair...");
-            pairToAdd = this.m_pair;
+            pairToAddToValidList = this.m_pair;
             }
         else
             {
@@ -336,7 +357,7 @@ public class IceStunClientCandidateProcessor
                 m_mediaStream.getPair(newLocalAddress, remoteAddress);
             if (existingPair != null)
                 {
-                pairToAdd = existingPair;
+                pairToAddToValidList = existingPair;
                 }
             else
                 {
@@ -352,42 +373,50 @@ public class IceStunClientCandidateProcessor
                 // remote candidate.  In that case, the priority is taken as the
                 // value of the PRIORITY attribute in the Binding Request which
                 // triggered the check that just completed.
-                //final IceStunChecker checker;
-                if (this.m_mediaStream.hasRemoteCandidate(remoteAddress, 
+                final long remotePriority;
+                if (this.m_mediaStream.hasRemoteCandidateInSdp(remoteAddress, 
                     remoteCandidate.isUdp()))
                     {
-                    // It's not a triggered check, so use the original 
-                    // candidate's priority, or, i.e., use the original 
-                    // candidate.
-                    final IoSession ioSession = this.m_pair.getIoSession(); 
-                    
-                    pairToAdd = this.m_existingSessionPairFactory.newPair(
-                        newLocalCandidate, remoteCandidate, ioSession);
+                    // The check was not a triggered check, so use the original 
+                    // candidate's priority.
+                    remotePriority = this.m_mediaStream.getRemoteCandidate(
+                        remoteAddress, remoteCandidate.isUdp()).getPriority();
                     }
                 else
                     {
-                    // It's a triggered check, so we use the priority
+                    // The check was a triggered check, so we use the priority
                     // from the Binding Request we just sent, as specified in
                     // section 7.1.2.2.2.
-                    
-                    // TODO: Review this a little bit.  Is it OK to just use
-                    // the remote candidate we started with and change the
-                    // priority here?
-                    remoteCandidate.setPriority(bindingRequestPriority);
-                    pairToAdd = this.m_pairFactory.newPair(newLocalCandidate, 
-                        remoteCandidate);
+                    remotePriority = bindingRequestPriority;
                     }
                 
+                final IceCandidate newRemoteCandidate =
+                    createRemoteCandidate(remoteCandidate, remotePriority);
+                
+                // This is key here.  Even if the local candidate is a
+                // new peer refexive candidate, its base is still the
+                // local candidate for the pair that started this check.
+                // If it's not peer reflexive, the local candidate *is* the 
+                // local candidate of the pair that started the check.  
+                // The remote candidate is the remote candidate from the pair 
+                // in any case.
+                //
+                // Either way, the point is that the underlying transport
+                // connection is the same so we need to reuse it.
                 m_log.debug("Creating new pair...");
+                final IoSession ioSession = this.m_pair.getIoSession(); 
+                pairToAddToValidList = 
+                    this.m_existingSessionPairFactory.newPair(
+                    localCandidate, newRemoteCandidate, ioSession);
                 }
             }
-        m_mediaStream.addValidPair(pairToAdd);
+        m_mediaStream.addValidPair(pairToAddToValidList);
         
         // 7.1.2.2.3.  Updating Pair States
         
         // Tell the media stream to update pair states as a result of 
         // a valid pair.  
-        this.m_mediaStream.updatePairStates(pairToAdd, this.m_pair, 
+        this.m_mediaStream.updatePairStates(pairToAddToValidList, this.m_pair, 
             useCandidate);
     
         this.m_iceAgent.checkValidPairsForAllComponents(m_mediaStream);
@@ -395,7 +424,7 @@ public class IceStunClientCandidateProcessor
         // Tell the ICE agent to consider this valid pair if it was not just
         // nominated.  Nominated pairs have already been considered as valid
         // pairs -- that's how they had their nominated flag set.
-        if (!updateNominatedFlag(pairToAdd, useCandidate))
+        if (!updateNominatedFlag(pairToAddToValidList, useCandidate))
             {
             this.m_iceAgent.onValidPairs(m_mediaStream);
             }
@@ -405,6 +434,96 @@ public class IceStunClientCandidateProcessor
         return null;
         }
     
+    /**
+     * This creates a new remote candidate with all the same characteristics of
+     * the original remote candidate, except with a different priority.  This
+     * is a pain, but we don't want to just set the priority of an existing
+     * candidate.
+     * 
+     * @param remoteCandidate The remote candidate to essentially copy.
+     * @param remotePriority The new priority.
+     * @return The new candidate.
+     */
+    private static IceCandidate createRemoteCandidate(
+        final IceCandidate remoteCandidate, final long remotePriority)
+        {
+        final InetSocketAddress remoteAddress = 
+            remoteCandidate.getSocketAddress();
+        final String foundation = remoteCandidate.getFoundation();
+        final boolean controlling = remoteCandidate.isControlling();
+        final int componentId = remoteCandidate.getComponentId();
+        final InetAddress relatedAddress = remoteCandidate.getRelatedAddress();
+        final int relatedPort = remoteCandidate.getRelatedPort();
+        final IceCandidateVisitor<IceCandidate> visitor =
+            new IceCandidateVisitorAdapter<IceCandidate>()
+            {
+
+            public IceCandidate visitTcpHostPassiveCandidate(
+                final IceTcpHostPassiveCandidate candidate)
+                {
+                return new IceTcpHostPassiveCandidate(remoteAddress, 
+                    foundation, controlling, remotePriority, componentId);
+                }
+
+            public IceCandidate visitTcpPeerReflexiveCandidate(
+                final IceTcpPeerReflexiveCandidate candidate)
+                {
+                return new IceTcpPeerReflexiveCandidate(remoteAddress, 
+                    foundation, componentId, controlling, remotePriority);
+                }
+
+            public IceCandidate visitTcpRelayPassiveCandidate(
+                final IceTcpRelayPassiveCandidate candidate)
+                {
+                return new IceTcpRelayPassiveCandidate(remoteAddress, 
+                    foundation, relatedAddress, relatedPort, 
+                    controlling, remotePriority, 
+                    componentId);
+                }
+
+            public IceCandidate visitTcpServerReflexiveSoCandidate(
+                final IceTcpServerReflexiveSoCandidate candidate)
+                {
+                return new IceTcpServerReflexiveSoCandidate(remoteAddress, 
+                    foundation, relatedAddress, relatedPort, 
+                    controlling, remotePriority, componentId);
+                }
+
+            public IceCandidate visitUdpHostCandidate(
+                final IceUdpHostCandidate candidate)
+                {
+                return new IceUdpHostCandidate(remoteAddress, foundation, 
+                    remotePriority, controlling, componentId);
+                }
+
+            public IceCandidate visitUdpPeerReflexiveCandidate(
+                final IceUdpPeerReflexiveCandidate candidate)
+                {
+                return new IceUdpPeerReflexiveCandidate(remoteAddress, 
+                    foundation, componentId, controlling, remotePriority);
+                }
+
+            public IceCandidate visitUdpRelayCandidate(
+                final IceUdpRelayCandidate candidate)
+                {
+                return new IceUdpRelayCandidate(remoteAddress, foundation, 
+                    remotePriority, controlling, componentId, 
+                    relatedAddress, relatedPort);
+                }
+
+            public IceCandidate visitUdpServerReflexiveCandidate(
+                final IceUdpServerReflexiveCandidate candidate)
+                {
+                return new IceUdpServerReflexiveCandidate(remoteAddress, 
+                    foundation, relatedAddress, relatedPort, 
+                    controlling, remotePriority, 
+                    componentId);
+                }
+            };
+        return remoteCandidate.accept(visitor);
+        }
+
+
     /**
      * This implements:<p> 
      * 

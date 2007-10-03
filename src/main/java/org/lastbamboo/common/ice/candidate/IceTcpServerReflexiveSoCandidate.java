@@ -9,8 +9,7 @@ import org.lastbamboo.common.ice.IceTransportProtocol;
 /**
  * ICE simultaneous open TCP candidate for server reflexive hosts.
  */
-public class IceTcpServerReflexiveSoCandidate 
-    extends AbstractIceCandidate
+public class IceTcpServerReflexiveSoCandidate extends AbstractIceCandidate
     {
 
     /**
@@ -39,6 +38,32 @@ public class IceTcpServerReflexiveSoCandidate
             baseCandidate.getSocketAddress().getAddress(),
             baseCandidate.getSocketAddress().getPort());
         }
+    
+    /**
+     * Creates a new ICE simultaneous open TCP candidate for server reflexive 
+     * hosts.
+     * 
+     * @param socketAddress The address of the relayed candidate.
+     * @param foundation The foundation.
+     * @param relatedAddress The address related to this candidate.  In this
+     * case, the mapped address received in the Allocate Response.
+     * @param relatedPort The port related to this candidate.  In this
+     * case, the port in the mapped address received in the Allocate Response.
+     * @param controlling Whether or not this candidate is the controlling
+     * candidate.
+     * @param priority The priority of the candidate.
+     * @param componentId The component ID.
+     */
+    public IceTcpServerReflexiveSoCandidate(
+        final InetSocketAddress socketAddress, final String foundation, 
+        final InetAddress relatedAddress, final int relatedPort, 
+        final boolean controlling, final long priority, final int componentId)
+        {
+        super(socketAddress, foundation, IceCandidateType.SERVER_REFLEXIVE, 
+            IceTransportProtocol.TCP_SO, priority, controlling, 
+            componentId, null, relatedAddress, relatedPort);
+        }
+
 
     public <T> T accept(IceCandidateVisitor<T> visitor)
         {

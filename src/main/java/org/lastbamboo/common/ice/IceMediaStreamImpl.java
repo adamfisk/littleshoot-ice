@@ -3,6 +3,7 @@ package org.lastbamboo.common.ice;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,7 +26,6 @@ import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
-import org.lastbamboo.common.ice.util.IceConnector;
 import org.lastbamboo.common.ice.util.IceUdpConnector;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
@@ -60,6 +60,8 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final IceAgent m_iceAgent;
     private final IceMediaStreamDesc m_desc;
     private final Collection<IceCandidate> m_remoteCandidates = 
+        new LinkedList<IceCandidate>();
+    private Collection<IceCandidate> m_remoteSdpCandidates = 
         new LinkedList<IceCandidate>();
     private final IceCandidateGatherer m_gatherer;
     private final IceStunCheckerFactory m_checkerFactory;
@@ -96,10 +98,10 @@ public class IceMediaStreamImpl implements IceMediaStream
             }
         this.m_localCandidates = this.m_gatherer.gatherCandidates();
         
-        final IceConnector udpConnector = 
+        final IceUdpConnector udpConnector = 
             new IceUdpConnector(ioServiceListener, this.m_demuxingCodecFactory,
                 this.m_udpDemuxingIoHandler, this.m_iceAgent.isControlling());
-        final IceConnector tcpConnector =
+        final IceTcpConnector tcpConnector =
             new IceTcpConnector(ioServiceListener, 
                 this.m_tcpMessageVisitorFactory, 
                 this.m_iceAgent.isControlling());
@@ -125,9 +127,16 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         synchronized (this.m_remoteCandidates)
             {
-            synchronized (remoteCandidates)
+            synchronized (this.m_remoteSdpCandidates)
                 {
-                this.m_remoteCandidates.addAll(remoteCandidates);
+                synchronized (remoteCandidates)
+                    {
+                    this.m_remoteCandidates.addAll(remoteCandidates);
+                    this.m_remoteSdpCandidates.addAll(remoteCandidates);
+                    this.m_remoteSdpCandidates = 
+                        Collections.unmodifiableCollection(
+                            this.m_remoteSdpCandidates);
+                    }
                 }
             }
         
@@ -318,6 +327,16 @@ public class IceMediaStreamImpl implements IceMediaStream
         return remoteCandidate != null;
         }
     
+    
+    public boolean hasRemoteCandidateInSdp(final InetSocketAddress remoteAddress,
+        final boolean isUdp)
+        {
+        final IceCandidate remoteCandidate = 
+            getCandidate(this.m_remoteSdpCandidates, remoteAddress, isUdp);
+        
+        return remoteCandidate != null;
+        }
+    
     private IceCandidate getCandidate(final Collection<IceCandidate> candidates,
         final InetSocketAddress address, final boolean isUdp)
         {
@@ -379,7 +398,7 @@ public class IceMediaStreamImpl implements IceMediaStream
                 }
             };
         
-        return this.m_checkList.selectPair(pred);
+        return this.m_checkList.selectAnyPair(pred);
         }
 
     public void updatePairStates(final IceCandidatePair validPair, 

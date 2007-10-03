@@ -110,13 +110,22 @@ public interface IceCheckList
     void executeOnPairs(Closure<IceCandidatePair> closure);
 
     /**
-     * Selects the first pair matching the predicate.
+     * Selects the first pair matching the predicate from the normal check list.
      * 
      * @param pred The {@link Predicate} to check with.
      * @return The first matching pair, or <code>null</code> if no such pair
      * exists.
      */
     IceCandidatePair selectPair(Predicate<IceCandidatePair> pred);
+   
+    /**
+     * Selects the first pair matching the predicate from any check list.
+     * 
+     * @param pred The {@link Predicate} to check with.
+     * @return The first matching pair from any check list, including the 
+     * triggered check queue, or <code>null</code> if no such pair exists.
+     */
+    IceCandidatePair selectAnyPair(Predicate<IceCandidatePair> pred);
 
     /**
      * Returns whether or not any pairs match the specified criteria.
@@ -131,4 +140,5 @@ public interface IceCheckList
      * Close all candidates pair connections.
      */
     void close();
+
     }

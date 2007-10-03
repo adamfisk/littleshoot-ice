@@ -183,4 +183,10 @@ public class IceMediaStreamImplStub implements IceMediaStream
         
         }
 
+    public boolean hasRemoteCandidateInSdp(InetSocketAddress remoteAddress, boolean isUdp)
+        {
+        // TODO Auto-generated method stub
+        return false;
+        }
+
     }

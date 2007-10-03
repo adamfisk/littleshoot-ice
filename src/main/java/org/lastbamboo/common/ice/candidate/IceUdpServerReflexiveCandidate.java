@@ -24,8 +24,7 @@ public class IceUdpServerReflexiveCandidate extends AbstractIceCandidate
      */
     public IceUdpServerReflexiveCandidate(
         final InetSocketAddress serverReflexiveAddress, 
-        final IceCandidate baseCandidate, 
-        final InetAddress stunServerAddress,
+        final IceCandidate baseCandidate, final InetAddress stunServerAddress,
         final boolean controlling)
         {
         super(serverReflexiveAddress, 

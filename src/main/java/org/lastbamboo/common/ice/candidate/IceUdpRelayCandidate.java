@@ -41,6 +41,16 @@ public class IceUdpRelayCandidate extends AbstractIceCandidate
             relatedAddress, relatedPort);
         }
 
+    public IceUdpRelayCandidate(final InetSocketAddress relayAddress, 
+        final String foundation, final long priority, 
+        final boolean controlling, final int componentId, 
+        final InetAddress relatedAddress, final int relatedPort)
+        {
+        super(relayAddress, foundation, IceCandidateType.RELAYED, 
+            IceTransportProtocol.UDP, priority, controlling, 
+            componentId, null, relatedAddress, relatedPort);
+        }
+
     public <T> T accept(IceCandidateVisitor<T> visitor)
         {
         return visitor.visitUdpRelayCandidate(this);
