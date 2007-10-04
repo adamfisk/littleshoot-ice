@@ -3,10 +3,13 @@ package org.lastbamboo.common.ice.transport;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.ExecutorThreadModel;
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoService;
+import org.apache.mina.common.IoServiceConfig;
 import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.RuntimeIOException;
@@ -24,12 +27,12 @@ import org.lastbamboo.common.tcp.frame.TcpFrame;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
-import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
+import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IceTcpConnector implements IceConnector
+public class IceTcpConnector implements IceConnector, IoServiceListener
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -61,6 +64,7 @@ public class IceTcpConnector implements IceConnector
         {
         final SocketConnector connector = new SocketConnector();
         connector.addListener(this.m_ioServiceListener);
+        connector.addListener(this);
         
         final SocketConnectorConfig cfg = connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
@@ -134,10 +138,32 @@ public class IceTcpConnector implements IceConnector
             throw e;
             }
         }
+    
+    public void serviceActivated(final IoService service, 
+        final SocketAddress serviceAddress, 
+        final IoHandler handler, final IoServiceConfig config)
+        {
+        }
+
+    public void serviceDeactivated(final IoService service, 
+        final SocketAddress serviceAddress, final IoHandler handler, 
+        final IoServiceConfig config)
+        {
+        }
+
+    public void sessionCreated(final IoSession session)
+        {
+        session.setAttribute(TcpFrameIoHandler.class.getSimpleName(), 
+            this.m_streamIoHandler);
+        }
+
+    public void sessionDestroyed(final IoSession session)
+        {
+        }
 
     public TcpFrameIoHandler getStreamIoHandler()
         {
-        return m_streamIoHandler;
+        return this.m_streamIoHandler;
         }
 
     }

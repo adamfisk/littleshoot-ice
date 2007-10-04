@@ -168,7 +168,8 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
 
     public void sessionCreated(final IoSession session)
         {
-        session.setAttribute("STUN_ATTRIBUTE_2", this.m_streamIoHandler);
+        session.setAttribute(TcpFrameIoHandler.class.getSimpleName(), 
+            this.m_streamIoHandler);
         }
 
     public void sessionDestroyed(IoSession session)

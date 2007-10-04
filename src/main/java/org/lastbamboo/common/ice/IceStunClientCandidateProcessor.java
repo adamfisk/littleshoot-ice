@@ -7,6 +7,7 @@ import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
+import org.lastbamboo.common.ice.candidate.IceCandidatePairVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateType;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
@@ -19,6 +20,8 @@ import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
+import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
+import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
@@ -154,8 +157,6 @@ public class IceStunClientCandidateProcessor
             request = new BindingRequest(priorityAttribute, controlling);
             includedUseCandidate = false;
             }
-        
-        //final IceStunChecker checker = this.m_pair.getStunChecker();
         
         // TODO: Obtain RTO properly.
         final long rto = 20L;
@@ -402,12 +403,28 @@ public class IceStunClientCandidateProcessor
                 // in any case.
                 //
                 // Either way, the point is that the underlying transport
-                // connection is the same so we need to reuse it.
+                // connection is the same so we need to reuse it, so we 
+                // construct a new pair with the same existing transport.
                 m_log.debug("Creating new pair...");
-                final IoSession ioSession = this.m_pair.getIoSession(); 
-                pairToAddToValidList = 
-                    this.m_existingSessionPairFactory.newPair(
-                    localCandidate, newRemoteCandidate, ioSession);
+                final IceCandidatePairVisitor<IceCandidatePair> pairVisitor =
+                    new IceCandidatePairVisitor<IceCandidatePair>()
+                    {
+                    public IceCandidatePair visitTcpIceCandidatePair(
+                        final TcpIceCandidatePair pair)
+                        {
+                        return m_existingSessionPairFactory.newTcpPair(
+                            localCandidate, remoteCandidate, 
+                            pair.getIoSession(), pair.getTcpFrameIoHandler());
+                        }
+                    public IceCandidatePair visitUdpIceCandidatePair(
+                        final UdpIceCandidatePair pair)
+                        {
+                        return m_existingSessionPairFactory.newUdpPair(
+                            localCandidate, newRemoteCandidate, 
+                            pair.getIoSession());
+                        }
+                    };
+                pairToAddToValidList = this.m_pair.accept(pairVisitor);
                 }
             }
         m_mediaStream.addValidPair(pairToAddToValidList);
@@ -432,6 +449,80 @@ public class IceStunClientCandidateProcessor
         // 7.1.2.3. Check List and Timer State Updates
         m_mediaStream.updateCheckListAndTimerStates();
         return null;
+        }
+    
+    /**
+     * This implements:<p> 
+     * 
+     * 7.1.2.2.4.  Updating the Nominated Flag<p>
+     * 
+     * and part of:<p>
+     * 
+     * 7.2.1.5.  Updating the Nominated Flag<p>
+     * 
+     * @param validPair The valid pair to update.
+     * @param sentUseCandidateInRequest Whether or not the USE-CANDIDATE 
+     * attribute appeared in the original Binding Request.
+     * @retuen <code>true</code> if the valid pair was nominated, otherwise
+     * <code>false</code>.
+     */
+    private boolean updateNominatedFlag(final IceCandidatePair validPair, 
+        final boolean sentUseCandidateInRequest)
+        {
+        if (this.m_iceAgent.isControlling() && sentUseCandidateInRequest)
+            {
+            validPair.nominate();
+            this.m_iceAgent.onNominatedPair(validPair, this.m_mediaStream);
+            return true;
+            }
+        
+        // Second part of 7.2.15 -- the pair may have been previously 
+        // In-Progress and should possibly have its nominated flag set upon
+        // this successful response.
+        else if (!this.m_iceAgent.isControlling())
+            {
+            // We synchronize here to avoid a race condition with the setting
+            // of the flag for nominating pairs for controlling agents upon
+            // successful checks.
+            synchronized (validPair)
+                {
+                if (validPair.shouldNominateOnSuccess())
+                    {
+                    m_log.debug("Nominating new pair on controlled agent!!");
+                    // We just put the pair in the successful state, so we know
+                    // that's the state it's in (it has to be in the successful
+                    // state for use to nominate it).
+                    validPair.nominate();
+                    this.m_iceAgent.onNominatedPair(validPair, 
+                        this.m_mediaStream);
+                    return true;
+                    }
+                }
+            }
+        return false;
+        }
+
+    /**
+     * Checks if the new pair equals the original pair that generated
+     * the check.
+     * 
+     * @param pair The original pair that generated the check.
+     * @param newLocalAddress The new local candidate.
+     * @param newRemoteAddress The new remote candidate.
+     * @return <code>true</code> if the pairs match, otherwise 
+     * <code>false</code>.
+     */
+    private boolean equalsOriginalPair(final IceCandidatePair pair, 
+        final InetSocketAddress newLocalAddress, 
+        final InetSocketAddress newRemoteAddress)
+        {
+        final InetSocketAddress oldLocalAddress =
+            pair.getLocalCandidate().getSocketAddress();
+        final InetSocketAddress oldRemoteAddress = 
+            pair.getRemoteCandidate().getSocketAddress();
+        return 
+            newLocalAddress.equals(oldLocalAddress) &&
+            newRemoteAddress.equals(oldRemoteAddress);
         }
     
     /**
@@ -521,80 +612,5 @@ public class IceStunClientCandidateProcessor
                 }
             };
         return remoteCandidate.accept(visitor);
-        }
-
-
-    /**
-     * This implements:<p> 
-     * 
-     * 7.1.2.2.4.  Updating the Nominated Flag<p>
-     * 
-     * and part of:<p>
-     * 
-     * 7.2.1.5.  Updating the Nominated Flag<p>
-     * 
-     * @param validPair The valid pair to update.
-     * @param sentUseCandidateInRequest Whether or not the USE-CANDIDATE 
-     * attribute appeared in the original Binding Request.
-     * @retuen <code>true</code> if the valid pair was nominated, otherwise
-     * <code>false</code>.
-     */
-    private boolean updateNominatedFlag(final IceCandidatePair validPair, 
-        final boolean sentUseCandidateInRequest)
-        {
-        if (this.m_iceAgent.isControlling() && sentUseCandidateInRequest)
-            {
-            validPair.nominate();
-            this.m_iceAgent.onNominatedPair(validPair, this.m_mediaStream);
-            return true;
-            }
-        
-        // Second part of 7.2.15 -- the pair may have been previously 
-        // In-Progress and should possibly have its nominated flag set upon
-        // this successful response.
-        else if (!this.m_iceAgent.isControlling())
-            {
-            // We synchronize here to avoid a race condition with the setting
-            // of the flag for nominating pairs for controlling agents upon
-            // successful checks.
-            synchronized (validPair)
-                {
-                if (validPair.shouldNominateOnSuccess())
-                    {
-                    m_log.debug("Nominating new pair on controlled agent!!");
-                    // We just put the pair in the successful state, so we know
-                    // that's the state it's in (it has to be in the successful
-                    // state for use to nominate it).
-                    validPair.nominate();
-                    this.m_iceAgent.onNominatedPair(validPair, 
-                        this.m_mediaStream);
-                    return true;
-                    }
-                }
-            }
-        return false;
-        }
-
-    /**
-     * Checks if the new pair equals the original pair that generated
-     * the check.
-     * 
-     * @param pair The original pair that generated the check.
-     * @param newLocalAddress The new local candidate.
-     * @param newRemoteAddress The new remote candidate.
-     * @return <code>true</code> if the pairs match, otherwise 
-     * <code>false</code>.
-     */
-    private boolean equalsOriginalPair(final IceCandidatePair pair, 
-        final InetSocketAddress newLocalAddress, 
-        final InetSocketAddress newRemoteAddress)
-        {
-        final InetSocketAddress oldLocalAddress =
-            pair.getLocalCandidate().getSocketAddress();
-        final InetSocketAddress oldRemoteAddress = 
-            pair.getRemoteCandidate().getSocketAddress();
-        return 
-            newLocalAddress.equals(oldLocalAddress) &&
-            newRemoteAddress.equals(oldRemoteAddress);
         }
     }
