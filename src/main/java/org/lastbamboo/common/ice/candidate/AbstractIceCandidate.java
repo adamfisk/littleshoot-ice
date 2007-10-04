@@ -2,7 +2,6 @@ package org.lastbamboo.common.ice.candidate;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 
 import org.apache.commons.lang.ClassUtils;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
@@ -16,13 +15,11 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
 
     private final InetSocketAddress m_address;
     
-    private Socket m_socket;
-
     private final IceTransportProtocol m_transport;
 
     private final IceCandidateType m_candidateType;
     
-    private long m_priority;
+    private final long m_priority;
 
     private final String m_foundation;
     
@@ -117,11 +114,6 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         this.m_isUdp = udp;
         }
     
-    public void setPriority(final long priority)
-        {
-        this.m_priority = priority;
-        }
-    
     public void setControlling(final boolean controlling)
         {
         this.m_controlling = controlling;
@@ -145,16 +137,6 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
     public final long getPriority()
         {
         return m_priority;
-        }
-
-    public Socket getSocket()
-        {
-        return m_socket;
-        }
-
-    public void setSocket(final Socket socket)
-        {
-        m_socket = socket;
         }
 
     public int getComponentId()

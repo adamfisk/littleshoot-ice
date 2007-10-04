@@ -2,10 +2,8 @@ package org.lastbamboo.common.ice.candidate;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.stun.client.StunClient;
 
 /**
  * This is an interface for an ICE "candidate" as defined in 
@@ -46,20 +44,6 @@ public interface IceCandidate
      * @return The class the visitor created. 
      */
     <T> T accept(IceCandidateVisitor<T> visitor);
-
-    /**
-     * Sets the socket.
-     * 
-     * @param sock The socket for the candidate.
-     */
-    void setSocket(Socket sock);
-
-    /**
-     * Accessor for the socket.
-     * 
-     * @return The socket.
-     */
-    Socket getSocket();
 
     /**
      * Gets the type of the ICE candidate.
@@ -114,13 +98,6 @@ public interface IceCandidate
      * @param controlling The controlling status.
      */
     void setControlling(boolean controlling);
-
-    /**
-     * Sets the priority of the candidate.
-     * 
-     * @param priority The priority of the candidate.
-     */
-    void setPriority(long priority);
 
     boolean isUdp();
 
