@@ -9,11 +9,6 @@ import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoHandlerAdapter;
-import org.apache.mina.common.IoServiceListener;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
-import org.lastbamboo.common.ice.IceAgent;
 import org.lastbamboo.common.ice.IceCandidatePairFactory;
 import org.lastbamboo.common.ice.IceCandidatePairFactoryImpl;
 import org.lastbamboo.common.ice.IceCheckList;
@@ -22,9 +17,8 @@ import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.IceStunCheckerFactoryImpl;
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.ice.stubs.IceAgentStub;
-import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
-import org.lastbamboo.common.ice.stubs.ProtocolCodecFactoryStub;
+import org.lastbamboo.common.ice.stubs.IceTcpConnectorStub;
+import org.lastbamboo.common.ice.stubs.IceUdpConnectorStub;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
@@ -46,19 +40,14 @@ public class IceCheckListImplTest extends TestCase
         final Collection<IceCandidate> localCandidates = createCandidates(true);
         final Collection<IceCandidate> remoteCandidates = createCandidates(false);
         
-        final IceAgent agent = new IceAgentStub();
-        
-        final ProtocolCodecFactory codecFactory = 
-            new ProtocolCodecFactoryStub();
-        IoHandler clientIoHandlerStub = new IoHandlerAdapter();
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
         final IceStunCheckerFactory checkerFactory =
             new IceStunCheckerFactoryImpl(tracker);
-        final IoServiceListener ioServiceListener = new IoServiceListenerStub();
         
         final IceCandidatePairFactory pairFactory = 
-            new IceCandidatePairFactoryImpl(checkerFactory, null, null);
+            new IceCandidatePairFactoryImpl(checkerFactory, 
+                new IceUdpConnectorStub(), new IceTcpConnectorStub());
         final IceCheckList checkList = 
             new IceCheckListImpl(pairFactory, localCandidates);
         checkList.formCheckList(remoteCandidates);
