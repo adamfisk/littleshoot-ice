@@ -26,7 +26,7 @@ import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
-import org.lastbamboo.common.stun.stack.message.IcmpErrorStunMessage;
+import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
@@ -287,8 +287,8 @@ public class IceStunClientCandidateProcessor
                 return null;
                 }
 
-            public IceCandidate visitIcmpErrorMesssage(
-                final IcmpErrorStunMessage message)
+            public IceCandidate visitConnectErrorMesssage(
+                final ConnectErrorStunMessage message)
                 {
                 // See section 7.1.2.1. Failure Cases.
                 m_log.debug("Got ICMP error -- setting pair state to failed.");
@@ -296,6 +296,12 @@ public class IceStunClientCandidateProcessor
                 return null;
                 }
             };
+            
+        if (response == null)
+            {
+            m_log.debug("No response -- could not connect?");
+            return null;
+            }
             
         final IceCandidate newLocalCandidate = response.accept(visitor);
         if (newLocalCandidate == null)

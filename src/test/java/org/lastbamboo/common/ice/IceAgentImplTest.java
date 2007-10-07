@@ -24,7 +24,7 @@ import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
-import org.lastbamboo.common.stun.stack.message.IcmpErrorStunMessage;
+import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
@@ -245,8 +245,8 @@ public class IceAgentImplTest
                     new StunMessageVisitorAdapter<StunMessage>()
                     {
 
-                    public StunMessage visitIcmpErrorMesssage(
-                        final IcmpErrorStunMessage message)
+                    public StunMessage visitConnectErrorMesssage(
+                        final ConnectErrorStunMessage message)
                         {
                         m_log.debug("Got ICMP error!!");
                         m_gotIcmpError.set(true);

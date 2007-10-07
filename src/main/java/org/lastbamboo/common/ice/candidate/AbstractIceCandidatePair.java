@@ -7,6 +7,7 @@ import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.util.IceConnector;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      */
     private volatile boolean m_useCandidate = false;
 
-    protected IoSession m_ioSession;
+    protected volatile IoSession m_ioSession;
 
     private final IceStunCheckerFactory m_stunCheckerFactory;
 
@@ -139,6 +140,13 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     
     public StunMessage check(final BindingRequest request, final long rto)
         {
+        // We set the state here instead of in the check list scheduler
+        // because it's more precise and because the schedule doesn't perform
+        // a subsequent check until after this check has executed, so it won't
+        // think a pair is waiting for frozen twice in a row (as opposed to
+        // in progress).
+        setState(IceCandidatePairState.IN_PROGRESS);
+        
         if (this.m_ioSession == null)
             {
             final InetSocketAddress localAddress = 
@@ -148,16 +156,16 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             this.m_ioSession = 
                 this.m_iceConnector.connect(localAddress, remoteAddress);
             }
-        
+
+        if (this.m_ioSession == null)
+            {
+            // This will be the case if the connection attempt simply failed.
+            m_log.debug("Could not connect to the remote host...");
+            return new ConnectErrorStunMessage();
+            }
         this.m_currentStunChecker = 
             this.m_stunCheckerFactory.newChecker(this.m_ioSession);
         
-        // We set the state here instead of in the check list scheduler
-        // because it's more precise and because the schedule doesn't perform
-        // a subsequent check until after this check has executed, so it won't
-        // think a pair is waiting for frozen twice in a row (as opposed to
-        // in progress).
-        setState(IceCandidatePairState.IN_PROGRESS);
         return this.m_currentStunChecker.write(request, rto);
         }
     
