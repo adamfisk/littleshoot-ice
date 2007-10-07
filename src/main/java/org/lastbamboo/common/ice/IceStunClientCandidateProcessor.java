@@ -162,9 +162,24 @@ public class IceStunClientCandidateProcessor
         final long rto = 20L;
         
         m_log.debug("Writing Binding Request: {}", request);
-        //final StunMessage response = checker.write(request, rto);
-        
         final StunMessage response = this.m_pair.check(request, rto);
+        final IoSession activeTcpSession = this.m_pair.getIoSession();
+        final IceCandidateVisitor<Void> localCandidateVisitor =
+            new IceCandidateVisitorAdapter<Void>()
+            {
+            public Void visitTcpActiveCandidate(
+                final IceTcpActiveCandidate candidate)
+                {
+                m_log.debug("Visiting TCP active candidate: {}", candidate);
+                final InetSocketAddress localSocketAddress =
+                    (InetSocketAddress) activeTcpSession.getLocalAddress();
+                final IceCandidate newActiveTcp =
+                    new IceTcpActiveCandidate(localSocketAddress, isControlling);
+                m_mediaStream.addLocalCandidate(newActiveTcp);
+                return null;
+                }
+            };
+        localCandidate.accept(localCandidateVisitor);
         
         final StunMessageVisitor<IceCandidate> visitor = 
             new StunMessageVisitorAdapter<IceCandidate>()

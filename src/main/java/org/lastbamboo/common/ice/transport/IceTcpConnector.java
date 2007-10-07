@@ -118,7 +118,8 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
             }
         
         final ConnectFuture cf = 
-            connector.connect(remoteAddress, this.m_demuxingIoHandler);
+            connector.connect(remoteAddress, localAddress, 
+                 this.m_demuxingIoHandler);
         cf.join(connectTimeout);
         try
             {
