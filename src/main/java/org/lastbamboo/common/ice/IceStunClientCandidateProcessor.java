@@ -163,23 +163,32 @@ public class IceStunClientCandidateProcessor
         
         m_log.debug("Writing Binding Request: {}", request);
         final StunMessage response = this.m_pair.check(request, rto);
+        
+        // We need to add the active TCP candidate as a local candidate because
+        // it has a port of zero at the gathering stage (since it's ephemeral).
+        // Here, though, we need to add the local candidate with the real
+        // port to properly process this incoming message, but only if it's
+        // an active TCP candidate of course.
         final IoSession activeTcpSession = this.m_pair.getIoSession();
-        final IceCandidateVisitor<Void> localCandidateVisitor =
-            new IceCandidateVisitorAdapter<Void>()
+        if (activeTcpSession != null)
             {
-            public Void visitTcpActiveCandidate(
-                final IceTcpActiveCandidate candidate)
+            final IceCandidateVisitor<Void> localCandidateVisitor =
+                new IceCandidateVisitorAdapter<Void>()
                 {
-                m_log.debug("Visiting TCP active candidate: {}", candidate);
-                final InetSocketAddress localSocketAddress =
-                    (InetSocketAddress) activeTcpSession.getLocalAddress();
-                final IceCandidate newActiveTcp =
-                    new IceTcpActiveCandidate(localSocketAddress, isControlling);
-                m_mediaStream.addLocalCandidate(newActiveTcp);
-                return null;
-                }
-            };
-        localCandidate.accept(localCandidateVisitor);
+                public Void visitTcpActiveCandidate(
+                    final IceTcpActiveCandidate candidate)
+                    {
+                    m_log.debug("Visiting TCP active candidate: {}", candidate);
+                    final InetSocketAddress localSocketAddress =
+                        (InetSocketAddress) activeTcpSession.getLocalAddress();
+                    final IceCandidate newActiveTcp =
+                        new IceTcpActiveCandidate(localSocketAddress, isControlling);
+                    m_mediaStream.addLocalCandidate(newActiveTcp);
+                    return null;
+                    }
+                };
+            localCandidate.accept(localCandidateVisitor);
+            }
         
         final StunMessageVisitor<IceCandidate> visitor = 
             new StunMessageVisitorAdapter<IceCandidate>()
