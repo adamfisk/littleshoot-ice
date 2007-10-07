@@ -17,7 +17,6 @@ import org.lastbamboo.common.turn.client.TurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.turn.client.TurnServerCandidateProvider;
 import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.ConnectionMaintainerListener;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
@@ -116,21 +115,6 @@ public class IceTcpTurnClient implements TurnClient
     public void close()
         {
         this.m_turnClient.close();
-        }
-
-    public void connect(
-        final ConnectionMaintainerListener<InetSocketAddress> listener, 
-        final InetSocketAddress stunServerAddress)
-        {
-        this.m_turnClient.connect(listener, stunServerAddress);
-        }
-
-    public void connect(
-        final ConnectionMaintainerListener<InetSocketAddress> listener, 
-        final InetSocketAddress stunServerAddress, 
-        final InetSocketAddress localAddress)
-        {
-        this.m_turnClient.connect(listener, stunServerAddress, localAddress);
         }
 
     public InetSocketAddress getMappedAddress()

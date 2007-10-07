@@ -188,8 +188,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
     private Collection<IceCandidate> createTcpCandidates(
         final StunClient client)
         {
-        
-        final Collection<IceCandidate> candidates =
+        final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
     
         final InetSocketAddress relayAddress = client.getRelayAddress();
