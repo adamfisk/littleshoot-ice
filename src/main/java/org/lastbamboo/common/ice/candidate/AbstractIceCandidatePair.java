@@ -236,7 +236,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         if (state == IceCandidatePairState.FAILED)
             {
             m_log.debug("Setting state to failed, closing checker");
-            this.m_currentStunChecker.close();
+            close();
             }
         }
     
