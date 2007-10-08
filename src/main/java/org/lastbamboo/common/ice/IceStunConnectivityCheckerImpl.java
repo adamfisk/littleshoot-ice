@@ -199,15 +199,17 @@ public final class IceStunConnectivityCheckerImpl<T>
             {
             m_log.debug("Found existing pair");
             computedPair = existingPair;
-            if (existingPair.getIoSession() == null)
+            if (computedPair.getIoSession() == null)
                 {
-                m_log.error("Should have a session for pair: {}", existingPair);
+                m_log.error("Should have a session for pair: {}", computedPair);
                 throw new NullPointerException("Null session!!!");
                 }
             
+            nominateOnSuccessAsNecessary(binding, computedPair);
+            
             // This is the case where the new pair is already on the 
             // check list.  See ICE section 7.2.1.4. Triggered Checks
-            final IceCandidatePairState state = existingPair.getState();
+            final IceCandidatePairState state = computedPair.getState();
             switch (state)
                 {
                 case WAITING:
@@ -270,6 +272,7 @@ public final class IceStunConnectivityCheckerImpl<T>
             
             // Add the pair the normal check list, set its state to waiting,
             // and add a triggered check.
+            nominateOnSuccessAsNecessary(binding, computedPair);
             this.m_iceMediaStream.addPair(computedPair);
             computedPair.setState(IceCandidatePairState.WAITING);
             this.m_iceMediaStream.addTriggeredPair(computedPair);
@@ -303,7 +306,7 @@ public final class IceStunConnectivityCheckerImpl<T>
                         m_log.debug("Nominating pair on controlled agent " +
                             "upon successful completion!");
                         computedPair.useCandidate();
-                        //computedPair.nominateOnSuccess();
+                        computedPair.nominateOnSuccess();
                         break;
                     case WAITING:
                         // No action.
@@ -316,6 +319,18 @@ public final class IceStunConnectivityCheckerImpl<T>
             }
         }
     
+
+    private void nominateOnSuccessAsNecessary(final BindingRequest binding, 
+        final IceCandidatePair computedPair)
+        {
+        if (binding.getAttributes().containsKey(
+            StunAttributeType.ICE_USE_CANDIDATE) && 
+            !!this.m_agent.isControlling())
+            {
+            m_log.debug("Nominating on success...");
+            computedPair.nominateOnSuccess();
+            }
+        }
 
     private boolean fromOurselves(final IceAgent agent, 
         final BindingRequest request)

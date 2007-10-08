@@ -513,7 +513,7 @@ public class IceStunClientCandidateProcessor
         // In-Progress and should possibly have its nominated flag set upon
         // this successful response.
         else if (!this.m_iceAgent.isControlling() && 
-            validPair.useCandidateSet())
+            validPair.shouldNominateOnSuccess())
             {
             m_log.debug("Nominating new pair on controlled agent!!");
             // We just put the pair in the successful state, so we know
