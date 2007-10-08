@@ -48,6 +48,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * 
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
+     * @param stunCheckerFactory The class for creating new STUN checkers.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
@@ -66,6 +67,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
      * @param priority The priority of the pair.
+     * @param stunCheckerFactory The class for creating new STUN checkers.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final long priority,
@@ -82,6 +84,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
      * @param ioSession The {@link IoSession} connecting to the two endpoints.
+     * @param stunCheckerFactory The class for creating new STUN checkers.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoSession ioSession,
@@ -98,7 +101,9 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * 
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
+     * @param priority The priority for the pair.
      * @param ioSession The {@link IoSession} connecting to the two endpoints.
+     * @param stunCheckerFactory The class for creating new STUN checkers.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final long priority,

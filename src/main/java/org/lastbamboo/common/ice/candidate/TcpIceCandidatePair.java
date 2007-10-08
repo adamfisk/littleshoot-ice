@@ -40,6 +40,10 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
             {
             throw new NullPointerException("Null frame io handler");
             }
+        if (ioSession == null)
+            {
+            throw new NullPointerException("Null session");
+            }
         m_frameIoHandler = frameIoHandler;
         this.m_pairId = s_pairId;
         s_pairId++;

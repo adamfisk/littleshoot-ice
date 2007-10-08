@@ -165,7 +165,7 @@ public class IceStunClientCandidateProcessor
         // it has a port of zero at the gathering stage (since it's ephemeral).
         // Here, though, we need to add the local candidate with the real
         // port to properly process this incoming message, but only if it's
-        // an active TCP candidate of course.
+        // an active TCP candidate.
         final IoSession activeTcpSession = this.m_pair.getIoSession();
         if (activeTcpSession != null)
             {

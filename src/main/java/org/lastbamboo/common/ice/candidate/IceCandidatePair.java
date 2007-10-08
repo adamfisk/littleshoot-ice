@@ -1,7 +1,6 @@
 package org.lastbamboo.common.ice.candidate;
 
 import org.apache.mina.common.IoSession;
-import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 
@@ -10,14 +9,6 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
  */
 public interface IceCandidatePair extends Comparable
     {
-    
-    /**
-     * Access the STUN connectivity checker for this pair.  Each pair has
-     * its own connectivity checker bound between the local and remote hosts.
-     * 
-     * @return The ICE STUN connectivity checker for this pair.
-     */
-    //IceStunChecker getStunChecker();
 
     /**
      * Accessor for the local candidate for the pair.
