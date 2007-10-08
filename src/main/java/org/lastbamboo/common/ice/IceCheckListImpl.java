@@ -30,8 +30,8 @@ import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
-import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.CollectionUtils;
 import org.lastbamboo.common.util.CollectionUtilsImpl;
@@ -701,7 +701,7 @@ public class IceCheckListImpl implements IceCheckList
             new IceCandidatePairVisitor<Void>()
             {
 
-            public Void visitTcpIceCandidatePair(final TcpIceCandidatePair pair)
+            public Void visitTcpIceCandidatePair(final IceTcpCandidatePair pair)
                 {
                 if (udp) return null;
                 
@@ -717,7 +717,7 @@ public class IceCheckListImpl implements IceCheckList
                 return null;
                 }
 
-            public Void visitUdpIceCandidatePair(final UdpIceCandidatePair pair)
+            public Void visitUdpIceCandidatePair(final IceUdpCandidatePair pair)
                 {
                 return null;
                 }

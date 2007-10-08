@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory;
 /**
  * A UDP ICE candidate pair. 
  */
-public class UdpIceCandidatePair extends AbstractIceCandidatePair
+public class IceUdpCandidatePair extends AbstractIceCandidatePair
     {
 
     private final Logger m_log = 
-        LoggerFactory.getLogger(UdpIceCandidatePair.class);
+        LoggerFactory.getLogger(IceUdpCandidatePair.class);
     
     /**
      * Pair of UDP ICE candidates.  This constructor uses an existing 
@@ -22,7 +22,7 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
      * @param localCandidate The local candidate.
      * @param remoteCandidate The remote candidate.
      */
-    public UdpIceCandidatePair(final IceCandidate localCandidate, 
+    public IceUdpCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
         final IceStunCheckerFactory stunCheckerFactory, 
         final IceConnector connector)
@@ -38,7 +38,7 @@ public class UdpIceCandidatePair extends AbstractIceCandidatePair
      * @param remoteCandidate The remote candidate.
      * @param ioSession The {@link IoSession} connecting to the two endpoints.
      */
-    public UdpIceCandidatePair(final IceCandidate localCandidate, 
+    public IceUdpCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoSession ioSession,
         final IceStunCheckerFactory stunCheckerFactory)
         {

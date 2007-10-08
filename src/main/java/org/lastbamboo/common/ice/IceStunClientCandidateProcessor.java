@@ -20,8 +20,8 @@ import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
-import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
@@ -437,14 +437,14 @@ public class IceStunClientCandidateProcessor
                     new IceCandidatePairVisitor<IceCandidatePair>()
                     {
                     public IceCandidatePair visitTcpIceCandidatePair(
-                        final TcpIceCandidatePair pair)
+                        final IceTcpCandidatePair pair)
                         {
                         return m_existingSessionPairFactory.newTcpPair(
                             localCandidate, remoteCandidate, 
                             pair.getIoSession(), pair.getTcpFrameIoHandler());
                         }
                     public IceCandidatePair visitUdpIceCandidatePair(
-                        final UdpIceCandidatePair pair)
+                        final IceUdpCandidatePair pair)
                         {
                         return m_existingSessionPairFactory.newUdpPair(
                             localCandidate, newRemoteCandidate, 

@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A TCP ICE candidate pair. 
  */
-public class TcpIceCandidatePair extends AbstractIceCandidatePair
+public class IceTcpCandidatePair extends AbstractIceCandidatePair
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -30,7 +30,7 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
      * @param remoteCandidate The remote candidate.
      * @param ioSession The connection between the two endpoints.
      */
-    public TcpIceCandidatePair(final IceCandidate localCandidate, 
+    public IceTcpCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoSession ioSession, 
         final IceStunCheckerFactory stunCheckerFactory, 
         final TcpFrameIoHandler frameIoHandler)
@@ -55,7 +55,7 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
      * @param localCandidate The local candidate.
      * @param remoteCandidate The remote candidate.
      */
-    public TcpIceCandidatePair(final IceCandidate localCandidate, 
+    public IceTcpCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate,
         final IceStunCheckerFactory stunCheckerFactory,
         final IceTcpConnector iceConnector)

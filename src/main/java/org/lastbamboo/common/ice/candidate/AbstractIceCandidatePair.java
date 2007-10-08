@@ -154,6 +154,14 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         
         if (this.m_ioSession == null)
             {
+            if (!(this.m_localCandidate instanceof IceTcpActiveCandidate) &&
+                !this.m_localCandidate.isUdp())
+                {
+                m_log.error("Connecting with non-active TCP candidate: {}",
+                    this.m_localCandidate);
+                throw new IllegalStateException(
+                    "Local candidate is not active: "+this.m_localCandidate);
+                }
             final InetSocketAddress localAddress = 
                 this.m_localCandidate.getSocketAddress();
             final InetSocketAddress remoteAddress = 

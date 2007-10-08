@@ -31,8 +31,8 @@ public class AbstractIceCandidatePairTest extends TestCase
             new IceTcpActiveCandidate(tcpLocalAddress, true);
         final IceCandidate tcpRemote = 
             new IceTcpActiveCandidate(tcpRemoteAddress, false);
-        final TcpIceCandidatePair tcpPair = 
-            new TcpIceCandidatePair(tcpLocal, tcpRemote, new IoSessionStub(), 
+        final IceTcpCandidatePair tcpPair = 
+            new IceTcpCandidatePair(tcpLocal, tcpRemote, new IoSessionStub(), 
                 null, null);
         
         final InetAddress stunServerAddress = 
@@ -46,8 +46,8 @@ public class AbstractIceCandidatePairTest extends TestCase
         final IceCandidate udpRemote =
             new IceUdpHostCandidate(udpRemoteAddress, false);
         
-        final UdpIceCandidatePair udpPair =
-            new UdpIceCandidatePair(udpLocal, udpRemote, new IoSessionStub(), null);
+        final IceUdpCandidatePair udpPair =
+            new IceUdpCandidatePair(udpLocal, udpRemote, new IoSessionStub(), null);
 
         final List<IceCandidatePair> pairs = new LinkedList<IceCandidatePair>();
         pairs.add(udpPair);

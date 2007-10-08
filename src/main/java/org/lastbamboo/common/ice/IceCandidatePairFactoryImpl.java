@@ -2,8 +2,8 @@ package org.lastbamboo.common.ice;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.ice.candidate.TcpIceCandidatePair;
-import org.lastbamboo.common.ice.candidate.UdpIceCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
 import org.lastbamboo.common.ice.util.IceUdpConnector;
 
@@ -29,12 +29,12 @@ public class IceCandidatePairFactoryImpl implements IceCandidatePairFactory
         {
         if (localCandidate.isUdp())
             {
-            return new UdpIceCandidatePair(localCandidate, remoteCandidate, 
+            return new IceUdpCandidatePair(localCandidate, remoteCandidate, 
                 this.m_checkerFactory, this.m_udpConnector);
             }
         else
             {
-            return new TcpIceCandidatePair(localCandidate, remoteCandidate, 
+            return new IceTcpCandidatePair(localCandidate, remoteCandidate, 
                 this.m_checkerFactory, this.m_tcpConnector);
             }
         }
