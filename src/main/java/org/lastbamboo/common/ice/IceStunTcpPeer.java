@@ -61,11 +61,11 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         final String controllingString;
         if (controlling)
             {
-            controllingString = "-Controlling";
+            controllingString = "Controlling";
             }
         else
             {
-            controllingString = "-Not-Controlling";
+            controllingString = "Not-Controlling";
             }
         
         final DemuxableProtocolCodecFactory stunCodecFactory =
