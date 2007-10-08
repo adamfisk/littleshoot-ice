@@ -302,7 +302,8 @@ public final class IceStunConnectivityCheckerImpl<T>
                     case IN_PROGRESS:
                         m_log.debug("Nominating pair on controlled agent " +
                             "upon successful completion!");
-                        computedPair.nominateOnSuccess();
+                        computedPair.useCandidate();
+                        //computedPair.nominateOnSuccess();
                         break;
                     case WAITING:
                         // No action.

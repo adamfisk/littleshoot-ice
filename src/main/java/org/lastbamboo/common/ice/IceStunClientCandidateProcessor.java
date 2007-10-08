@@ -506,25 +506,38 @@ public class IceStunClientCandidateProcessor
         // Second part of 7.2.15 -- the pair may have been previously 
         // In-Progress and should possibly have its nominated flag set upon
         // this successful response.
-        else if (!this.m_iceAgent.isControlling())
+        else if (!this.m_iceAgent.isControlling() && 
+            validPair.useCandidateSet())
             {
-            // We synchronize here to avoid a race condition with the setting
-            // of the flag for nominating pairs for controlling agents upon
-            // successful checks.
-            synchronized (validPair)
+            m_log.debug("Nominating new pair on controlled agent!!");
+            // We just put the pair in the successful state, so we know
+            // that's the state it's in (it has to be in the successful
+            // state for use to nominate it).
+            validPair.nominate();
+            this.m_iceAgent.onNominatedPair(validPair, this.m_mediaStream);
+
+                /*
+            else if (validPair.getState() == IceCandidatePairState.IN_PROGRESS)
                 {
-                if (validPair.shouldNominateOnSuccess())
+                // We synchronize here to avoid a race condition with the setting
+                // of the flag for nominating pairs for controlling agents upon
+                // successful checks.
+                synchronized (validPair)
                     {
-                    m_log.debug("Nominating new pair on controlled agent!!");
-                    // We just put the pair in the successful state, so we know
-                    // that's the state it's in (it has to be in the successful
-                    // state for use to nominate it).
-                    validPair.nominate();
-                    this.m_iceAgent.onNominatedPair(validPair, 
-                        this.m_mediaStream);
-                    return true;
+                    if (validPair.shouldNominateOnSuccess())
+                        {
+                        m_log.debug("Nominating new pair on controlled agent!!");
+                        // We just put the pair in the successful state, so we know
+                        // that's the state it's in (it has to be in the successful
+                        // state for use to nominate it).
+                        validPair.nominate();
+                        this.m_iceAgent.onNominatedPair(validPair, 
+                            this.m_mediaStream);
+                        return true;
+                        }
                     }
                 }
+                */
             }
         return false;
         }
