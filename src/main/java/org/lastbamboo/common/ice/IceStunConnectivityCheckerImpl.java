@@ -325,11 +325,12 @@ public final class IceStunConnectivityCheckerImpl<T>
         {
         if (binding.getAttributes().containsKey(
             StunAttributeType.ICE_USE_CANDIDATE) && 
-            !!this.m_agent.isControlling())
+            !this.m_agent.isControlling())
             {
             m_log.debug("Nominating on success...");
             computedPair.nominateOnSuccess();
             }
+        m_log.debug("Not nominating on success...");
         }
 
     private boolean fromOurselves(final IceAgent agent, 

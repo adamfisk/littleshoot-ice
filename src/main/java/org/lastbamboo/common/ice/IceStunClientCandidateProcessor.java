@@ -473,7 +473,7 @@ public class IceStunClientCandidateProcessor
         // pairs -- that's how they had their nominated flag set.
         if (!updateNominatedFlag(pairToAddToValidList, useCandidate))
             {
-            m_log.debug("Nominated!  Notifying the agent of valid pairs...");
+            m_log.debug("Not Nominated.  Notifying agent of valid pairs...");
             this.m_iceAgent.onValidPairs(m_mediaStream);
             }
         
@@ -503,7 +503,7 @@ public class IceStunClientCandidateProcessor
         {
         if (this.m_iceAgent.isControlling() && sentUseCandidateInRequest)
             {
-            m_log.debug("Nominating pair con controlling agent.");
+            m_log.debug("Nominating pair on controlling agent.");
             validPair.nominate();
             this.m_iceAgent.onNominatedPair(validPair, this.m_mediaStream);
             return true;
