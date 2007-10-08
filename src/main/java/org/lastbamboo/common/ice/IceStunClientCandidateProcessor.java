@@ -59,8 +59,6 @@ public class IceStunClientCandidateProcessor
 
     private final ExistingSessionIceCandidatePairFactory m_existingSessionPairFactory;
 
-    private final IceCandidatePairFactory m_pairFactory;
-
     /**
      * Creates a new connectiviy checker for a single UDP pair.
      * 
@@ -70,14 +68,12 @@ public class IceStunClientCandidateProcessor
      */
     public IceStunClientCandidateProcessor(final IceAgent iceAgent, 
         final IceMediaStream iceMediaStream, final IceCandidatePair udpPair,
-        final ExistingSessionIceCandidatePairFactory existingSessionPairFactory,
-        final IceCandidatePairFactory pairFactory)
+        final ExistingSessionIceCandidatePairFactory existingSessionPairFactory)
         {
         m_iceAgent = iceAgent;
         m_mediaStream = iceMediaStream;
         m_pair = udpPair;
         m_existingSessionPairFactory = existingSessionPairFactory;
-        m_pairFactory = pairFactory; 
         }
     
     
@@ -162,6 +158,7 @@ public class IceStunClientCandidateProcessor
         final long rto = 20L;
         
         m_log.debug("Writing Binding Request: {}", request);
+        
         final StunMessage response = this.m_pair.check(request, rto);
         
         // We need to add the active TCP candidate as a local candidate because

@@ -1,9 +1,14 @@
 package org.lastbamboo.common.ice;
 
+import java.util.Collection;
+
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
+import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
+import org.lastbamboo.common.ice.transport.IceTcpConnector;
+import org.lastbamboo.common.ice.util.IceUdpConnector;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
@@ -72,7 +77,7 @@ public class GeneralIceMediaStreamFactoryImpl
         
         // This class just decodes the TCP frames.
 
-        final StunClient tcpStunPeer;
+        final IceStunTcpPeer tcpStunPeer;
         if (streamDesc.isTcp())
             {
             final TurnClientListener turnClientListener =
@@ -94,8 +99,7 @@ public class GeneralIceMediaStreamFactoryImpl
                 iceAgent.isControlling(), streamDesc);
         
         final IceMediaStreamImpl stream = new IceMediaStreamImpl(iceAgent, 
-            streamDesc, gatherer, checkerFactory, messageVisitorFactory, 
-            demuxingCodecFactory, udpIoHandler);
+            streamDesc, gatherer);
         
         if (tcpStunPeer != null)
             {
@@ -115,7 +119,29 @@ public class GeneralIceMediaStreamFactoryImpl
             {
             udpStunPeer.connect();
             }
-        stream.start(stream);
+        
+        final Collection<IceCandidate> localCandidates = 
+            gatherer.gatherCandidates();
+        
+        final IceUdpConnector udpConnector = 
+            new IceUdpConnector(stream, demuxingCodecFactory,
+                udpIoHandler, iceAgent.isControlling());
+        final IceTcpConnector tcpConnector =
+            new IceTcpConnector(stream, messageVisitorFactory, 
+                iceAgent.isControlling());
+        final IceCandidatePairFactory candidatePairFactory = 
+            new IceCandidatePairFactoryImpl(
+                checkerFactory, udpConnector, tcpConnector);
+        
+        final IceCheckList checkList = 
+            new IceCheckListImpl(candidatePairFactory, 
+                localCandidates);
+        final ExistingSessionIceCandidatePairFactory existingSessionPairFactory =
+            new ExistingSessionIceCandidatePairFactoryImpl(checkerFactory);
+        final IceCheckScheduler scheduler = 
+            new IceCheckSchedulerImpl(iceAgent, stream, checkList,
+                existingSessionPairFactory);
+        stream.start(checkList, localCandidates, scheduler);
         return stream;
         }
     }

@@ -4,7 +4,6 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Queue;
 
-import org.apache.mina.common.IoService;
 import org.apache.mina.common.IoServiceListener;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
@@ -217,9 +216,12 @@ public interface IceMediaStream extends IoServiceListener
     /**
      * Starts gathering candidates and executing ICE.
      * 
-     * @param ioServiceListener The listener for {@link IoService} events.
+     * @param checkList The candidate pair check list.
+     * @param localCandidates The local candidates.
+     * @param scheduler The check scheduler.
      */
-    void start(IoServiceListener ioServiceListener);
+    void start(IceCheckList checkList, Collection<IceCandidate> localCandidates,
+        IceCheckScheduler scheduler);
 
     /**
      * Perform any necessary close operations for the media stream.

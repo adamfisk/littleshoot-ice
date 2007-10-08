@@ -2,6 +2,7 @@ package org.lastbamboo.common.ice;
 
 import java.util.Collection;
 
+import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.util.Closure;
@@ -140,5 +141,15 @@ public interface IceCheckList
      * Close all candidates pair connections.
      */
     void close();
+
+    /**
+     * Checks all pairs to see if this session matches any pair.  This is 
+     * necessary for TCP in particular because we can receive sessions on
+     * accepting sockets, and we need a way to associate those sessions with 
+     * the appropriate existing pair.
+     * 
+     * @param session The session to check existing pairs for.
+     */
+    void matchWithCandidatePair(IoSession session);
 
     }

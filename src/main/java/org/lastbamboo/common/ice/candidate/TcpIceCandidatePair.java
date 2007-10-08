@@ -72,6 +72,16 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
         return this.m_frameIoHandler;
         }
     
+    public void setIoSession(final IoSession session)
+        {
+        if (this.m_ioSession != null)
+            {
+            m_log.warn("Ignoring set session because it already exists!!");
+            return;
+            }
+        this.m_ioSession = session;
+        }
+    
     public Socket getSocket()
         {
         return this.m_frameIoHandler.getSocket();
@@ -81,13 +91,6 @@ public class TcpIceCandidatePair extends AbstractIceCandidatePair
         {
         return visitor.visitTcpIceCandidatePair(this);
         }
-
-    /*
-    public TcpFrameIoHandler getIoHandler()
-        {
-        return m_tcpFrameIoHandler;
-        }
-        */
     
     @Override
     public String toString()

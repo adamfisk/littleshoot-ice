@@ -10,7 +10,9 @@ import org.apache.mina.common.IoService;
 import org.apache.mina.common.IoServiceConfig;
 import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
+import org.lastbamboo.common.ice.IceCheckList;
 import org.lastbamboo.common.ice.IceCheckListState;
+import org.lastbamboo.common.ice.IceCheckScheduler;
 import org.lastbamboo.common.ice.IceMediaStream;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
@@ -187,6 +189,12 @@ public class IceMediaStreamImplStub implements IceMediaStream
         {
         // TODO Auto-generated method stub
         return false;
+        }
+
+    public void start(IceCheckList checkList, Collection<IceCandidate> localCandidates, IceCheckScheduler scheduler)
+        {
+        // TODO Auto-generated method stub
+        
         }
 
     }
