@@ -454,12 +454,15 @@ public class IceStunClientCandidateProcessor
                 pairToAddToValidList = this.m_pair.accept(pairVisitor);
                 }
             }
+        
+        m_log.debug("Adding valid pair...");
         m_mediaStream.addValidPair(pairToAddToValidList);
         
         // 7.1.2.2.3.  Updating Pair States
         
         // Tell the media stream to update pair states as a result of 
         // a valid pair.  
+        m_log.debug("Updating pair states...");
         this.m_mediaStream.updatePairStates(pairToAddToValidList, this.m_pair, 
             useCandidate);
     
@@ -470,10 +473,12 @@ public class IceStunClientCandidateProcessor
         // pairs -- that's how they had their nominated flag set.
         if (!updateNominatedFlag(pairToAddToValidList, useCandidate))
             {
+            m_log.debug("Nominated!  Notifying the agent of valid pairs...");
             this.m_iceAgent.onValidPairs(m_mediaStream);
             }
         
         // 7.1.2.3. Check List and Timer State Updates
+        m_log.debug("Updating check list and timer states.");
         m_mediaStream.updateCheckListAndTimerStates();
         return null;
         }
@@ -498,6 +503,7 @@ public class IceStunClientCandidateProcessor
         {
         if (this.m_iceAgent.isControlling() && sentUseCandidateInRequest)
             {
+            m_log.debug("Nominating pair con controlling agent.");
             validPair.nominate();
             this.m_iceAgent.onNominatedPair(validPair, this.m_mediaStream);
             return true;
@@ -515,6 +521,7 @@ public class IceStunClientCandidateProcessor
             // state for use to nominate it).
             validPair.nominate();
             this.m_iceAgent.onNominatedPair(validPair, this.m_mediaStream);
+            return true;
 
                 /*
             else if (validPair.getState() == IceCandidatePairState.IN_PROGRESS)
@@ -539,6 +546,8 @@ public class IceStunClientCandidateProcessor
                 }
                 */
             }
+        
+        m_log.debug("Not nominating pair.");
         return false;
         }
 
