@@ -154,16 +154,16 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         this.m_stunServer.close();
         }
 
-    public void serviceActivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config)
+    public void serviceActivated(final IoService service, 
+        final SocketAddress serviceAddress, final IoHandler handler, 
+        final IoServiceConfig config)
         {
-        // TODO Auto-generated method stub
-        
         }
 
-    public void serviceDeactivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config)
+    public void serviceDeactivated(final IoService service, 
+        final SocketAddress serviceAddress, final IoHandler handler, 
+        final IoServiceConfig config)
         {
-        // TODO Auto-generated method stub
-        
         }
 
     public void sessionCreated(final IoSession session)
@@ -172,7 +172,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
             this.m_streamIoHandler);
         }
 
-    public void sessionDestroyed(IoSession session)
+    public void sessionDestroyed(final IoSession session)
         {
         // TODO Auto-generated method stub
         

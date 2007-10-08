@@ -31,6 +31,6 @@ public class ExistingSessionIceCandidatePairFactoryImpl
         final TcpFrameIoHandler frameIoHandler)
         {
         return new IceTcpCandidatePair(localCandidate, 
-            remoteCandidate, ioSession, this.m_checkerFactory, frameIoHandler);
+            remoteCandidate, ioSession, this.m_checkerFactory);
         }
     }

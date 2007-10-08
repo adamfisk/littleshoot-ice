@@ -21,7 +21,9 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
     
     private static int s_pairId = 0;
 
-    private final TcpFrameIoHandler m_frameIoHandler;
+    //private Socket m_socket;
+
+    //private final TcpFrameIoHandler m_frameIoHandler;
     
     /**
      * Pair of TCP ICE candidates.
@@ -32,19 +34,15 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
      */
     public IceTcpCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoSession ioSession, 
-        final IceStunCheckerFactory stunCheckerFactory, 
-        final TcpFrameIoHandler frameIoHandler)
+        final IceStunCheckerFactory stunCheckerFactory)
         {
         super(localCandidate, remoteCandidate, ioSession, stunCheckerFactory);
-        if (frameIoHandler == null)
-            {
-            throw new NullPointerException("Null frame io handler");
-            }
         if (ioSession == null)
             {
             throw new NullPointerException("Null session");
             }
-        m_frameIoHandler = frameIoHandler;
+        //m_frameIoHandler = frameIoHandler;
+        //this.m_socket = socket;
         this.m_pairId = s_pairId;
         s_pairId++;
         }
@@ -61,11 +59,13 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
         final IceTcpConnector iceConnector)
         {
         super(localCandidate, remoteCandidate, stunCheckerFactory, iceConnector);
+        /*
         this.m_frameIoHandler = iceConnector.getStreamIoHandler();
         if (m_frameIoHandler == null)
             {
             throw new NullPointerException("Null frame io handler");
             }
+            */
         this.m_pairId = s_pairId;
         s_pairId++;
         }
@@ -73,7 +73,8 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
 
     public TcpFrameIoHandler getTcpFrameIoHandler()
         {
-        return this.m_frameIoHandler;
+        //return this.m_frameIoHandler;
+        return null;
         }
     
     public void setIoSession(final IoSession session)
@@ -88,7 +89,7 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
     
     public Socket getSocket()
         {
-        return this.m_frameIoHandler.getSocket();
+        return (Socket) this.m_ioSession.getAttribute("SOCKET");
         }
 
     public <T> T accept(final IceCandidatePairVisitor<T> visitor)

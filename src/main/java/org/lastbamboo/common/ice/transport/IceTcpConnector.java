@@ -166,5 +166,4 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
         {
         return this.m_streamIoHandler;
         }
-
     }

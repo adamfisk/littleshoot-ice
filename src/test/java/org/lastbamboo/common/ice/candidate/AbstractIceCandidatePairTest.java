@@ -33,7 +33,7 @@ public class AbstractIceCandidatePairTest extends TestCase
             new IceTcpActiveCandidate(tcpRemoteAddress, false);
         final IceTcpCandidatePair tcpPair = 
             new IceTcpCandidatePair(tcpLocal, tcpRemote, new IoSessionStub(), 
-                null, null);
+                null);
         
         final InetAddress stunServerAddress = 
             InetAddress.getByName("64.2.1.86");
