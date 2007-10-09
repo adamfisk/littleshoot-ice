@@ -93,6 +93,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         {
         this.m_stunClient.connect();
         this.m_stunServer.start(m_stunClient.getHostAddress());
+        m_log.debug("Bound to address: {}", m_stunClient.getHostAddress());
         //this.m_upnpManager.mapAddress(m_stunClient.getHostAddress());
         }
     
