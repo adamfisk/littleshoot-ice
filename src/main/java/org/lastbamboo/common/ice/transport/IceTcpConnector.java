@@ -161,9 +161,4 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
     public void sessionDestroyed(final IoSession session)
         {
         }
-
-    public TcpFrameClientIoHandler getStreamIoHandler()
-        {
-        return this.m_streamIoHandler;
-        }
     }

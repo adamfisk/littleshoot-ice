@@ -64,8 +64,7 @@ public class IceAgentImpl implements IceAgent
      * @param iceMediaFactory The factory for creating media that needs to 
      * know about ICE.
      */
-    public IceAgentImpl(
-        final IceMediaStreamFactory mediaStreamFactory, 
+    public IceAgentImpl(final IceMediaStreamFactory mediaStreamFactory, 
         final boolean controlling, final IceMediaFactory iceMediaFactory) 
         {
         this.m_controlling = controlling;

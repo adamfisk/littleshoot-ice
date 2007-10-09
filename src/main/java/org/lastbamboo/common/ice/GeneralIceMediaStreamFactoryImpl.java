@@ -10,6 +10,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
 import org.lastbamboo.common.ice.util.IceUdpConnector;
 import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.client.TcpStunClient;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
@@ -83,8 +84,20 @@ public class GeneralIceMediaStreamFactoryImpl
             final TurnClientListener turnClientListener =
                 new TcpFrameTurnClientListener(messageVisitorFactory, 
                     delegateTurnClientListener);
-            final StunClient tcpTurnClient = 
-                new IceTcpTurnClient(turnClientListener);
+            
+            // We should only start a TURN client on the answerer to 
+            // save resources.
+            final StunClient tcpTurnClient;
+            if (!iceAgent.isControlling())
+                {
+                tcpTurnClient = new IceTcpTurnClient(turnClientListener);
+                }
+            else
+                {
+                // TODO: Not sure what this should be!!
+                tcpTurnClient = new TcpStunClient();
+                }
+                
             tcpStunPeer = 
                 new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 
                     iceAgent.isControlling());

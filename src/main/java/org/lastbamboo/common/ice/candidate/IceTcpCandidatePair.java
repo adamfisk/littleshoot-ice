@@ -69,13 +69,6 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
         this.m_pairId = s_pairId;
         s_pairId++;
         }
-
-
-    public TcpFrameClientIoHandler getTcpFrameIoHandler()
-        {
-        //return this.m_frameIoHandler;
-        return null;
-        }
     
     public void setIoSession(final IoSession session)
         {

@@ -21,8 +21,6 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrame;
 import org.lastbamboo.common.tcp.frame.TcpFrameClientIoHandler;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
-import org.lastbamboo.common.tcp.frame.TcpFrameServerIoHandler;
-import org.lastbamboo.common.util.ShootConstants;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -42,9 +40,9 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final StunClient m_stunClient;
     private final StunServer m_stunServer;
-    private final IoHandler m_streamIoHandler = 
-        new TcpFrameServerIoHandler(
-            new InetSocketAddress("127.0.0.1", ShootConstants.HTTP_PORT));
+    private final IoHandler m_streamIoHandler = new TcpFrameClientIoHandler();
+        //new TcpFrameServerIoHandler(
+          //  new InetSocketAddress("127.0.0.1", ShootConstants.HTTP_PORT));
     
     /**
      * Creates a new ICE STUN UDP peer.

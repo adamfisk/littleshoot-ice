@@ -440,8 +440,8 @@ public class IceStunClientCandidateProcessor
                         final IceTcpCandidatePair pair)
                         {
                         return m_existingSessionPairFactory.newTcpPair(
-                            localCandidate, remoteCandidate, 
-                            pair.getIoSession(), pair.getTcpFrameIoHandler());
+                            localCandidate, newRemoteCandidate, 
+                            pair.getIoSession());
                         }
                     public IceCandidatePair visitUdpIceCandidatePair(
                         final IceUdpCandidatePair pair)

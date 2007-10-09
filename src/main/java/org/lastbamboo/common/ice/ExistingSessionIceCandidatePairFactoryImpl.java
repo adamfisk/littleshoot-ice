@@ -27,8 +27,7 @@ public class ExistingSessionIceCandidatePairFactoryImpl
         }
 
     public IceCandidatePair newTcpPair(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final IoSession ioSession, 
-        final TcpFrameClientIoHandler frameIoHandler)
+        final IceCandidate remoteCandidate, final IoSession ioSession)
         {
         return new IceTcpCandidatePair(localCandidate, 
             remoteCandidate, ioSession, this.m_checkerFactory);
