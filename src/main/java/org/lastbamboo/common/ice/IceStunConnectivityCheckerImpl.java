@@ -20,7 +20,7 @@ import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
+import org.lastbamboo.common.tcp.frame.TcpFrameClientIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ public final class IceStunConnectivityCheckerImpl<T>
 
     private final IceBindingRequestTracker m_bindingRequestTracker;
 
-    private final TcpFrameIoHandler m_tcpFrameIoHandler;
+    private final TcpFrameClientIoHandler m_tcpFrameIoHandler;
 
     /**
      * Creates a new message visitor for the specified session.
@@ -71,8 +71,8 @@ public final class IceStunConnectivityCheckerImpl<T>
         
         // This will be null if we're not checking for TCP here.  That's fine
         // though, as only TCP code uses this.
-        this.m_tcpFrameIoHandler = (TcpFrameIoHandler) session.getAttribute(
-            TcpFrameIoHandler.class.getSimpleName());
+        this.m_tcpFrameIoHandler = (TcpFrameClientIoHandler) session.getAttribute(
+            TcpFrameClientIoHandler.class.getSimpleName());
         m_ioSession = session;
         m_bindingRequestTracker = bindingRequestTracker;
         m_candidatePairFactory = 

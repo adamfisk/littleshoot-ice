@@ -25,7 +25,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrame;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
-import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
+import org.lastbamboo.common.tcp.frame.TcpFrameClientIoHandler;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -39,7 +39,7 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
     private final IoServiceListener m_ioServiceListener;
     private final boolean m_controlling;
     private final DemuxingIoHandler<StunMessage, TcpFrame> m_demuxingIoHandler;
-    private final TcpFrameIoHandler m_streamIoHandler;
+    private final TcpFrameClientIoHandler m_streamIoHandler;
 
     public IceTcpConnector(final IoServiceListener ioServiceListener, 
         final StunMessageVisitorFactory messageVisitorFactory, 
@@ -52,7 +52,7 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
         final IoHandler stunIoHandler = 
             new StunIoHandler<StunMessage>(messageVisitorFactory);
 
-        this.m_streamIoHandler = new TcpFrameIoHandler();
+        this.m_streamIoHandler = new TcpFrameClientIoHandler();
         this.m_demuxingIoHandler = 
             new DemuxingIoHandler<StunMessage, TcpFrame>(
                 StunMessage.class, stunIoHandler, 
@@ -154,7 +154,7 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
 
     public void sessionCreated(final IoSession session)
         {
-        session.setAttribute(TcpFrameIoHandler.class.getSimpleName(), 
+        session.setAttribute(TcpFrameClientIoHandler.class.getSimpleName(), 
             this.m_streamIoHandler);
         }
 
@@ -162,7 +162,7 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
         {
         }
 
-    public TcpFrameIoHandler getStreamIoHandler()
+    public TcpFrameClientIoHandler getStreamIoHandler()
         {
         return this.m_streamIoHandler;
         }

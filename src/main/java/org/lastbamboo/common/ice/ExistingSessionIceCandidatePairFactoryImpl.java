@@ -5,7 +5,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
-import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
+import org.lastbamboo.common.tcp.frame.TcpFrameClientIoHandler;
 
 public class ExistingSessionIceCandidatePairFactoryImpl 
     implements ExistingSessionIceCandidatePairFactory
@@ -28,7 +28,7 @@ public class ExistingSessionIceCandidatePairFactoryImpl
 
     public IceCandidatePair newTcpPair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoSession ioSession, 
-        final TcpFrameIoHandler frameIoHandler)
+        final TcpFrameClientIoHandler frameIoHandler)
         {
         return new IceTcpCandidatePair(localCandidate, 
             remoteCandidate, ioSession, this.m_checkerFactory);
