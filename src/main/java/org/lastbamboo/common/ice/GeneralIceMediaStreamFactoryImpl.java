@@ -88,7 +88,7 @@ public class GeneralIceMediaStreamFactoryImpl
             // We should only start a TURN client on the answerer to 
             // save resources.
             final StunClient tcpTurnClient;
-            if (!iceAgent.isControlling())
+            if (!true)
                 {
                 tcpTurnClient = new IceTcpTurnClient(turnClientListener);
                 }
