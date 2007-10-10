@@ -5,7 +5,6 @@ import java.net.Socket;
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
-import org.lastbamboo.common.tcp.frame.TcpFrameClientIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +58,6 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
         final IceTcpConnector iceConnector)
         {
         super(localCandidate, remoteCandidate, stunCheckerFactory, iceConnector);
-        /*
-        this.m_frameIoHandler = iceConnector.getStreamIoHandler();
-        if (m_frameIoHandler == null)
-            {
-            throw new NullPointerException("Null frame io handler");
-            }
-            */
         this.m_pairId = s_pairId;
         s_pairId++;
         }
@@ -89,11 +81,4 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
         {
         return visitor.visitTcpIceCandidatePair(this);
         }
-    
-    @Override
-    public String toString()
-        {
-        return getClass().getSimpleName() + " " + this.m_pairId;
-        }
-
     }
