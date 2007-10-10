@@ -1,6 +1,7 @@
 package org.lastbamboo.common.ice;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,22 +9,15 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.mina.common.ByteBuffer;
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoService;
-import org.apache.mina.common.IoServiceConfig;
-import org.apache.mina.common.IoServiceListener;
-import org.apache.mina.common.IoSession;
 import org.junit.Test;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.TurnClientListenerStub;
 import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.client.TcpStunClient;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
@@ -50,6 +44,11 @@ public class IceStunTcpPeerTest
     
     @Test public void testSocketHandling() throws Exception
         {
+        // This is disabled because we no longer relay data to the server
+        // because either side could be the "client" or "server" depending
+        // on ICE processing -- i.e., we can't assume we're even passing
+        // data to the server side ever.
+        /*
         startThreadedHttpServer();
         synchronized (this.m_serverStarted)
             {
@@ -104,6 +103,7 @@ public class IceStunTcpPeerTest
         assertEquals(MESSAGE.length(), length);
         final String responseString = MinaUtils.toAsciiString(responseBuf);
         assertEquals(MESSAGE, responseString);
+        */
         }
 
     private void startThreadedHttpServer()
