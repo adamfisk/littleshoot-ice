@@ -32,6 +32,9 @@ import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Class for establishing TCP connections for ICE. 
+ */
 public class IceTcpConnector implements IceConnector, IoServiceListener
     {
 
@@ -41,6 +44,14 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
     private final DemuxingIoHandler<StunMessage, TcpFrame> m_demuxingIoHandler;
     private final TcpFrameClientIoHandler m_streamIoHandler;
 
+    /**
+     * Creates a new connector for connecting to the remote address.
+     * 
+     * @param ioServiceListener The listener for IO events.
+     * @param messageVisitorFactory The class for visiting received STUN
+     * messages.
+     * @param controlling Whether or not this agent is controlling.
+     */
     public IceTcpConnector(final IoServiceListener ioServiceListener, 
         final StunMessageVisitorFactory messageVisitorFactory, 
         final boolean controlling)
@@ -87,7 +98,7 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
         
         connector.getFilterChain().addLast("demuxingFilter", demuxingFilter);
 
-        m_log.debug("Establishing TCP connection...");
+        m_log.debug("Establishing TCP connection to: {}", remoteAddress);
         final InetAddress address = remoteAddress.getAddress();
         final int connectTimeout;
         // If the address is on the local network, we should be able to 
