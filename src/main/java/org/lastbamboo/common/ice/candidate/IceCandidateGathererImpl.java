@@ -57,9 +57,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
         
-        // The TCP peer can be null on offerers as an optimization to save
-        // TURN server resources.
-        if (this.m_desc.isTcp() && this.m_iceTcpStunPeer != null)
+        if (this.m_desc.isTcp())
             {
             final Collection<IceCandidate> tcpCandidates = 
                 createTcpCandidates(this.m_iceTcpStunPeer);
@@ -193,29 +191,34 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
     
-        final InetSocketAddress relayAddress = client.getRelayAddress();
-        
-        // For relayed candidates, the related address is the mapped address.
-        final InetSocketAddress relatedAddress = 
-            client.getServerReflexiveAddress();
-        
-        final InetAddress stunServerAddress = client.getStunServerAddress();
-        
-        // Add the relay candidate.  Note that for relay candidates, the base
-        // candidate is the relay candidate itself. 
-        final IceCandidate relayCandidate = 
-            new IceTcpRelayPassiveCandidate(relayAddress, 
-                stunServerAddress, relatedAddress.getAddress(), 
-                relatedAddress.getPort(), this.m_controlling);
-        candidates.add(relayCandidate);
-        
-        // Add the host candidate.  Note the host candidate is also used as
-        // the BASE candidate for the server reflexive candidate below.
-        final InetSocketAddress hostAddress = client.getHostAddress();
-        
-        final IceCandidate hostCandidate = 
-            new IceTcpHostPassiveCandidate(hostAddress, this.m_controlling);
-        candidates.add(hostCandidate);
+        // The TCP peer can be null on offerers as an optimization to save
+        // TURN server resources.
+        if (client != null)
+            {
+            final InetSocketAddress relayAddress = client.getRelayAddress();
+            
+            // For relayed candidates, the related address is the mapped address.
+            final InetSocketAddress relatedAddress = 
+                client.getServerReflexiveAddress();
+            
+            final InetAddress stunServerAddress = client.getStunServerAddress();
+            
+            // Add the relay candidate.  Note that for relay candidates, the base
+            // candidate is the relay candidate itself. 
+            final IceCandidate relayCandidate = 
+                new IceTcpRelayPassiveCandidate(relayAddress, 
+                    stunServerAddress, relatedAddress.getAddress(), 
+                    relatedAddress.getPort(), this.m_controlling);
+            candidates.add(relayCandidate);
+            
+            // Add the host candidate.  Note the host candidate is also used as
+            // the BASE candidate for the server reflexive candidate below.
+            final InetSocketAddress hostAddress = client.getHostAddress();
+            
+            final IceCandidate hostCandidate = 
+                new IceTcpHostPassiveCandidate(hostAddress, this.m_controlling);
+            candidates.add(hostCandidate);
+            }
         
         // Add the active candidate.
         try
