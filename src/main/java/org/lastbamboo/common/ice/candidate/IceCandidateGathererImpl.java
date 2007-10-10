@@ -57,7 +57,9 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
         
-        if (this.m_desc.isTcp())
+        // The TCP peer can be null on offerers as an optimization to save
+        // TURN server resources.
+        if (this.m_desc.isTcp() && this.m_iceTcpStunPeer != null)
             {
             final Collection<IceCandidate> tcpCandidates = 
                 createTcpCandidates(this.m_iceTcpStunPeer);
