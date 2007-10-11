@@ -9,6 +9,7 @@ import org.lastbamboo.common.ice.util.IceConnector;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.message.attributes.turn.RemoteAddressAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,7 +174,8 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         if (this.m_ioSession == null)
             {
             // This will be the case if the connection attempt simply failed.
-            m_log.debug("Could not connect to the remote host...");
+            m_log.debug("Could not connect to the remote host: {}", 
+                this.m_remoteCandidate.getSocketAddress());
             return new ConnectErrorStunMessage();
             }
         this.m_currentStunChecker = 

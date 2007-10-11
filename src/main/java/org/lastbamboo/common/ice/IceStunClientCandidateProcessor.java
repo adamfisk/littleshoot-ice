@@ -312,7 +312,8 @@ public class IceStunClientCandidateProcessor
                 final ConnectErrorStunMessage message)
                 {
                 // See section 7.1.2.1. Failure Cases.
-                m_log.debug("Got ICMP error -- setting pair state to failed.");
+                m_log.debug("Got connect error -- setting pair state to " +
+                    "failed.");
                 m_pair.setState(IceCandidatePairState.FAILED);
                 return null;
                 }
