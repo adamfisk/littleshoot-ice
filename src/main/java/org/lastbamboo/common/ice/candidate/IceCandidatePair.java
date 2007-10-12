@@ -146,5 +146,12 @@ public interface IceCandidatePair extends Comparable
     void close();
 
     IoSession getIoSession();
+    
+    /**
+     * Sets the {@link IoSession} for the pair.
+     * 
+     * @param session The {@link IoSession}.
+     */
+    void setIoSession(final IoSession session);
 
     }

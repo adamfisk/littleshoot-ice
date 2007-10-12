@@ -51,11 +51,11 @@ public class IceStunUdpPeer implements StunClient, StunServer
         final String controllingString;
         if (controlling)
             {
-            controllingString = "Controlling";
+            controllingString = "-Controlling";
             }
         else
             {
-            controllingString = "Not-Controlling";
+            controllingString = "-Not-Controlling";
             }
         
         // NOTE: We're starting the server here before external code has

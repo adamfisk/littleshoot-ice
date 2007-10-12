@@ -66,11 +66,12 @@ public interface IceMediaStream extends IoServiceListener
      * 
      * @param localAddress The address for the local candidate.
      * @param remoteAddress The address for the remote candidate.
+     * @param udp Whether or not the pair is UDP.
      * @return The pair matching both addresses, or <code>null</code> if no
      * such pair exists.
      */
     IceCandidatePair getPair(InetSocketAddress localAddress, 
-        InetSocketAddress remoteAddress);
+        InetSocketAddress remoteAddress, boolean udp);
 
     /**
      * Called when connectivity checks have created a new valid pair and the

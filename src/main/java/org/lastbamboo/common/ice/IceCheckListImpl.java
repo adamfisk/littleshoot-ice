@@ -2,7 +2,6 @@ package org.lastbamboo.common.ice;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,12 +13,10 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairPriorityCalculator;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
-import org.lastbamboo.common.ice.candidate.IceCandidatePairVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
@@ -30,8 +27,6 @@ import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
-import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.CollectionUtils;
 import org.lastbamboo.common.util.CollectionUtilsImpl;
@@ -684,53 +679,5 @@ public class IceCheckListImpl implements IceCheckList
         
         executeOnPairs(close);
         executeOnPairs(this.m_triggeredQueue, close);
-        }
-
-    public void matchWithCandidatePair(final IoSession session)
-        {
-        final InetSocketAddress localAddress = 
-            (InetSocketAddress) session.getLocalAddress();
-        final InetSocketAddress remoteAddress =
-            (InetSocketAddress) session.getRemoteAddress();
-        final boolean udp = session.getTransportType().isConnectionless();
-        
-        // We don't currently do this for UDP sessions.
-        if (udp) return;
-        
-        final IceCandidatePairVisitor<Void> pairVisitor = 
-            new IceCandidatePairVisitor<Void>()
-            {
-
-            public Void visitTcpIceCandidatePair(final IceTcpCandidatePair pair)
-                {
-                if (udp) return null;
-                
-                final InetSocketAddress local = 
-                    pair.getLocalCandidate().getSocketAddress();
-                final InetSocketAddress remote =
-                    pair.getRemoteCandidate().getSocketAddress();
-                if (localAddress.equals(local) && remoteAddress.equals(remote))
-                    {
-                    m_log.debug("Setting session on pair!!");
-                    pair.setIoSession(session);
-                    }
-                return null;
-                }
-
-            public Void visitUdpIceCandidatePair(final IceUdpCandidatePair pair)
-                {
-                return null;
-                }
-            
-            };
-        final Closure<IceCandidatePair> closure = new Closure<IceCandidatePair>()
-            {
-            public void execute(final IceCandidatePair pair)
-                {
-                pair.accept(pairVisitor);
-                }
-            };
-        executeOnPairs(closure);
-        executeOnPairs(this.m_triggeredQueue, closure);
         }
     }

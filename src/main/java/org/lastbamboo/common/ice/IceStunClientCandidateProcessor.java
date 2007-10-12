@@ -383,7 +383,8 @@ public class IceStunClientCandidateProcessor
             {
             m_log.debug("Original pair not equal");
             final IceCandidatePair existingPair = 
-                m_mediaStream.getPair(newLocalAddress, remoteAddress);
+                m_mediaStream.getPair(newLocalAddress, remoteAddress,
+                    localCandidate.isUdp());
             if (existingPair != null)
                 {
                 pairToAddToValidList = existingPair;

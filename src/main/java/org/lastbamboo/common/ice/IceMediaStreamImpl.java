@@ -29,6 +29,7 @@ import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttribute;
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.Predicate;
+import org.lastbamboo.common.util.mina.MinaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,8 +137,12 @@ public class IceMediaStreamImpl implements IceMediaStream
             getLocalCandidate(localAddress, isUdp);
         if (localCandidate == null)
             {
-            m_log.warn("Could not find local candidate.  Aborting: "+
-                localAddress);
+            // We need to synchronized for toString to work on local candidates.
+            synchronized (this)
+                {
+                m_log.warn("Could not find local candidate "+localAddress+
+                    " in: "+ this.m_localCandidates+".  Aborting.");
+                }
             return null;
             }
         final int componentId = localCandidate.getComponentId();
@@ -325,16 +330,8 @@ public class IceMediaStreamImpl implements IceMediaStream
         return null;
         }
 
-    /**
-     * Checks if the new pair matches any pair the media stream already 
-     * knows about.
-     * 
-     * @param localAddress The local address of the new pair.
-     * @param remoteAddress The remote address of the new pair.
-     * @return The matching pair if it exists, otherwise <code>null</code>.
-     */
     public IceCandidatePair getPair(final InetSocketAddress localAddress, 
-        final InetSocketAddress remoteAddress)
+        final InetSocketAddress remoteAddress, final boolean isUdp)
         {
         // The check list might not exist yet if the offerer receives incoming
         // requests before it has received an answer.
@@ -342,16 +339,21 @@ public class IceMediaStreamImpl implements IceMediaStream
             {
             return null;
             }
-
         final Predicate<IceCandidatePair> pred = 
             new Predicate<IceCandidatePair>()
             {
             public boolean evaluate(final IceCandidatePair pair)
                 {
-                if (pair.getLocalCandidate().getSocketAddress().equals(localAddress) &&
-                    pair.getRemoteCandidate().getSocketAddress().equals(remoteAddress))
+                final IceCandidate lc = pair.getLocalCandidate();
+                final IceCandidate rc = pair.getRemoteCandidate();
+                if ((isUdp && lc.isUdp()) ||
+                    (!isUdp && !lc.isUdp()))
                     {
-                    return true;
+                    if (lc.getSocketAddress().equals(localAddress) &&
+                        rc.getSocketAddress().equals(remoteAddress))
+                        {
+                        return true;
+                        }
                     }
                 return false;
                 }
@@ -535,10 +537,18 @@ public class IceMediaStreamImpl implements IceMediaStream
         m_log.debug("Setting media stream on session");
         session.setAttribute(IceMediaStream.class.getSimpleName(), this);
         
-        // The check list could be null in tests.
-        if (m_checkList != null)
+        final InetSocketAddress localAddress = 
+            (InetSocketAddress) session.getLocalAddress();
+        final InetSocketAddress remoteAddress =
+            (InetSocketAddress) session.getRemoteAddress();
+        
+        final boolean isUdp = MinaUtils.isUdp(session);
+        final IceCandidatePair pair = 
+            getPair(localAddress, remoteAddress, isUdp);
+        
+        if (pair.getIoSession() == null)
             {
-            this.m_checkList.matchWithCandidatePair(session);
+            pair.setIoSession(session);
             }
         }
 

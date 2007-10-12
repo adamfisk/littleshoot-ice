@@ -46,8 +46,6 @@ public final class IceStunConnectivityCheckerImpl<T>
 
     private final IceBindingRequestTracker m_bindingRequestTracker;
 
-    //private final TcpFrameClientIoHandler m_tcpFrameIoHandler;
-
     /**
      * Creates a new message visitor for the specified session.
      * 
@@ -67,11 +65,6 @@ public final class IceStunConnectivityCheckerImpl<T>
         m_agent = agent;
         m_iceMediaStream = (IceMediaStream) session.getAttribute(
             IceMediaStream.class.getSimpleName());
-        
-        // This will be null if we're not checking for TCP here.  That's fine
-        // though, as only TCP code uses this.
-        //this.m_tcpFrameIoHandler = (TcpFrameClientIoHandler) session.getAttribute(
-          //  TcpFrameClientIoHandler.class.getSimpleName());
         m_ioSession = session;
         m_bindingRequestTracker = bindingRequestTracker;
         m_candidatePairFactory = 
@@ -192,7 +185,8 @@ public final class IceStunConnectivityCheckerImpl<T>
         
         // 7.2.1.4. Triggered Checks
         final IceCandidatePair existingPair = 
-            this.m_iceMediaStream.getPair(localAddress, remoteAddress);
+            this.m_iceMediaStream.getPair(localAddress, remoteAddress, 
+                localCandidate.isUdp());
         final IceCandidatePair computedPair;
         if (existingPair != null)
             {

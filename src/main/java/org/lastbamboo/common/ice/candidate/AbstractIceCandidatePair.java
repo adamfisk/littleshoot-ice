@@ -9,7 +9,6 @@ import org.lastbamboo.common.ice.util.IceConnector;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.attributes.turn.RemoteAddressAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -253,6 +252,16 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             m_log.debug("Setting state to failed, closing checker");
             close();
             }
+        }
+    
+    public void setIoSession(final IoSession session)
+        {
+        if (this.m_ioSession != null)
+            {
+            m_log.warn("Ignoring set session because it already exists!!");
+            return;
+            }
+        this.m_ioSession = session;
         }
     
     public int getComponentId()

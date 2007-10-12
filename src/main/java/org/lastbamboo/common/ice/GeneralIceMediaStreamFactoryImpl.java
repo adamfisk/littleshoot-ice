@@ -16,8 +16,11 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
-import org.lastbamboo.common.turn.client.TcpFrameTurnClientListener;
+import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
+import org.lastbamboo.common.turn.client.StunTcpFrameTurnClientListener;
+import org.lastbamboo.common.turn.client.TcpTurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
+import org.lastbamboo.common.turn.client.TurnStunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -80,14 +83,22 @@ public class GeneralIceMediaStreamFactoryImpl
         final IceStunTcpPeer tcpStunPeer;
         if (streamDesc.isTcp() && !iceAgent.isControlling())
             {
+            final TurnStunDemuxableProtocolCodecFactory mapper = 
+                new TurnStunDemuxableProtocolCodecFactory();
             final TurnClientListener turnClientListener =
-                new TcpFrameTurnClientListener(messageVisitorFactory, 
-                    delegateTurnClientListener);
+                new StunTcpFrameTurnClientListener(messageVisitorFactory, 
+                    delegateTurnClientListener, mapper);
+            
+            final DemuxableProtocolCodecFactory tcpFramingCodecFactory =
+                new TcpFrameCodecFactory();
+            final ProtocolCodecFactory codecFactory = 
+                new DemuxingProtocolCodecFactory(mapper, 
+                    tcpFramingCodecFactory);
             
             // We should only start a TURN client on the answerer to 
             // save resources.
             final StunClient tcpTurnClient = 
-                new IceTcpTurnClient(turnClientListener);
+                new TcpTurnClient(turnClientListener, codecFactory);
                 
             tcpStunPeer = 
                 new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 

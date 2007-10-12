@@ -51,13 +51,6 @@ public class IceMediaStreamImplStub implements IceMediaStream
 
         }
 
-    public IceCandidatePair getPair(InetSocketAddress localAddress,
-            InetSocketAddress remoteAddress)
-        {
-        // TODO Auto-generated method stub
-        return null;
-        }
-
     public Queue<IceCandidatePair> getValidPairs()
         {
         // TODO Auto-generated method stub
@@ -195,6 +188,12 @@ public class IceMediaStreamImplStub implements IceMediaStream
         {
         // TODO Auto-generated method stub
         
+        }
+
+    public IceCandidatePair getPair(InetSocketAddress localAddress, InetSocketAddress remoteAddress, boolean udp)
+        {
+        // TODO Auto-generated method stub
+        return null;
         }
 
     }

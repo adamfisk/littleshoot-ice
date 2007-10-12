@@ -142,14 +142,4 @@ public interface IceCheckList
      */
     void close();
 
-    /**
-     * Checks all pairs to see if this session matches any pair.  This is 
-     * necessary for TCP in particular because we can receive sessions on
-     * accepting sockets, and we need a way to associate those sessions with 
-     * the appropriate existing pair.
-     * 
-     * @param session The session to check existing pairs for.
-     */
-    void matchWithCandidatePair(IoSession session);
-
     }

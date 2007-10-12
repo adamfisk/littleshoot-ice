@@ -62,16 +62,6 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
         s_pairId++;
         }
     
-    public void setIoSession(final IoSession session)
-        {
-        if (this.m_ioSession != null)
-            {
-            m_log.warn("Ignoring set session because it already exists!!");
-            return;
-            }
-        this.m_ioSession = session;
-        }
-    
     public Socket getSocket()
         {
         return (Socket) this.m_ioSession.getAttribute("SOCKET");
