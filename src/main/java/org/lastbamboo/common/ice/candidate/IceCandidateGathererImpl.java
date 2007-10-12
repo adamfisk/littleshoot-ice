@@ -213,11 +213,13 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             
             // Add the host candidate.  Note the host candidate is also used as
             // the BASE candidate for the server reflexive candidate below.
+            /*
             final InetSocketAddress hostAddress = client.getHostAddress();
             
             final IceCandidate hostCandidate = 
                 new IceTcpHostPassiveCandidate(hostAddress, this.m_controlling);
             candidates.add(hostCandidate);
+            */
             }
         
         // Add the active candidate.
