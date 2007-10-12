@@ -83,7 +83,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
 
     private final String m_mimeContentSubtype;
 
-    private final IceCandidate[] m_defaultCandidates = new IceCandidate[4];
+    private final IceCandidate[] m_defaultCandidates = new IceCandidate[5];
 
     /**
      * Creates a new encoder for encoder ICE candidates into SDP.
@@ -130,7 +130,6 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
             throw new IllegalArgumentException("Could not create SDP", e);
             }
         }
-    
 
     /**
      * Accesses the SDP as an array of bytes.
@@ -189,6 +188,11 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
                     defaultCandidate = candidate;
                     }
                 }
+            if (defaultCandidate == null)
+                {
+                LOG.error("No default candidate from: {}", candidates);
+                return;
+                }
             final MediaDescription md = 
                 createMessageMediaDesc(defaultCandidate);
             md.setAttributes(m_candidates);
@@ -225,6 +229,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         final IceTcpRelayPassiveCandidate candidate)
         {
         addAttributeWithRelated(candidate);
+        m_defaultCandidates[3] = candidate;
         return ObjectUtils.NULL;
         }
 
@@ -240,6 +245,9 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
     public Null visitTcpActiveCandidate(final IceTcpActiveCandidate candidate)
         {
         addAttribute(candidate, 9);
+        
+        // This will only ever be relevant for testing.
+        m_defaultCandidates[4] = candidate;
         return ObjectUtils.NULL;
         }
 

@@ -82,7 +82,7 @@ public class IceAgentImpl implements IceAgent
     private void setIceState(final IceState state)
         {
         this.m_iceState.set(state);
-        if (state == IceState.COMPLETED)
+        if (state == IceState.COMPLETED || state == IceState.FAILED)
             {
             this.m_offerAnswerListener.onOfferAnswerComplete(this);
             }

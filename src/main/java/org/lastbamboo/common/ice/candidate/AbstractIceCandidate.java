@@ -273,8 +273,7 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         sb.append(m_controlling);
         sb.append(" ");
         sb.append(m_address);
-        sb.append(" UDP: ");
-        sb.append(this.m_isUdp);
+        sb.append(this.m_isUdp ? " UDP" : " TCP");
         return sb.toString();
         }
     }

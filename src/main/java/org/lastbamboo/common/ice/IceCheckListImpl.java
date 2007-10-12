@@ -573,6 +573,7 @@ public class IceCheckListImpl implements IceCheckList
                     case FROZEN:
                         // Fall through.
                     case WAITING:
+                        m_log.debug("Closing pair:\n{}", curPair);
                         curPair.close();
                         iter.remove();
                         break;
