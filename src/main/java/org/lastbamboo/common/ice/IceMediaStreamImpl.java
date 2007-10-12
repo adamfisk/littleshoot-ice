@@ -546,6 +546,10 @@ public class IceMediaStreamImpl implements IceMediaStream
         final IceCandidatePair pair = 
             getPair(localAddress, remoteAddress, isUdp);
         
+        if (pair == null)
+            {
+            return;
+            }
         if (pair.getIoSession() == null)
             {
             pair.setIoSession(session);
