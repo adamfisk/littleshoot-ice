@@ -81,7 +81,7 @@ public class GeneralIceMediaStreamFactoryImpl
         // This class just decodes the TCP frames.
 
         final IceStunTcpPeer tcpStunPeer;
-        if (streamDesc.isTcp())// && !iceAgent.isControlling())
+        if (streamDesc.isTcp())
             {
             final TurnStunDemuxableProtocolCodecFactory mapper = 
                 new TurnStunDemuxableProtocolCodecFactory();

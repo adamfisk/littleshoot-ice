@@ -191,36 +191,35 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
     
-        // The TCP peer can be null on offerers as an optimization to save
-        // TURN server resources.
-        if (client != null)
+        // Only add the TURN candidate on the non-controlling side to save
+        // resources.
+        if (!this.m_controlling)
             {
             final InetSocketAddress relayAddress = client.getRelayAddress();
             
-            // For relayed candidates, the related address is the mapped address.
+            // For relayed candidates, the related address is the mapped 
+            // address.
             final InetSocketAddress relatedAddress = 
                 client.getServerReflexiveAddress();
             
             final InetAddress stunServerAddress = client.getStunServerAddress();
             
-            // Add the relay candidate.  Note that for relay candidates, the base
-            // candidate is the relay candidate itself. 
+            // Add the relay candidate.  Note that for relay candidates, the 
+            // base candidate is the relay candidate itself. 
             final IceCandidate relayCandidate = 
                 new IceTcpRelayPassiveCandidate(relayAddress, 
                     stunServerAddress, relatedAddress.getAddress(), 
                     relatedAddress.getPort(), this.m_controlling);
             candidates.add(relayCandidate);
-            
-            // Add the host candidate.  Note the host candidate is also used as
-            // the BASE candidate for the server reflexive candidate below.
-            /*
-            final InetSocketAddress hostAddress = client.getHostAddress();
-            
-            final IceCandidate hostCandidate = 
-                new IceTcpHostPassiveCandidate(hostAddress, this.m_controlling);
-            candidates.add(hostCandidate);
-            */
             }
+            
+        // Add the host candidate.  Note the host candidate is also used as
+        // the BASE candidate for the server reflexive candidate below.
+        final InetSocketAddress hostAddress = client.getHostAddress();
+        
+        final IceCandidate hostCandidate = 
+            new IceTcpHostPassiveCandidate(hostAddress, this.m_controlling);
+        candidates.add(hostCandidate);
         
         // Add the active candidate.
         try

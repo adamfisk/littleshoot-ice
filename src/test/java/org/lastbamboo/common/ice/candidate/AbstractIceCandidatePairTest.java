@@ -10,7 +10,7 @@ import junit.framework.TestCase;
 
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.stubs.IoSessionStub;
-import org.lastbamboo.common.tcp.frame.TcpFrameClientIoHandler;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 
 /**
  * Test for ICE candidate pairs.

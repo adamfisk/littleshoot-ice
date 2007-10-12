@@ -670,6 +670,7 @@ public class IceCheckListImpl implements IceCheckList
 
     public void close()
         {
+        m_log.debug("Closing check list...");
         final Closure<IceCandidatePair> close = new Closure<IceCandidatePair>()
             {
             public void execute(final IceCandidatePair pair)

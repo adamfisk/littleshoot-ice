@@ -5,7 +5,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
-import org.lastbamboo.common.tcp.frame.TcpFrameClientIoHandler;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 
 public class ExistingSessionIceCandidatePairFactoryImpl 
     implements ExistingSessionIceCandidatePairFactory

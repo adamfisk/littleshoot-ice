@@ -25,7 +25,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrame;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
-import org.lastbamboo.common.tcp.frame.TcpFrameClientIoHandler;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -62,8 +62,8 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
         final IoHandler stunIoHandler = 
             new StunIoHandler<StunMessage>(messageVisitorFactory);
 
-        final TcpFrameClientIoHandler streamIoHandler = 
-            new TcpFrameClientIoHandler();
+        final TcpFrameIoHandler streamIoHandler = 
+            new TcpFrameIoHandler();
         this.m_demuxingIoHandler = 
             new DemuxingIoHandler<StunMessage, TcpFrame>(
                 StunMessage.class, stunIoHandler, 

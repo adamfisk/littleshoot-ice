@@ -19,8 +19,8 @@ import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrame;
-import org.lastbamboo.common.tcp.frame.TcpFrameClientIoHandler;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
+import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -40,9 +40,8 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final StunClient m_stunClient;
     private final StunServer m_stunServer;
-    private final IoHandler m_streamIoHandler = new TcpFrameClientIoHandler();
-        //new TcpFrameServerIoHandler(
-          //  new InetSocketAddress("127.0.0.1", ShootConstants.HTTP_PORT));
+    private final IoHandler m_streamIoHandler = new TcpFrameIoHandler();
+    private final boolean m_controlling;
     
     /**
      * Creates a new ICE STUN UDP peer.
@@ -57,6 +56,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         final boolean controlling)
         {
         m_stunClient = tcpStunClient;
+        this.m_controlling = controlling;
         
         // We also add whether we're the controlling agent for thread
         // naming here just to make log reading easier.
@@ -91,15 +91,27 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
 
     public void connect()
         {
-        this.m_stunClient.connect();
-        this.m_stunServer.start(m_stunClient.getHostAddress());
-        m_log.debug("Bound to address: {}", m_stunClient.getHostAddress());
+        // We only use the TURN client for non-controlling agents to save
+        // resources.
+        if (!this.m_controlling)
+            {
+            this.m_stunClient.connect();
+            this.m_stunServer.start(m_stunClient.getHostAddress());
+            }
+        else
+            {
+            // This tells the server to allocate an ephemeral port.
+            m_log.debug("Starting TCP STUN server on ephemeral port");
+            this.m_stunServer.start(null); 
+            }
+        
         //this.m_upnpManager.mapAddress(m_stunClient.getHostAddress());
         }
     
     public InetSocketAddress getHostAddress()
         {
-        return this.m_stunClient.getHostAddress();
+        //return this.m_stunClient.getHostAddress();
+        return this.m_stunServer.getBoundAddress();
         }
 
     public InetSocketAddress getRelayAddress()
