@@ -42,7 +42,6 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
     private final IoServiceListener m_ioServiceListener;
     private final boolean m_controlling;
     private final DemuxingIoHandler<StunMessage, TcpFrame> m_demuxingIoHandler;
-    private final TcpFrameClientIoHandler m_streamIoHandler;
 
     /**
      * Creates a new connector for connecting to the remote address.
@@ -63,11 +62,12 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
         final IoHandler stunIoHandler = 
             new StunIoHandler<StunMessage>(messageVisitorFactory);
 
-        this.m_streamIoHandler = new TcpFrameClientIoHandler();
+        final TcpFrameClientIoHandler streamIoHandler = 
+            new TcpFrameClientIoHandler();
         this.m_demuxingIoHandler = 
             new DemuxingIoHandler<StunMessage, TcpFrame>(
                 StunMessage.class, stunIoHandler, 
-                TcpFrame.class, m_streamIoHandler);
+                TcpFrame.class, streamIoHandler);
         }
 
     public IoSession connect(final InetSocketAddress localAddress,
@@ -165,11 +165,10 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
 
     public void sessionCreated(final IoSession session)
         {
-        session.setAttribute(TcpFrameClientIoHandler.class.getSimpleName(), 
-            this.m_streamIoHandler);
         }
 
     public void sessionDestroyed(final IoSession session)
         {
+        m_log.debug("Lost connection: {}", session);
         }
     }
