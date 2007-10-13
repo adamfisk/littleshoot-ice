@@ -115,9 +115,6 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final Collection<IceCandidate> candidates =
             new LinkedList<IceCandidate>();
 
-        final InetSocketAddress serverReflexiveAddress = 
-            client.getServerReflexiveAddress();
-        
         final InetAddress stunServerAddress = 
             client.getStunServerAddress();
         
@@ -130,59 +127,16 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             new IceUdpHostCandidate(hostAddress, this.m_controlling);
         candidates.add(hostCandidate);
         
-        addServerReflexive(candidates, serverReflexiveAddress, hostCandidate, 
-            stunServerAddress, this.m_controlling);
+        final InetSocketAddress serverReflexiveAddress = 
+            client.getServerReflexiveAddress();
+        
+        final IceUdpServerReflexiveCandidate serverReflexiveCandidate =
+            new IceUdpServerReflexiveCandidate(serverReflexiveAddress, 
+                hostCandidate, stunServerAddress, this.m_controlling);
+        
+        candidates.add(serverReflexiveCandidate);
+        
         return candidates;
-        }
-
-    private static void addServerReflexive(
-        final Collection<IceCandidate> candidates, 
-        final InetSocketAddress srflxAddress, 
-        final IceUdpHostCandidate hostCandidate, 
-        final InetAddress stunServerAddress, 
-        final boolean controlling)
-        {
-        /*
-        final InetSocketAddress srflxAddress2 = 
-            new InetSocketAddress(srflxAddress.getAddress(), 
-                srflxAddress.getPort() + 1);
-        final InetSocketAddress srflxAddress3 = 
-            new InetSocketAddress(srflxAddress.getAddress(), 
-                srflxAddress.getPort() + 2);
-        final InetSocketAddress srflxAddress4 = 
-            new InetSocketAddress(srflxAddress.getAddress(), 
-                srflxAddress.getPort() + 3);
-        final InetSocketAddress srflxAddress5 = 
-            new InetSocketAddress(srflxAddress.getAddress(), 
-                srflxAddress.getPort() + 4);
-        */
-        
-        final IceUdpServerReflexiveCandidate serverReflexiveCandidate1 =
-            new IceUdpServerReflexiveCandidate(srflxAddress, 
-                hostCandidate, stunServerAddress, controlling);
-        
-        /*
-        final IceUdpServerReflexiveCandidate serverReflexiveCandidate2 =
-            new IceUdpServerReflexiveCandidate(srflxAddress2, 
-                hostCandidate, stunServerAddress, controlling);
-        final IceUdpServerReflexiveCandidate serverReflexiveCandidate3 =
-            new IceUdpServerReflexiveCandidate(srflxAddress3, 
-                hostCandidate, stunServerAddress, controlling);
-        final IceUdpServerReflexiveCandidate serverReflexiveCandidate4 =
-            new IceUdpServerReflexiveCandidate(srflxAddress4, 
-                hostCandidate, stunServerAddress, controlling);
-        final IceUdpServerReflexiveCandidate serverReflexiveCandidate5 =
-            new IceUdpServerReflexiveCandidate(srflxAddress5, 
-                hostCandidate, stunServerAddress, controlling);
-        */
-        
-        candidates.add(serverReflexiveCandidate1);
-        /*
-        candidates.add(serverReflexiveCandidate2);
-        candidates.add(serverReflexiveCandidate3);
-        candidates.add(serverReflexiveCandidate4);
-        candidates.add(serverReflexiveCandidate5);
-        */
         }
 
     private Collection<IceCandidate> createTcpCandidates(

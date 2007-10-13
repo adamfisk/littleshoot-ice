@@ -74,6 +74,7 @@ public class IceCheckListImpl implements IceCheckList
         {
         this.m_iceCandidatePairFactory = candidatePairFactory;
         this.m_localCandidates = localCandidates;
+        m_log.debug("Using local candidates: {}", localCandidates);
         }
     
     public IceCandidatePair removeTopTriggeredPair()

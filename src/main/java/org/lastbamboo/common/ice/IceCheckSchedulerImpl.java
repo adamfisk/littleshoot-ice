@@ -3,11 +3,9 @@ package org.lastbamboo.common.ice;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
-import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.util.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,10 +115,11 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     private void performCheck(final IceCandidatePair pair)
         {
         final IceCandidate local = pair.getLocalCandidate();
-        final IceCandidateVisitor<IoSession> visitor = 
+        final IceStunClientCandidateProcessor processor = 
             new IceStunClientCandidateProcessor(m_agent, m_mediaStream, pair,
                 this.m_existingSessionPairFactory);
-        local.accept(visitor);
+        
+        processor.processLocalCandidate(local);
         }
 
     private IceCandidatePair getNextPair()

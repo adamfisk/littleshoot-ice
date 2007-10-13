@@ -16,19 +16,19 @@ public abstract class IceCandidateVisitorAdapter<T>
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
 
-    public void visitCandidates(Collection<IceCandidate> candidates)
+    public void visitCandidates(final Collection<IceCandidate> candidates)
         {
         m_log.warn("Not handling visit all candidates");
-        
         }
 
-    public T visitTcpActiveCandidate(IceTcpActiveCandidate candidate)
+    public T visitTcpActiveCandidate(final IceTcpActiveCandidate candidate)
         {
         m_log.warn("Visiting unhandled candidate: {}", candidate);
         return null;
         }
 
-    public T visitTcpHostPassiveCandidate(IceTcpHostPassiveCandidate candidate)
+    public T visitTcpHostPassiveCandidate(
+        final IceTcpHostPassiveCandidate candidate)
         {
         m_log.warn("Visiting unhandled candidate: {}", candidate);
         return null;
@@ -55,25 +55,27 @@ public abstract class IceCandidateVisitorAdapter<T>
         return null;
         }
 
-    public T visitUdpHostCandidate(IceUdpHostCandidate candidate)
+    public T visitUdpHostCandidate(final IceUdpHostCandidate candidate)
         {
         m_log.warn("Visiting unhandled candidate: {}", candidate);
         return null;
         }
 
-    public T visitUdpPeerReflexiveCandidate(IceUdpPeerReflexiveCandidate candidate)
+    public T visitUdpPeerReflexiveCandidate(
+        final IceUdpPeerReflexiveCandidate candidate)
         {
         m_log.warn("Visiting unhandled candidate: {}", candidate);
         return null;
         }
 
-    public T visitUdpRelayCandidate(IceUdpRelayCandidate candidate)
+    public T visitUdpRelayCandidate(final IceUdpRelayCandidate candidate)
         {
         m_log.warn("Visiting unhandled candidate: {}", candidate);
         return null;
         }
 
-    public T visitUdpServerReflexiveCandidate(IceUdpServerReflexiveCandidate candidate)
+    public T visitUdpServerReflexiveCandidate(
+        final IceUdpServerReflexiveCandidate candidate)
         {
         m_log.warn("Visiting unhandled candidate: {}", candidate);
         return null;

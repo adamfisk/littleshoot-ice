@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
  * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.1
  */
 public class IceStunClientCandidateProcessor 
-    extends IceCandidateVisitorAdapter<IoSession>
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
@@ -76,36 +75,12 @@ public class IceStunClientCandidateProcessor
         m_existingSessionPairFactory = existingSessionPairFactory;
         }
     
-    
-    public IoSession visitUdpHostCandidate(
-        final IceUdpHostCandidate candidate)
-        {
-        m_log.debug("Checking UDP host candidate...");
-        return visitLocalCandidate(candidate);
-        }
-    
-    public IoSession visitTcpActiveCandidate(
-        final IceTcpActiveCandidate candidate)
-        {
-        m_log.debug("Visiting TCP active candidate: {}", candidate);
-        return visitLocalCandidate(candidate);
-        }
-    
-    public IoSession visitTcpHostPassiveCandidate(
-        final IceTcpHostPassiveCandidate candidate)
-        {
-        m_log.debug("Visiting TCP host passive candidate: {}", candidate);
-        return visitLocalCandidate(candidate);
-        }
-    
-    public IoSession visitTcpPeerReflexiveCandidate(
-        final IceTcpPeerReflexiveCandidate candidate)
-        {
-        m_log.debug("Visiting TCP peer reflexive candidate: {}", candidate);
-        return visitLocalCandidate(candidate);
-        }
-    
-    private IoSession visitLocalCandidate(final IceCandidate localCandidate)
+    /**
+     * Processes the specified local candidate.
+     * 
+     * @param localCandidate The local candidate.
+     */
+    public void processLocalCandidate(final IceCandidate localCandidate)
         {
         // See ICE section 7 "Performing Connectivity Checks".
         final IceCandidate remoteCandidate = this.m_pair.getRemoteCandidate();
@@ -322,7 +297,7 @@ public class IceStunClientCandidateProcessor
         if (response == null)
             {
             m_log.debug("No response -- could not connect?");
-            return null;
+            return;
             }
             
         final IceCandidate newLocalCandidate = response.accept(visitor);
@@ -330,11 +305,11 @@ public class IceStunClientCandidateProcessor
             {
             m_log.debug("Check failed or was canceled -- should happen " +
                 "quite often");
-            return null;
+            return;
             }
         else
             {
-            return processSuccess(newLocalCandidate, remoteCandidate, 
+            processSuccess(newLocalCandidate, remoteCandidate, 
                 includedUseCandidate, requestPriority);
             }
         }
@@ -359,9 +334,8 @@ public class IceStunClientCandidateProcessor
      * @param useCandidate Whether the Binding Request included the 
      * USE-CANDIDATE attribute.
      * @param bindingRequestPriority The priority of the Binding Request.
-     * @return The generated {@link IoSession}.
      */
-    private IoSession processSuccess(final IceCandidate localCandidate, 
+    private void processSuccess(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final boolean useCandidate, 
         final long bindingRequestPriority)
         {
@@ -482,7 +456,6 @@ public class IceStunClientCandidateProcessor
         // 7.1.2.3. Check List and Timer State Updates
         m_log.debug("Updating check list and timer states.");
         m_mediaStream.updateCheckListAndTimerStates();
-        return null;
         }
     
     /**
