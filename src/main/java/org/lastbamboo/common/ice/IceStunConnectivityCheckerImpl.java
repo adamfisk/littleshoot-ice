@@ -322,7 +322,10 @@ public final class IceStunConnectivityCheckerImpl<T>
             m_log.debug("Nominating on success...");
             computedPair.nominateOnSuccess();
             }
-        m_log.debug("Not nominating on success...");
+        else
+            {
+            m_log.debug("Not nominating on success...");
+            }
         }
 
     private boolean fromOurselves(final IceAgent agent, 
