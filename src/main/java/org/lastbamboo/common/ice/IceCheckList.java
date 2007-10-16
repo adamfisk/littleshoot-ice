@@ -50,7 +50,8 @@ public interface IceCheckList
      * Removes the top triggered pair.  Triggered pairs are maintained in a
      * FIFO queue.
      * 
-     * @return The top triggered pair.
+     * @return The top triggered pair, or <code>null</code> if there is no
+     * such pair.
      */
     IceCandidatePair removeTopTriggeredPair();
 

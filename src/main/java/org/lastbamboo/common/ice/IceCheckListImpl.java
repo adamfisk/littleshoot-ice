@@ -79,7 +79,17 @@ public class IceCheckListImpl implements IceCheckList
     
     public IceCandidatePair removeTopTriggeredPair()
         {
-        return this.m_triggeredQueue.poll();
+        while (!this.m_triggeredQueue.isEmpty())
+            {
+            final IceCandidatePair pair = this.m_triggeredQueue.poll();
+            
+            // Don't recheck nominated pairs.
+            if (!pair.isNominated())
+                {
+                return pair;
+                }
+            }
+        return null;
         }
 
     public void setState(final IceCheckListState state)
