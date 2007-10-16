@@ -145,7 +145,7 @@ public class IceStunClientCandidateProcessor
         if (activeTcpSession != null)
             {
             final IceCandidateVisitor<Void> localCandidateVisitor =
-                new IceCandidateVisitorAdapter<Void>()
+                new IceCandidateVisitorAdapter<Void>(false)
                 {
                 public Void visitTcpActiveCandidate(
                     final IceTcpActiveCandidate candidate)
