@@ -1,7 +1,5 @@
 package org.lastbamboo.common.ice;
 
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 
@@ -32,10 +30,6 @@ public interface IceStunChecker
      * wait the duration of the transaction timeout for a response."
      */
     void cancelTransaction();
-
-    IoSession getIoSession();
-    
-    //IoHandler getProtocolIoHandler();
 
     /**
      * Close any connections associated with the checker.

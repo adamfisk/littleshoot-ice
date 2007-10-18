@@ -112,7 +112,9 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
                 return response;
                 }
             
-            if (this.m_transactionCanceled)
+            if (this.m_transactionCanceled || 
+                this.m_closed || 
+                this.m_ioSession.isClosing())
                 {
                 m_log.debug("The transaction was canceled!");
                 return new CanceledStunMessage();

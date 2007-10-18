@@ -66,6 +66,7 @@ public class IceCheckListImpl implements IceCheckList
     /**
      * Creates a new check list, starting with only local candidates.
      * 
+     * @param candidatePairFactory Factory for creating candidate pairs.
      * @param localCandidates The local candidates to use in the check list.
      */
     public IceCheckListImpl(
@@ -572,12 +573,11 @@ public class IceCheckListImpl implements IceCheckList
 
     public void removeWaitingAndFrozenPairs(final IceCandidatePair pair)
         {
-        synchronized (this)
+        final Predicate<IceCandidatePair> pred = 
+            new Predicate<IceCandidatePair>()
             {
-            for (final Iterator<IceCandidatePair> iter = m_pairs.iterator(); 
-                iter.hasNext();)
+            public boolean evaluate(final IceCandidatePair curPair)
                 {
-                final IceCandidatePair curPair = iter.next();
                 final IceCandidatePairState state = curPair.getState();
                 switch (state)
                     {
@@ -586,10 +586,13 @@ public class IceCheckListImpl implements IceCheckList
                     case WAITING:
                         m_log.debug("Closing pair:\n{}", curPair);
                         curPair.close();
-                        iter.remove();
-                        break;
+                        return true;
                     case IN_PROGRESS:
-                        // The following is at SHOULD strength in 8.1.2
+                        // The following is at SHOULD strength in 8.1.2.  We
+                        // do this for both triggered checks and the check list
+                        // because I see no reason not to cancel the triggered
+                        // one here too, although the draft seems to indicate
+                        // we should only do it for the normal check list.
                         if (curPair.getPriority() < pair.getPriority())
                             {
                             pair.cancelStunTransaction();
@@ -600,27 +603,28 @@ public class IceCheckListImpl implements IceCheckList
                     case FAILED:
                         // Do nothing.
                     }
+                return false;
                 }
-
+            };
+            
+        synchronized (this)
+            {
+            for (final Iterator<IceCandidatePair> iter = m_pairs.iterator(); 
+                iter.hasNext();)
+                {
+                final IceCandidatePair curPair = iter.next();
+                if (pred.evaluate(curPair))
+                    {
+                    iter.remove();
+                    }
+                }
             for (final Iterator<IceCandidatePair> iter = m_triggeredQueue.iterator();
                 iter.hasNext();)
                 {
                 final IceCandidatePair curPair = iter.next();
-                final IceCandidatePairState state = curPair.getState();
-                switch (state)
+                if (pred.evaluate(curPair))
                     {
-                    case FROZEN:
-                        // Fall through.
-                    case WAITING:
-                        curPair.close();
-                        iter.remove();
-                        break;
-                    case IN_PROGRESS:
-                        // Do nothing in the case of triggered checks.
-                    case SUCCEEDED:
-                        // Do nothing.
-                    case FAILED:
-                        // Do nothing.
+                    iter.remove();
                     }
                 }
             }

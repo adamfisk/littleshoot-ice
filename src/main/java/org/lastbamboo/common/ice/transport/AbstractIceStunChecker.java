@@ -5,9 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.id.uuid.UUID;
 import org.apache.mina.common.CloseFuture;
-import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
@@ -46,71 +44,6 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
     protected volatile boolean m_transactionCanceled = false;
 
     protected volatile boolean m_closed = false;
-
-    /**
-     * Creates a new ICE connectivity checker over any transport.
-     * 
-     * @param localCandidate The local address.
-     * @param remoteCandidate The remote address.
-     * @param transactionTracker The class that keeps track of STUN 
-     * transactions.
-     * @param stunIoHandler The {@link IoHandler} for STUN messages.
-     * @param iceAgent The top-level ICE agent.
-     * @param demuxingCodecFactory The {@link ProtocolCodecFactory} for 
-     * demultiplexing between STUN and another protocol.
-     * @param clazz The top-level message class for the protocol other than 
-     * STUN.
-     * @param protocolIoHandler The {@link IoHandler} to use for the other 
-     * protocol.
-     */
-    /*
-    public AbstractIceStunChecker(
-        final IceCandidate localCandidate, final IceCandidate remoteCandidate, 
-        final StunTransactionTracker<StunMessage> transactionTracker,
-        final IoHandler stunIoHandler, final IceAgent iceAgent, 
-        final ProtocolCodecFactory demuxingCodecFactory,
-        final Class clazz, final IoHandler protocolIoHandler,
-        final IoServiceListener ioServiceListener, final IoSession ioSession)
-        {
-        m_localCandidate = localCandidate;
-        m_remoteCandidate = remoteCandidate;
-        if (ioServiceListener == null)
-            {
-            throw new NullPointerException("Null listener");
-            }
-        this.m_ioServiceListener = ioServiceListener;
-        this.m_transactionTracker = transactionTracker;
-        this.m_demuxingIoHandler = 
-            new MinaDemuxingIoHandler(StunMessage.class, stunIoHandler, clazz, 
-                protocolIoHandler);
-        this.m_protocolIoHandler = protocolIoHandler;
-
-        final String controllingString;
-        if (iceAgent.isControlling())
-            {
-            controllingString = "Controlling";
-            }
-        else
-            {
-            controllingString = "Not-Controlling";
-            }
-        
-        final ThreadModel threadModel = ExecutorThreadModel.getInstance(
-            getClass().getSimpleName()+"-"+controllingString);
-        final ProtocolCodecFilter stunFilter = 
-            new ProtocolCodecFilter(demuxingCodecFactory);
-        this.m_remoteAddress = remoteCandidate.getSocketAddress();
-        this.m_localAddress = localCandidate.getSocketAddress();
-        this.m_ioSession = ioSession;
-        if (this.m_ioSession == null)
-            {
-            this.m_connector = createConnector(
-                localCandidate.getSocketAddress(), 
-                remoteCandidate.getSocketAddress(), 
-                threadModel, stunFilter);
-            }
-        }
-        */
     
     public AbstractIceStunChecker(final IoSession ioSession,
         final StunTransactionTracker<StunMessage> transactionTracker)
@@ -122,14 +55,6 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         m_transactionTracker = transactionTracker;
         m_ioSession = ioSession;
         }
-
-    /*
-    protected abstract IoConnector createConnector(
-        InetSocketAddress localAddress, InetSocketAddress remoteAddress, 
-        ThreadModel threadModel, ProtocolCodecFilter stunFilter);
-    
-    protected abstract boolean connect();
-    */
     
     public StunMessage write(final BindingRequest bindingRequest, 
         final long rto)
@@ -150,7 +75,9 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
         // (since the remote candidates can be the same).
         //this.m_transactionCanceled = false;
         
-        if (this.m_closed || this.m_ioSession.isClosing())
+        if (this.m_transactionCanceled ||
+            this.m_closed || 
+            this.m_ioSession.isClosing())
             {
             m_log.debug("Already closed");
             return new CanceledStunMessage();
@@ -219,18 +146,6 @@ public abstract class AbstractIceStunChecker implements IceStunChecker,
             }
         return null;
         }
-
-    public IoSession getIoSession()
-        {
-        return this.m_ioSession;
-        }
-    
-    /*
-    public IoHandler getProtocolIoHandler()
-        {
-        return this.m_protocolIoHandler;
-        }
-        */
     
     public void close()
         {

@@ -27,128 +27,15 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
      * Creates a new ICE connectivity checker over TCP.  If the 
      * {@link IoSession} is <code>null</code>, this will connect to create a
      * new session.
-     * 
-     * @param localCandidate The local address.
-     * @param remoteCandidate The remote address.
-     * @param iceAgent The top-level ICE agent.
-     * @param protocolIoHandler The {@link IoHandler} to use for the other 
-     * protocol.
+     * @param session The {@link IoSession} to write messages over.
+     * @param transactionTracker The class that keeps track of STUN 
+     * transactions.
      */
-    /*
-    public IceTcpStunChecker(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final IoHandler stunIoHandler,
-        final IceAgent iceAgent, final IoSession session,
-        final StunTransactionTracker<StunMessage> transactionTracker,
-        final IoHandler protocolIoHandler, 
-        final IoServiceListener ioServiceListener)
-        {
-        super(localCandidate, remoteCandidate, transactionTracker, 
-            stunIoHandler, iceAgent, createCodecFactory(), TcpFrame.class, 
-            protocolIoHandler, ioServiceListener, session);
-        }
-        */
-    
     public IceTcpStunChecker(final IoSession session,
-            final StunTransactionTracker<StunMessage> transactionTracker)
+        final StunTransactionTracker<StunMessage> transactionTracker)
         {
         super(session, transactionTracker);
         }
-    
-    
-    /*
-    private static ProtocolCodecFactory createCodecFactory()
-        {
-        final DemuxableProtocolCodecFactory stunCodecFactory =
-            new StunDemuxableProtocolCodecFactory();
-        final DemuxableProtocolCodecFactory tcpFramingCodecFactory =
-            new TcpFrameCodecFactory();
-        final ProtocolCodecFactory codecFactory = 
-            new DemuxingProtocolCodecFactory(stunCodecFactory, 
-                tcpFramingCodecFactory);
-        return codecFactory;
-        }
-    
-    @Override
-    protected IoConnector createConnector(
-        final InetSocketAddress localAddress, 
-        final InetSocketAddress remoteAddress,
-        final ThreadModel threadModel, final ProtocolCodecFilter stunFilter)
-        {
-        if (this.m_connector != null) 
-            {
-            m_log.debug("Already connected...");
-            return this.m_connector;
-            }
-        
-        final SocketConnector connector = new SocketConnector();
-        connector.addListener(this.m_ioServiceListener);
-        
-        final SocketConnectorConfig cfg = connector.getDefaultConfig();
-        cfg.getSessionConfig().setReuseAddress(true);
-        cfg.setThreadModel(threadModel);
-        
-        connector.getFilterChain().addLast("stunFilter", stunFilter);
-        return connector;
-        }
-
-    @Override
-    protected boolean connect()
-        {
-        m_log.debug("Establishing TCP connection...");
-        final InetAddress address = this.m_remoteAddress.getAddress();
-        final int connectTimeout;
-        // If the address is on the local network, we should be able to 
-        // connect more quickly.  If we can't, that likely indicates the 
-        // address is just from a different local network.
-        if (address.isSiteLocalAddress())
-            {
-            try
-                {
-                if (!address.isReachable(400))
-                    {
-                    return false;
-                    }
-                }
-            catch (final IOException e)
-                {
-                return false;
-                }
-            m_log.debug("Address is reachable. Connecting:{}", address);
-
-            // We should be able to connect to local, private addresses 
-            // really quickly.  So don't wait around too long.
-            connectTimeout = 3000;
-            }
-        else
-            {
-            connectTimeout = 12000;
-            }
-
-        // TODO: We don't currently support TCP-SO, so we don't bind to the 
-        // local port.
-        final ConnectFuture cf = 
-            m_connector.connect(this.m_remoteAddress, this.m_demuxingIoHandler);
-        cf.join(connectTimeout);
-        try
-            {
-            final IoSession session = cf.getSession();
-            if (session == null)
-                {
-                return false;
-                }
-            this.m_ioSession = session;
-            m_log.debug("TCP STUN checker connected on: "+session);
-            return true;
-            }
-        catch (final RuntimeIOException e)
-            {
-            // This happens when we can't connect.
-            m_log.debug("Could not connect to host: {}", this.m_remoteAddress);
-            m_log.debug("Reason for no connection: ", e);
-            return false;
-            }
-        }
-        */
 
     @Override
     protected StunMessage writeInternal(
