@@ -82,6 +82,11 @@ libraries, mostly stemming from commons jxpath
         
         <dependency>
             <groupId>org.lastbamboo</groupId>
+            <artifactId>lastbamboo-common-upnp</artifactId>
+            </dependency>
+
+        <dependency>
+            <groupId>org.lastbamboo</groupId>
             <artifactId>lastbamboo-common-util-common</artifactId>
             </dependency>
             
