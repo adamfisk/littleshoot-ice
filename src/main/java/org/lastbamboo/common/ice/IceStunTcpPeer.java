@@ -21,6 +21,8 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrame;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
+import org.lastbamboo.common.upnp.UpnpManager;
+import org.lastbamboo.common.upnp.UpnpManagerImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -42,6 +44,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
     private final StunServer m_stunServer;
     private final IoHandler m_streamIoHandler = new TcpFrameIoHandler();
     private final boolean m_controlling;
+    private final UpnpManager m_upnpManager;
     
     /**
      * Creates a new ICE STUN UDP peer.
@@ -50,13 +53,15 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
      * @param messageVisitorFactory The factory for creating message visitors
      * on the server. 
      * @param controlling Whether or not this agent is controlling.
+     * @param upnpManager The class for managing UPNP.
      */
     public IceStunTcpPeer(final StunClient tcpStunClient, 
         final StunMessageVisitorFactory messageVisitorFactory,
-        final boolean controlling)
+        final boolean controlling, final UpnpManager upnpManager)
         {
         m_stunClient = tcpStunClient;
         this.m_controlling = controlling;
+        this.m_upnpManager = upnpManager;
         
         // We also add whether we're the controlling agent for thread
         // naming here just to make log reading easier.
@@ -105,7 +110,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
             this.m_stunServer.start(null); 
             }
         
-        //this.m_upnpManager.mapAddress(m_stunClient.getHostAddress());
+        this.m_upnpManager.mapAddress(m_stunClient.getHostAddress());
         }
     
     public InetSocketAddress getHostAddress()
@@ -164,7 +169,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
 
     public void close()
         {
-        //this.m_upnpManager.unmapAddress(this.m_stunClient.getHostAddress());
+        this.m_upnpManager.unmapAddress(this.m_stunClient.getHostAddress());
         this.m_stunClient.close();
         this.m_stunServer.close();
         }

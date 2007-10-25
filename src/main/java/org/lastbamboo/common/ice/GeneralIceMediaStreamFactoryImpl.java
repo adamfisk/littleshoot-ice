@@ -21,6 +21,7 @@ import org.lastbamboo.common.turn.client.StunTcpFrameTurnClientListener;
 import org.lastbamboo.common.turn.client.TcpTurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.turn.client.TurnStunDemuxableProtocolCodecFactory;
+import org.lastbamboo.common.upnp.UpnpManager;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -43,7 +44,8 @@ public class GeneralIceMediaStreamFactoryImpl
         final DemuxableProtocolCodecFactory protocolCodecFactory, 
         final Class<T> protocolMessageClass, 
         final IoHandler udpProtocolIoHandler,
-        final TurnClientListener delegateTurnClientListener)
+        final TurnClientListener delegateTurnClientListener,
+        final UpnpManager upnpManager)
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
@@ -102,7 +104,7 @@ public class GeneralIceMediaStreamFactoryImpl
                 
             tcpStunPeer = 
                 new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 
-                    iceAgent.isControlling());
+                    iceAgent.isControlling(), upnpManager);
             }
         else
             {
