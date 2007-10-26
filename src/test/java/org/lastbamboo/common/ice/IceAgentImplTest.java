@@ -30,6 +30,8 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.turn.client.TurnClientListener;
+import org.lastbamboo.common.upnp.UpnpManager;
+import org.lastbamboo.common.upnp.UpnpManagerImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,9 +69,10 @@ public class IceAgentImplTest
                     new StunDemuxableProtocolCodecFactory();
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final TurnClientListener delegateListener = null;
+                final UpnpManager upnpManager = new UpnpManagerImpl();
                 return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
                     otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener);
+                    delegateListener, upnpManager);
                 }
             };
         
@@ -82,9 +85,10 @@ public class IceAgentImplTest
                     new StunDemuxableProtocolCodecFactory();
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final TurnClientListener delegateListener = null;
+                final UpnpManager upnpManager = new UpnpManagerImpl();
                 return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
                     otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener);
+                    delegateListener, upnpManager);
                 }
             };
         final IceMediaFactory iceMediaFactory = new IceMediaFactory()
