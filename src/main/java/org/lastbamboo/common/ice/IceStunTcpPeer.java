@@ -22,6 +22,7 @@ import org.lastbamboo.common.tcp.frame.TcpFrame;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.upnp.UpnpManager;
+import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -39,6 +40,11 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
+    
+    /**
+     * The STUN client implementation.  In practice this will typically also
+     * be a TURN client.
+     */
     private final StunClient m_stunClient;
     private final StunServer m_stunServer;
     private final IoHandler m_streamIoHandler = new TcpFrameIoHandler();
@@ -58,7 +64,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         final StunMessageVisitorFactory messageVisitorFactory,
         final boolean controlling, final UpnpManager upnpManager)
         {
-        m_stunClient = tcpStunClient;
+        this.m_stunClient = tcpStunClient;
         this.m_controlling = controlling;
         this.m_upnpManager = upnpManager;
         
@@ -97,7 +103,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         {
         // We only use the TURN client for non-controlling agents to save
         // resources.
-        if (!this.m_controlling)
+        if (!this.m_controlling && !NetworkUtils.isPublicAddress())
             {
             this.m_stunClient.connect();
             this.m_stunServer.start(m_stunClient.getHostAddress());
@@ -114,7 +120,6 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
     
     public InetSocketAddress getHostAddress()
         {
-        //return this.m_stunClient.getHostAddress();
         return this.m_stunServer.getBoundAddress();
         }
 
