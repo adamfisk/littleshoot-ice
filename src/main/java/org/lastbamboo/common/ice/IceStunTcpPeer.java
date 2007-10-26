@@ -22,7 +22,6 @@ import org.lastbamboo.common.tcp.frame.TcpFrame;
 import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
 import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 import org.lastbamboo.common.upnp.UpnpManager;
-import org.lastbamboo.common.upnp.UpnpManagerImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -110,7 +109,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
             this.m_stunServer.start(null); 
             }
         
-        this.m_upnpManager.mapAddress(m_stunClient.getHostAddress());
+        this.m_upnpManager.mapAddress(m_stunServer.getBoundAddress());
         }
     
     public InetSocketAddress getHostAddress()
@@ -169,7 +168,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
 
     public void close()
         {
-        this.m_upnpManager.unmapAddress(this.m_stunClient.getHostAddress());
+        this.m_upnpManager.unmapAddress(this.m_stunServer.getBoundAddress());
         this.m_stunClient.close();
         this.m_stunServer.close();
         }
