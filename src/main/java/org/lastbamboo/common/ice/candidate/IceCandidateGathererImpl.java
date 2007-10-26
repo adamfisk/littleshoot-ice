@@ -31,6 +31,8 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
 
     private final IceMediaStreamDesc m_desc;
 
+    private InetSocketAddress m_udpServerReflexiveAddress;
+
     /**
      * Creates a new class for gathering ICE candidates.
      * 
@@ -56,16 +58,6 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         {
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
-        
-        if (this.m_desc.isTcp())
-            {
-            final Collection<IceCandidate> tcpCandidates = 
-                createTcpCandidates(this.m_iceTcpStunPeer);
-            
-            // 4.1.1.3. Eliminating Redundant Candidates.
-            eliminateRedundantCandidates(tcpCandidates);
-            candidates.addAll(tcpCandidates);
-            }
 
         if (this.m_desc.isUdp())
             {
@@ -75,6 +67,16 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             // 4.1.1.3. Eliminating Redundant Candidates.
             eliminateRedundantCandidates(udpCandidates);
             candidates.addAll(udpCandidates);
+            }
+        
+        if (this.m_desc.isTcp())
+            {
+            final Collection<IceCandidate> tcpCandidates = 
+                createTcpCandidates(this.m_iceTcpStunPeer);
+            
+            // 4.1.1.3. Eliminating Redundant Candidates.
+            eliminateRedundantCandidates(tcpCandidates);
+            candidates.addAll(tcpCandidates);
             }
         
         return candidates; 
@@ -127,11 +129,11 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             new IceUdpHostCandidate(hostAddress, this.m_controlling);
         candidates.add(hostCandidate);
         
-        final InetSocketAddress serverReflexiveAddress = 
+        this.m_udpServerReflexiveAddress = 
             client.getServerReflexiveAddress();
         
         final IceUdpServerReflexiveCandidate serverReflexiveCandidate =
-            new IceUdpServerReflexiveCandidate(serverReflexiveAddress, 
+            new IceUdpServerReflexiveCandidate(m_udpServerReflexiveAddress, 
                 hostCandidate, stunServerAddress, this.m_controlling);
         
         candidates.add(serverReflexiveCandidate);
@@ -174,6 +176,26 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final IceCandidate hostCandidate = 
             new IceTcpHostPassiveCandidate(hostAddress, this.m_controlling);
         candidates.add(hostCandidate);
+        
+        // OK, the following is non-standard.  If we have a public address
+        // for the host from our UDP STUN check, we use the address part for
+        // a new candidate because we always make an effort to map our TCP
+        // host port with UPnP.  This is not a simultaneous open candidate,
+        // although there may be cases where this actually succeeds when UPnP
+        // mapping failed do to simultaneous open behavior on the NAT.
+        if (this.m_udpServerReflexiveAddress != null &&
+            !NetworkUtils.isPublicAddress())
+            {
+            final InetSocketAddress publicHostAddress = 
+                new InetSocketAddress(
+                    this.m_udpServerReflexiveAddress.getAddress(), 
+                    hostAddress.getPort());
+            
+            final IceCandidate publicHostCandidate = 
+                new IceTcpHostPassiveCandidate(publicHostAddress, 
+                    this.m_controlling);
+            candidates.add(publicHostCandidate);
+            }
         
         // Add the active candidate.
         try
