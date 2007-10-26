@@ -147,7 +147,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
     
         // Only add the TURN candidate on the non-controlling side to save
         // resources.
-        if (!this.m_controlling)
+        if (!this.m_controlling && !NetworkUtils.isPublicAddress())
             {
             final InetSocketAddress relayAddress = client.getRelayAddress();
             
