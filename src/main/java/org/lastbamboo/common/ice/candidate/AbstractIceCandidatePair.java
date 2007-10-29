@@ -50,6 +50,8 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * @param localCandidate The local candidate.
      * @param remoteCandidate The candidate from the remote agent.
      * @param stunCheckerFactory The class for creating new STUN checkers.
+     * @param iceConnector The class for creating a connection between the 
+     * candidates.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
@@ -69,6 +71,8 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
      * @param remoteCandidate The candidate from the remote agent.
      * @param priority The priority of the pair.
      * @param stunCheckerFactory The class for creating new STUN checkers.
+     * @param iceConnector The class for creating a connection between the 
+     * candidates.
      */
     public AbstractIceCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final long priority,
@@ -303,18 +307,23 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             "state:      "+this.m_state;
         }
 
+
+    
     @Override
     public int hashCode()
         {
         final int PRIME = 31;
         int result = 1;
+        result = PRIME * result + m_componentId;
+        result = PRIME * result + ((m_foundation == null) ? 0 : m_foundation.hashCode());
         result = PRIME * result + ((m_localCandidate == null) ? 0 : m_localCandidate.hashCode());
+        result = PRIME * result + (int) (m_priority ^ (m_priority >>> 32));
         result = PRIME * result + ((m_remoteCandidate == null) ? 0 : m_remoteCandidate.hashCode());
         return result;
         }
 
     @Override
-    public boolean equals(final Object obj)
+    public boolean equals(Object obj)
         {
         if (this == obj)
             return true;
@@ -323,12 +332,23 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         if (getClass() != obj.getClass())
             return false;
         final AbstractIceCandidatePair other = (AbstractIceCandidatePair) obj;
+        if (m_componentId != other.m_componentId)
+            return false;
+        if (m_foundation == null)
+            {
+            if (other.m_foundation != null)
+                return false;
+            }
+        else if (!m_foundation.equals(other.m_foundation))
+            return false;
         if (m_localCandidate == null)
             {
             if (other.m_localCandidate != null)
                 return false;
             }
         else if (!m_localCandidate.equals(other.m_localCandidate))
+            return false;
+        if (m_priority != other.m_priority)
             return false;
         if (m_remoteCandidate == null)
             {
@@ -339,7 +359,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             return false;
         return true;
         }
-    
+
     public int compareTo(final Object obj)
         {
         final AbstractIceCandidatePair other = (AbstractIceCandidatePair) obj;
@@ -363,6 +383,12 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         // doesn't matter -- we can use either one.
         if (NetworkUtils.isPublicAddress(
             m_remoteCandidate.getSocketAddress().getAddress()))
+            {
+            return -1;
+            }
+        
+        else if (NetworkUtils.isPublicAddress(
+            other.m_remoteCandidate.getSocketAddress().getAddress()))
             {
             return 1;
             }

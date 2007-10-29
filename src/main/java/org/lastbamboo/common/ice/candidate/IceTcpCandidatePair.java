@@ -16,14 +16,6 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
-    private final int m_pairId;
-    
-    private static int s_pairId = 0;
-
-    //private Socket m_socket;
-
-    //private final TcpFrameIoHandler m_frameIoHandler;
-    
     /**
      * Pair of TCP ICE candidates.
      * 
@@ -40,10 +32,6 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
             {
             throw new NullPointerException("Null session");
             }
-        //m_frameIoHandler = frameIoHandler;
-        //this.m_socket = socket;
-        this.m_pairId = s_pairId;
-        s_pairId++;
         }
     
     /**
@@ -58,8 +46,6 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
         final IceTcpConnector iceConnector)
         {
         super(localCandidate, remoteCandidate, stunCheckerFactory, iceConnector);
-        this.m_pairId = s_pairId;
-        s_pairId++;
         }
     
     public Socket getSocket()
