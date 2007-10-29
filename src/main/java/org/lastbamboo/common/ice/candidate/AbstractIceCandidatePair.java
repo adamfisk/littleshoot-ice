@@ -9,6 +9,7 @@ import org.lastbamboo.common.ice.util.IceConnector;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -350,10 +351,24 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             // We reverse this because we want to go from highest to lowest.
             return -priorityComparison;
             }
-        if (!m_localCandidate.equals(other.m_localCandidate))
-            return -1;
-        else if (!m_remoteCandidate.equals(other.m_remoteCandidate))
-            return -1;
-        return 1;
+
+        if (this.equals(other))
+            {
+            return 0;
+            }
+        
+        // If our remote candidate has a public address, it should be use 
+        // ahead of a pair without a public address for the remote candidate.
+        // If both pairs have remote candidates with public addresses, it 
+        // doesn't matter -- we can use either one.
+        if (NetworkUtils.isPublicAddress(
+            m_remoteCandidate.getSocketAddress().getAddress()))
+            {
+            return 1;
+            }
+        
+        // Just use the other one -- it could have a public address for the
+        // remote candidate or not.
+        return -1;
         }
     }
