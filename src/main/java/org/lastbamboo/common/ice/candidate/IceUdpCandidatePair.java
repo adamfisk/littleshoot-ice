@@ -2,7 +2,7 @@ package org.lastbamboo.common.ice.candidate;
 
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
-import org.lastbamboo.common.ice.util.IceConnector;
+import org.lastbamboo.common.ice.transport.IceConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

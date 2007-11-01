@@ -8,7 +8,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
-import org.lastbamboo.common.ice.util.IceUdpConnector;
+import org.lastbamboo.common.ice.transport.IceUdpConnector;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;

@@ -5,7 +5,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
-import org.lastbamboo.common.ice.util.IceUdpConnector;
+import org.lastbamboo.common.ice.transport.IceUdpConnector;
 
 public class IceCandidatePairFactoryImpl implements IceCandidatePairFactory
     {

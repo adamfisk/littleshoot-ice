@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
-import org.lastbamboo.common.ice.util.IceConnector;
+import org.lastbamboo.common.ice.transport.IceConnector;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;

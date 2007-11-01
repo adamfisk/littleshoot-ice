@@ -506,6 +506,10 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void onNominated(final IceCandidatePair pair)
         {
+        if (pair == null)
+            {
+            throw new NullPointerException("Can't nominate null pair");
+            }
         // First, remove all Waiting and Frozen pairs on the check list and
         // triggered check queue.
         this.m_checkList.removeWaitingAndFrozenPairs(pair);
@@ -517,7 +521,14 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public Queue<IceCandidatePair> getNominatedPairs()
         {
-        return this.m_nominatedPairs;
+        // Return a copy of the pairs to maintain immutability.
+        synchronized (this.m_nominatedPairs)
+            {
+            final Queue<IceCandidatePair> pairs = 
+                new PriorityQueue<IceCandidatePair>();
+            pairs.addAll(this.m_nominatedPairs);
+            return pairs;
+            }
         }
 
     public void serviceActivated(final IoService service, 
