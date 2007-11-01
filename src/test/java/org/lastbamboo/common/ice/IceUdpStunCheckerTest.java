@@ -36,8 +36,7 @@ public class IceUdpStunCheckerTest
      * 
      * @throws Exception If any unexpected error occurs.
      */
-    @Test
-    public void testStunChecker() throws Exception
+    @Test public void testStunChecker() throws Exception
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
@@ -69,12 +68,6 @@ public class IceUdpStunCheckerTest
             connector.connect(new InetSocketAddress(4932), remoteAddress);
         final IceUdpStunChecker checker = 
             new IceUdpStunChecker(ioSession, tracker);
-        /*
-        final IceUdpStunChecker checker = 
-            new IceUdpStunChecker(localCandidate, remoteCandidate, 
-                stunIoHandler, iceAgent, codecFactory, Object.class, 
-                clientIoHandler, tracker, new IoServiceListenerStub());
-                */
         
         final BindingRequest bindingRequest = new BindingRequest();
         final long rto = 20;

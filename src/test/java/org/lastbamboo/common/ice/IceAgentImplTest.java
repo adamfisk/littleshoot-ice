@@ -129,6 +129,14 @@ public class IceAgentImplTest
                     offererCompleted.notifyAll();
                     }
                 }
+
+            public void onOfferAnswerFailed(final MediaOfferAnswer mediaOfferAnswer)
+                {
+                synchronized (offererCompleted)
+                    {
+                    offererCompleted.notifyAll();
+                    }
+                }
             };
         final OfferAnswerListener answererStateListener =
             new OfferAnswerListener()
@@ -141,6 +149,13 @@ public class IceAgentImplTest
                     answererCompleted.notifyAll();
                     }
                 }
+            public void onOfferAnswerFailed(final MediaOfferAnswer mediaOfferAnswer)
+                {
+                synchronized (offererCompleted)
+                    {
+                    offererCompleted.notifyAll();
+                    }
+                } 
             };
 
         final AtomicBoolean threadFailed = new AtomicBoolean(false);

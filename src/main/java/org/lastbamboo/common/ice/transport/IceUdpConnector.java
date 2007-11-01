@@ -1,7 +1,5 @@
 package org.lastbamboo.common.ice.transport;
 
-import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 import org.apache.mina.common.ConnectFuture;
@@ -76,16 +74,22 @@ public class IceUdpConnector implements IceConnector
         // If the address is on the local network, we should be able to 
         // connect more quickly.  If we can't, that likely indicates the 
         // address is just from a different local network.
+        /*
         final InetAddress address = remoteAddress.getAddress();
         try
             {
-            if (!address.isReachable(400)) return null;
+            if (!address.isReachable(600)) 
+                {
+                m_log.debug("Address is not reachable: {}", address);
+                return null;
+                }
             }
         catch (final IOException e)
             {
             m_log.debug("IO error attempting to reach address: {}", address);
             return null;
             }
+            */
         
         final ConnectFuture cf = 
             connector.connect(remoteAddress, localAddress, 
