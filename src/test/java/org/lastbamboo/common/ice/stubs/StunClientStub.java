@@ -146,4 +146,10 @@ public class StunClientStub implements StunClient
         // TODO Auto-generated method stub
         
         }
+
+    public boolean hostPortMapped()
+        {
+        // TODO Auto-generated method stub
+        return false;
+        }
     }

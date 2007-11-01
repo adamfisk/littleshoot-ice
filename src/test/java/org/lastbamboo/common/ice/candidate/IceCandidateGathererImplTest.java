@@ -103,6 +103,11 @@ public class IceCandidateGathererImplTest extends TestCase
             // TODO Auto-generated method stub
             
             }
+
+        public boolean hostPortMapped()
+            {
+            return false;
+            }
     
         }
     }
