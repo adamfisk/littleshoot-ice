@@ -286,7 +286,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     
     public void close()
         {
-        m_log.debug("Closing pair: {}", this);
+        m_log.debug("Closing pair:\n{}", this);
         if (this.m_currentStunChecker !=  null)
             {
             this.m_currentStunChecker.close();

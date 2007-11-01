@@ -107,16 +107,19 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
             {
             try
                 {
-                if (!address.isReachable(400))
+                if (!address.isReachable(600))
                     {
+                    m_log.debug("Address is not reachable: {}", remoteAddress);
                     return null;
                     }
                 }
             catch (final IOException e)
                 {
+                m_log.debug("Exception checking reachability", e);
                 return null;
                 }
-            m_log.debug("Address is reachable. Connecting:{}", address);
+            m_log.debug("Address is reachable. Connecting to: {}", 
+                 remoteAddress);
 
             // We should be able to connect to local, private addresses 
             // really quickly.  So don't wait around too long.
@@ -124,18 +127,21 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
             }
         else
             {
-            connectTimeout = 10000;
+            connectTimeout = 6000;
             }
         
+        m_log.debug("Connecting with timeout: {}", connectTimeout);
         final ConnectFuture cf = 
             connector.connect(remoteAddress, localAddress, 
                  this.m_demuxingIoHandler);
         cf.join(connectTimeout);
+        m_log.debug("Successfully joined...");
         try
             {
             final IoSession session = cf.getSession();
             if (session == null)
                 {
+                m_log.debug("Session is null!!");
                 return null;
                 }
             m_log.debug("TCP STUN checker connected on: {}",session);
