@@ -18,7 +18,6 @@ import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.SocketConnector;
 import org.apache.mina.transport.socket.nio.SocketConnectorConfig;
-import org.lastbamboo.common.ice.util.IceConnector;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
@@ -125,7 +124,7 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
             }
         else
             {
-            connectTimeout = 12000;
+            connectTimeout = 10000;
             }
         
         final ConnectFuture cf = 
