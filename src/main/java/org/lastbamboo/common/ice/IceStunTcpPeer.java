@@ -50,6 +50,8 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
     private final IoHandler m_streamIoHandler = new TcpFrameIoHandler();
     private final boolean m_controlling;
     private final UpnpManager m_upnpManager;
+
+    private boolean m_mappedPort = false;
     
     /**
      * Creates a new ICE STUN UDP peer.
@@ -115,7 +117,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
             this.m_stunServer.start(null); 
             }
         
-        this.m_upnpManager.mapAddress(m_stunServer.getBoundAddress());
+        this.m_mappedPort = this.m_upnpManager.mapAddress(getHostAddress());
         }
     
     public InetSocketAddress getHostAddress()
@@ -176,6 +178,11 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         this.m_upnpManager.unmapAddress(this.m_stunServer.getBoundAddress());
         this.m_stunClient.close();
         this.m_stunServer.close();
+        }
+
+    public boolean hostPortMapped()
+        {
+        return m_mappedPort;
         }
 
     public void serviceActivated(final IoService service, 

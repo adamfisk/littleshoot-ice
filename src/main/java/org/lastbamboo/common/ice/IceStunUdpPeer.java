@@ -40,7 +40,11 @@ public class IceStunUdpPeer implements StunClient, StunServer
     
     /**
      * Creates a new ICE STUN UDP peer.
-     * 
+     * @param demuxingCodecFactory The class for interpretting the multiple 
+     * protocols on the wire -- STUN and whatever protocol it's negotiating
+     * a connection for.
+     * @param demuxingIoHandler The class for handling read and written 
+     * messages. 
      * @param controlling Whether or not this agent is controlling.
      */
     public IceStunUdpPeer(final ProtocolCodecFactory demuxingCodecFactory, 
@@ -146,11 +150,16 @@ public class IceStunUdpPeer implements StunClient, StunServer
         this.m_stunClient.close();
         this.m_stunServer.close();
         }
+
+    public boolean hostPortMapped()
+        {
+        // We don't currently do any mapping for UDP.
+        return false;
+        }
     
     @Override
     public String toString()
         {
         return getClass().getSimpleName();
         }
-
     }
