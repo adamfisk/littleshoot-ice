@@ -98,25 +98,6 @@ public interface IceCandidatePair extends Comparable
     void cancelStunTransaction();
 
     /**
-     * Tells the pair to set its nominated flag if a response arrives that
-     * produces a successful result.  If no such response arrives, the nominated
-     * flag does not change.
-     */
-    void nominateOnSuccess();
-
-    /**
-     * Returns whether or not this pair should be automatically nominated if it
-     * results in successful response. The default is false, but this can
-     * change for controlled candidates.  See:
-     * 
-     * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2.1.5
-     * 
-     * @return Whether or not to automatically nominate this pair if it results
-     * in a successful response.
-     */
-    boolean shouldNominateOnSuccess();
-
-    /**
      * Sets a flag indicating checks on this pair should include the 
      * USE-CANDIDATE attribute in their Binding Requests.  See:
      *

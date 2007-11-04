@@ -183,7 +183,13 @@ public class IceStunClientCandidateProcessor
                     m_mediaStream.getLocalCandidate(mappedAddress, 
                         localCandidate.isUdp());
                 
-                if (matchingCandidate == null)
+                if (matchingCandidate != null)
+                    {
+                    // This will have the priority signalled in the original
+                    // SDP, as specified in 7.1.2.2.2.
+                    return matchingCandidate;
+                    }
+                else
                     {
                     // This basically indicates the NAT bound to a new port for
                     // the outgoing request to the new host, meaning the NAT
@@ -195,27 +201,23 @@ public class IceStunClientCandidateProcessor
                     
                     // We use the PRIORITY from the Binding Request, as
                     // specified in section 7.1.2.2.1. and 7.1.2.2.2.  
-                    final IceCandidate prc;
+                    final IceCandidate peerReflexiveLocal;
                     if (localCandidate.isUdp())
                         {
-                        prc = new IceUdpPeerReflexiveCandidate(mappedAddress, 
-                            localCandidate, m_iceAgent.isControlling(), 
-                            requestPriority);
+                        peerReflexiveLocal = 
+                            new IceUdpPeerReflexiveCandidate(mappedAddress, 
+                                localCandidate, m_iceAgent.isControlling(), 
+                                requestPriority);
                         }
                     else
                         {
-                        prc = new IceTcpPeerReflexiveCandidate(mappedAddress, 
-                            localCandidate, m_iceAgent.isControlling(), 
-                            requestPriority);
+                        peerReflexiveLocal = 
+                            new IceTcpPeerReflexiveCandidate(mappedAddress, 
+                                localCandidate, m_iceAgent.isControlling(), 
+                                requestPriority);
                         }
-                    m_mediaStream.addLocalCandidate(prc);
-                    return prc;
-                    }
-                else
-                    {
-                    // This will have the priority signalled in the original
-                    // SDP, as specified in 7.1.2.2.2.
-                    return matchingCandidate;
+                    m_mediaStream.addLocalCandidate(peerReflexiveLocal);
+                    return peerReflexiveLocal;
                     }
                 }
 
@@ -428,6 +430,7 @@ public class IceStunClientCandidateProcessor
                         }
                     };
                 pairToAddToValidList = this.m_pair.accept(pairVisitor);
+                m_log.debug("Created pair: {}", pairToAddToValidList);
                 }
             }
         
@@ -439,8 +442,7 @@ public class IceStunClientCandidateProcessor
         // Tell the media stream to update pair states as a result of 
         // a valid pair.  
         m_log.debug("Updating pair states...");
-        this.m_mediaStream.updatePairStates(pairToAddToValidList, this.m_pair, 
-            useCandidate);
+        this.m_mediaStream.updatePairStates(this.m_pair);
     
         this.m_iceAgent.checkValidPairsForAllComponents(m_mediaStream);
         
@@ -467,7 +469,7 @@ public class IceStunClientCandidateProcessor
      * 
      * 7.2.1.5.  Updating the Nominated Flag<p>
      * 
-     * @param validPair The valid pair to update.
+     * @param validPair The valid pair.
      * @param sentUseCandidateInRequest Whether or not the USE-CANDIDATE 
      * attribute appeared in the original Binding Request.
      * @retuen <code>true</code> if the valid pair was nominated, otherwise
@@ -484,18 +486,17 @@ public class IceStunClientCandidateProcessor
             return true;
             }
         
-        // Second part of 7.2.15 -- the pair may have been previously 
-        // In-Progress and should possibly have its nominated flag set upon
-        // this successful response.
-        else if (!this.m_iceAgent.isControlling() && 
-            validPair.shouldNominateOnSuccess())
+        // If the check was the result of a triggered check from a request
+        // that included USE-CANDIDATE (a request from the controlling agent), 
+        // we nominate.
+        else if (!this.m_iceAgent.isControlling() && m_pair.useCandidateSet())
             {
             m_log.debug("Nominating new pair on controlled agent!!");
             // We just put the pair in the successful state, so we know
             // that's the state it's in (it has to be in the successful
-            // state for use to nominate it).
-            validPair.nominate();
-            this.m_iceAgent.onNominatedPair(validPair, this.m_mediaStream);
+            // state for us to nominate it).
+            m_pair.nominate();
+            this.m_iceAgent.onNominatedPair(m_pair, this.m_mediaStream);
             return true;
 
                 /*

@@ -30,7 +30,6 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final int m_componentId;
     private volatile boolean m_nominated = false;
     protected volatile IceStunChecker m_currentStunChecker;
-    private volatile boolean m_nominateOnSuccess = false;
     
     /**
      * Flag indicating whether or not this pair should include the 
@@ -198,16 +197,6 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         return this.m_useCandidate;
         }
     
-    public void nominateOnSuccess()
-        {
-        this.m_nominateOnSuccess = true;
-        }
-    
-    public boolean shouldNominateOnSuccess()
-        {
-        return this.m_nominateOnSuccess;
-        }
-    
     public void cancelStunTransaction()
         {
         this.m_currentStunChecker.cancelTransaction();
@@ -301,10 +290,22 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     @Override
     public String toString()
         {
-        return 
-            "local:      "+this.m_localCandidate+"\n"+
-            "remote:     "+this.m_remoteCandidate+"\n"+
-            "state:      "+this.m_state;
+        final StringBuilder sb = new StringBuilder();
+        sb.append("local:               ");
+        sb.append(this.m_localCandidate);
+        sb.append("\n");
+        sb.append("remote:              ");
+        sb.append(this.m_remoteCandidate);
+        sb.append("\n");
+        sb.append("state:               ");
+        sb.append(this.m_state);
+        sb.append("\n");
+        sb.append("use-candidate:       ");
+        sb.append(this.m_useCandidate);
+        sb.append("\n");
+        sb.append("nominated:           ");
+        sb.append(this.m_nominated);
+        return sb.toString();
         }
 
 

@@ -362,8 +362,7 @@ public class IceMediaStreamImpl implements IceMediaStream
         return this.m_checkList.selectAnyPair(pred);
         }
 
-    public void updatePairStates(final IceCandidatePair validPair, 
-        final IceCandidatePair generatingPair, final boolean useCandidate)
+    public void updatePairStates(final IceCandidatePair generatingPair)
         {
         m_log.debug("Updating pair states...");
         // Set the state of the pair that *generated* the check to succeeded.

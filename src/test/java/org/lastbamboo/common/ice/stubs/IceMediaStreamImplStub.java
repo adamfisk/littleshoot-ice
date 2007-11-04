@@ -57,8 +57,7 @@ public class IceMediaStreamImplStub implements IceMediaStream
         return null;
         }
 
-    public void updatePairStates(IceCandidatePair validPair,
-            IceCandidatePair generatingPair, boolean useCandidate)
+    public void updatePairStates(IceCandidatePair generatingPair)
         {
         // TODO Auto-generated method stub
 

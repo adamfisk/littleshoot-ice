@@ -198,7 +198,7 @@ public final class IceStunConnectivityCheckerImpl<T>
                 throw new NullPointerException("Null session!!!");
                 }
             
-            nominateOnSuccessAsNecessary(binding, computedPair);
+            //nominateOnSuccessAsNecessary(binding, computedPair);
             
             // This is the case where the new pair is already on the 
             // check list.  See ICE section 7.2.1.4. Triggered Checks
@@ -264,7 +264,7 @@ public final class IceStunConnectivityCheckerImpl<T>
             
             // Add the pair the normal check list, set its state to waiting,
             // and add a triggered check.
-            nominateOnSuccessAsNecessary(binding, computedPair);
+            //nominateOnSuccessAsNecessary(binding, computedPair);
             this.m_iceMediaStream.addPair(computedPair);
             computedPair.setState(IceCandidatePairState.WAITING);
             this.m_iceMediaStream.addTriggeredPair(computedPair);
@@ -281,50 +281,37 @@ public final class IceStunConnectivityCheckerImpl<T>
             StunAttributeType.ICE_USE_CANDIDATE) &&
             !this.m_agent.isControlling())
             {
-            synchronized (computedPair)
+            // Just record the fact that the controlling agent told us
+            // to use this pair.
+            computedPair.useCandidate();
+            final IceCandidatePairState state = computedPair.getState();
+            
+            switch (state)
                 {
-                final IceCandidatePairState state = computedPair.getState();
-                
-                switch (state)
-                    {
-                    case SUCCEEDED:
-                        m_log.debug("Nominating pair on controlled agent:\n{}",  
-                            computedPair);
-                        computedPair.nominate();
-                        m_agent.onNominatedPair(computedPair, 
-                            this.m_iceMediaStream);
-                        break;
-                    case IN_PROGRESS:
-                        m_log.debug("Nominating pair on controlled agent " +
-                            "upon successful completion!");
-                        computedPair.useCandidate();
-                        computedPair.nominateOnSuccess();
-                        break;
-                    case WAITING:
-                        // No action.
-                    case FROZEN:
-                        // No action.
-                    case FAILED:
-                        // No action.
-                    }
+                // This is an optimization that allows us to nominate now
+                // when we've already previously done a successful check
+                // on this pair.  In that case, we didn't add a triggered
+                // check above, and we can just nominate now.
+                case SUCCEEDED:
+                    m_log.debug("Nominating pair on controlled agent:\n{}",  
+                        computedPair);
+                    computedPair.nominate();
+                    m_agent.onNominatedPair(computedPair, 
+                        this.m_iceMediaStream);
+                    break;
+                case IN_PROGRESS:
+                    // No action.
+                    break;
+                case WAITING:
+                    // No action.
+                    break;
+                case FROZEN:
+                    // No action.
+                    break;
+                case FAILED:
+                    // No action.
+                    break;
                 }
-            }
-        }
-    
-
-    private void nominateOnSuccessAsNecessary(final BindingRequest binding, 
-        final IceCandidatePair computedPair)
-        {
-        if (binding.getAttributes().containsKey(
-            StunAttributeType.ICE_USE_CANDIDATE) && 
-            !this.m_agent.isControlling())
-            {
-            m_log.debug("Nominating on success...");
-            computedPair.nominateOnSuccess();
-            }
-        else
-            {
-            m_log.debug("Not nominating on success...");
             }
         }
 

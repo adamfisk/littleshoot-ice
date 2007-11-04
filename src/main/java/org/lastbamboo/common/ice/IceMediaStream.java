@@ -77,13 +77,9 @@ public interface IceMediaStream extends IoServiceListener
      * Called when connectivity checks have created a new valid pair and the
      * media stream needs to update the states of other pairs.  
      * 
-     * @param validPair The new valid pair.
      * @param generatingPair The pair that generated the valid pair.
-     * @param useCandidate Whether or not the Binding Request for the check
-     * included the USE CANDIDATE attribute.
      */
-    void updatePairStates(IceCandidatePair validPair, 
-        IceCandidatePair generatingPair, boolean useCandidate);
+    void updatePairStates(IceCandidatePair generatingPair);
 
     /**
      * Adds a pair to the triggered check queue.
