@@ -88,7 +88,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             // No more pairs to try.
             timer.cancel();
             m_log.debug("No more active pairs...");
-            this.m_checkList.setState(IceCheckListState.FAILED);
+            //this.m_checkList.setState(IceCheckListState.FAILED);
             }
         else
             {

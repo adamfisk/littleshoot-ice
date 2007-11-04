@@ -387,6 +387,7 @@ public class IceMediaStreamImpl implements IceMediaStream
                 // The check list is definitely created at this point, as
                 // we're updating pair state for a pair that had to have
                 // been on the check list.
+                m_log.debug("Setting check list state to failed...");
                 this.m_checkList.setState(IceCheckListState.FAILED);
                 }
             
