@@ -430,7 +430,7 @@ public class IceStunClientCandidateProcessor
                         }
                     };
                 pairToAddToValidList = this.m_pair.accept(pairVisitor);
-                m_log.debug("Created pair: {}", pairToAddToValidList);
+                m_log.debug("Created pair:\n{}", pairToAddToValidList);
                 }
             }
         
