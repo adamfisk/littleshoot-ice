@@ -160,7 +160,8 @@ public final class IceStunConnectivityCheckerImpl<T>
             {
             remoteCandidate = this.m_iceMediaStream.addRemotePeerReflexive(
                 binding, localAddress, remoteAddress, isUdp);
-            m_log.debug("Added peer reflexive remote candidate.");
+            m_log.debug("Added peer reflexive remote candidate: {}", 
+                remoteCandidate);
             }
         else
             {
