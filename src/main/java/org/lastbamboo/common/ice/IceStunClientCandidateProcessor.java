@@ -495,32 +495,12 @@ public class IceStunClientCandidateProcessor
             // We just put the pair in the successful state, so we know
             // that's the state it's in (it has to be in the successful
             // state for us to nominate it).
+            
+            // NOTE: We nominate the *original pair* here, not the valid pair.
+            // That was the pair the originally had USE-CANDIDATE set.
             m_pair.nominate();
             this.m_iceAgent.onNominatedPair(m_pair, this.m_mediaStream);
             return true;
-
-                /*
-            else if (validPair.getState() == IceCandidatePairState.IN_PROGRESS)
-                {
-                // We synchronize here to avoid a race condition with the setting
-                // of the flag for nominating pairs for controlling agents upon
-                // successful checks.
-                synchronized (validPair)
-                    {
-                    if (validPair.shouldNominateOnSuccess())
-                        {
-                        m_log.debug("Nominating new pair on controlled agent!!");
-                        // We just put the pair in the successful state, so we know
-                        // that's the state it's in (it has to be in the successful
-                        // state for use to nominate it).
-                        validPair.nominate();
-                        this.m_iceAgent.onNominatedPair(validPair, 
-                            this.m_mediaStream);
-                        return true;
-                        }
-                    }
-                }
-                */
             }
         
         m_log.debug("Not nominating pair.");
