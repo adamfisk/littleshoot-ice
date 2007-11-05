@@ -291,6 +291,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     public String toString()
         {
         final StringBuilder sb = new StringBuilder();
+        sb.append("\n");
         sb.append("local:               ");
         sb.append(this.m_localCandidate);
         sb.append("\n");
