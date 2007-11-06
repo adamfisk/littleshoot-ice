@@ -268,9 +268,9 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
     public String toString()
         {
         final StringBuilder sb = new StringBuilder();
-        sb.append(ClassUtils.getShortClassName(getClass()));
+        sb.append(getClass().getSimpleName());
         sb.append(" ");
-        sb.append(m_controlling);
+        sb.append(m_controlling ? "controlling" : "controlled");
         sb.append(" ");
         sb.append(m_address);
         sb.append(this.m_isUdp ? " UDP" : " TCP");
