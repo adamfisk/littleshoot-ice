@@ -3,13 +3,12 @@ package org.lastbamboo.common.ice.transport;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import java.util.Collection;
+import java.util.LinkedList;
 
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.ExecutorThreadModel;
 import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoService;
-import org.apache.mina.common.IoServiceConfig;
 import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.RuntimeIOException;
@@ -34,27 +33,27 @@ import org.slf4j.LoggerFactory;
 /**
  * Class for establishing TCP connections for ICE. 
  */
-public class IceTcpConnector implements IceConnector, IoServiceListener
+public class IceTcpConnector implements IceConnector
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
-    private final IoServiceListener m_ioServiceListener;
     private final boolean m_controlling;
     private final DemuxingIoHandler<StunMessage, TcpFrame> m_demuxingIoHandler;
+    
+    private final Collection<IoServiceListener> m_serviceListeners =
+        new LinkedList<IoServiceListener>();
 
     /**
      * Creates a new connector for connecting to the remote address.
      * 
-     * @param ioServiceListener The listener for IO events.
      * @param messageVisitorFactory The class for visiting received STUN
      * messages.
      * @param controlling Whether or not this agent is controlling.
      */
-    public IceTcpConnector(final IoServiceListener ioServiceListener, 
+    public IceTcpConnector(
         final StunMessageVisitorFactory messageVisitorFactory, 
         final boolean controlling)
         {
-        m_ioServiceListener = ioServiceListener;
         m_controlling = controlling;
         // TODO: We don't currently support TCP-SO, so we don't bind to the 
         // local port.
@@ -73,8 +72,13 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
         final InetSocketAddress remoteAddress)
         {
         final SocketConnector connector = new SocketConnector();
-        connector.addListener(this.m_ioServiceListener);
-        connector.addListener(this);
+        synchronized (this.m_serviceListeners)
+            {
+            for (final IoServiceListener listener : this.m_serviceListeners)
+                {
+                connector.addListener(listener);
+                }
+            }
         
         final SocketConnectorConfig cfg = connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
@@ -156,24 +160,8 @@ public class IceTcpConnector implements IceConnector, IoServiceListener
             }
         }
     
-    public void serviceActivated(final IoService service, 
-        final SocketAddress serviceAddress, 
-        final IoHandler handler, final IoServiceConfig config)
+    public void addIoServiceListener(final IoServiceListener serviceListener)
         {
-        }
-
-    public void serviceDeactivated(final IoService service, 
-        final SocketAddress serviceAddress, final IoHandler handler, 
-        final IoServiceConfig config)
-        {
-        }
-
-    public void sessionCreated(final IoSession session)
-        {
-        }
-
-    public void sessionDestroyed(final IoSession session)
-        {
-        m_log.debug("Lost connection: {}", session);
+        this.m_serviceListeners.add(serviceListener);
         }
     }

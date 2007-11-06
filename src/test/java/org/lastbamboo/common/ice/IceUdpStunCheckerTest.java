@@ -62,8 +62,7 @@ public class IceUdpStunCheckerTest
                 StunMessage.class, stunIoHandler, Object.class, 
                 clientIoHandler);
         final IceConnector connector = 
-            new IceUdpConnector(new IoServiceListenerStub(), codecFactory, 
-                demuxingIoHandler, true);
+            new IceUdpConnector(codecFactory, demuxingIoHandler, true);
         final IoSession ioSession = 
             connector.connect(new InetSocketAddress(4932), remoteAddress);
         final IceUdpStunChecker checker = 

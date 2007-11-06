@@ -29,7 +29,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final String m_foundation;
     private final int m_componentId;
     private volatile boolean m_nominated = false;
-    protected volatile IceStunChecker m_currentStunChecker;
+    private volatile IceStunChecker m_currentStunChecker;
     
     /**
      * Flag indicating whether or not this pair should include the 
@@ -41,7 +41,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
 
     private final IceStunCheckerFactory m_stunCheckerFactory;
 
-    protected final IceConnector m_iceConnector;
+    private final IceConnector m_iceConnector;
     
     /**
      * Creates a new pair without an existing connection between the endpoints.
@@ -59,27 +59,8 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         {
         this(localCandidate, remoteCandidate, 
             IceCandidatePairPriorityCalculator.calculatePriority(
-                localCandidate, remoteCandidate), stunCheckerFactory,
-            iceConnector);
-        }
-
-    /**
-     * Creates a new pair with an existing connection between the endpoints.
-     * 
-     * @param localCandidate The local candidate.
-     * @param remoteCandidate The candidate from the remote agent.
-     * @param priority The priority of the pair.
-     * @param stunCheckerFactory The class for creating new STUN checkers.
-     * @param iceConnector The class for creating a connection between the 
-     * candidates.
-     */
-    public AbstractIceCandidatePair(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final long priority,
-        final IceStunCheckerFactory stunCheckerFactory,
-        final IceConnector iceConnector)
-        {
-        this(localCandidate, remoteCandidate, priority, null, 
-            stunCheckerFactory, iceConnector);
+                localCandidate, remoteCandidate), 
+            null, stunCheckerFactory, iceConnector);
         }
     
     /**
@@ -99,24 +80,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
                 localCandidate, remoteCandidate),
             ioSession, stunCheckerFactory, null);
         }
-
-    /**
-     * Creates a new pair.
-     * 
-     * @param localCandidate The local candidate.
-     * @param remoteCandidate The candidate from the remote agent.
-     * @param priority The priority for the pair.
-     * @param ioSession The {@link IoSession} connecting to the two endpoints.
-     * @param stunCheckerFactory The class for creating new STUN checkers.
-     */
-    public AbstractIceCandidatePair(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final long priority,
-        final IoSession ioSession,  
-        final IceStunCheckerFactory stunCheckerFactory)
-        {
-        this(localCandidate, remoteCandidate, priority,
-            ioSession, stunCheckerFactory, null);
-        }
+    
 
     /**
      * Creates a new pair.

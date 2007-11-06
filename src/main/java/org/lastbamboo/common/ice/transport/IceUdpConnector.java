@@ -1,6 +1,8 @@
 package org.lastbamboo.common.ice.transport;
 
 import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.LinkedList;
 
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.ExecutorThreadModel;
@@ -24,27 +26,26 @@ public class IceUdpConnector implements IceConnector
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
-    private final IoServiceListener m_ioServiceListener;
     private final ProtocolCodecFactory m_demuxingCodecFactory;
     private final IoHandler m_demuxingIoHandler;
     private final boolean m_controlling;
+    
+    private final Collection<IoServiceListener> m_serviceListeners =
+        new LinkedList<IoServiceListener>();
 
     /**
      * Creates a new UDP connector.
      * 
-     * @param ioServiceListener The class that will listen to IO events for
-     * the connection.
      * @param protocolCodecFactory The class for interpretting the protocol
      * for the connection.
      * @param demuxingIoHandler The class for processing read and written
      * messages.
      * @param controlling Whether or not we're the controlling agent.
      */
-    public IceUdpConnector(final IoServiceListener ioServiceListener, 
+    public IceUdpConnector(
         final ProtocolCodecFactory protocolCodecFactory,
         final IoHandler demuxingIoHandler, final boolean controlling)
         {
-        m_ioServiceListener = ioServiceListener;
         m_demuxingCodecFactory = protocolCodecFactory;
         m_demuxingIoHandler = demuxingIoHandler;
         m_controlling = controlling;
@@ -54,7 +55,13 @@ public class IceUdpConnector implements IceConnector
         final InetSocketAddress remoteAddress)
         {
         final DatagramConnector connector = new DatagramConnector();
-        connector.addListener(this.m_ioServiceListener);
+        synchronized (this.m_serviceListeners)
+            {
+            for (final IoServiceListener listener : this.m_serviceListeners)
+                {
+                connector.addListener(listener);
+                }
+            }
         final DatagramConnectorConfig cfg = connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
         
@@ -70,26 +77,6 @@ public class IceUdpConnector implements IceConnector
 
         m_log.debug("Connecting from "+localAddress+" to "+
             remoteAddress);
-
-        // If the address is on the local network, we should be able to 
-        // connect more quickly.  If we can't, that likely indicates the 
-        // address is just from a different local network.
-        /*
-        final InetAddress address = remoteAddress.getAddress();
-        try
-            {
-            if (!address.isReachable(600)) 
-                {
-                m_log.debug("Address is not reachable: {}", address);
-                return null;
-                }
-            }
-        catch (final IOException e)
-            {
-            m_log.debug("IO error attempting to reach address: {}", address);
-            return null;
-            }
-            */
         
         final ConnectFuture cf = 
             connector.connect(remoteAddress, localAddress, 
@@ -119,5 +106,10 @@ public class IceUdpConnector implements IceConnector
                 remoteAddress+" -- look at the CAUSE!!!", e);
             throw e;
             }
+        }
+
+    public void addIoServiceListener(final IoServiceListener serviceListener)
+        {
+        this.m_serviceListeners.add(serviceListener);
         }
     }

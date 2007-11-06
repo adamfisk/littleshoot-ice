@@ -21,6 +21,8 @@ public class IceUdpCandidatePair extends AbstractIceCandidatePair
      * 
      * @param localCandidate The local candidate.
      * @param remoteCandidate The remote candidate.
+     * @param stunCheckerFactory The factory for creating connectivity checkers.
+     * @param connector The class for creating connections between pairs.
      */
     public IceUdpCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, 
@@ -37,6 +39,7 @@ public class IceUdpCandidatePair extends AbstractIceCandidatePair
      * @param localCandidate The local candidate.
      * @param remoteCandidate The remote candidate.
      * @param ioSession The {@link IoSession} connecting to the two endpoints.
+     * @param stunCheckerFactory The factory for creating connectivity checkers.
      */
     public IceUdpCandidatePair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate, final IoSession ioSession,

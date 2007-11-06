@@ -7,6 +7,9 @@ import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
 import org.lastbamboo.common.ice.transport.IceUdpConnector;
 
+/**
+ * Factory for creating ICE candidate pairs.
+ */
 public class IceCandidatePairFactoryImpl implements IceCandidatePairFactory
     {
     
@@ -14,6 +17,13 @@ public class IceCandidatePairFactoryImpl implements IceCandidatePairFactory
     private final IceUdpConnector m_udpConnector;
     private final IceTcpConnector m_tcpConnector;
 
+    /**
+     * Creates a new pair factory.
+     * 
+     * @param checkerFactory The factory for creating connectivity checkers.
+     * @param udpConnector The class for creating UDP "connections" for pairs.
+     * @param tcpConnector The class for creating TCP connections for pairs.
+     */
     public IceCandidatePairFactoryImpl(
         final IceStunCheckerFactory checkerFactory,
         final IceUdpConnector udpConnector,

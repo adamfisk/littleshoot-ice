@@ -3,6 +3,7 @@ package org.lastbamboo.common.ice;
 import java.util.Collection;
 
 import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
@@ -45,7 +46,8 @@ public class GeneralIceMediaStreamFactoryImpl
         final Class<T> protocolMessageClass, 
         final IoHandler udpProtocolIoHandler,
         final TurnClientListener delegateTurnClientListener,
-        final UpnpManager upnpManager)
+        final UpnpManager upnpManager, 
+        final IoServiceListener udpServiceListener)
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
@@ -74,6 +76,7 @@ public class GeneralIceMediaStreamFactoryImpl
             udpStunPeer = 
                 new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler,
                     iceAgent.isControlling());
+            udpStunPeer.addIoServiceListener(udpServiceListener);
             }
         else
             {
@@ -141,11 +144,14 @@ public class GeneralIceMediaStreamFactoryImpl
             gatherer.gatherCandidates();
         
         final IceUdpConnector udpConnector = 
-            new IceUdpConnector(stream, demuxingCodecFactory,
+            new IceUdpConnector(demuxingCodecFactory,
                 udpIoHandler, iceAgent.isControlling());
+        udpConnector.addIoServiceListener(stream);
+        udpConnector.addIoServiceListener(udpServiceListener);
         final IceTcpConnector tcpConnector =
-            new IceTcpConnector(stream, messageVisitorFactory, 
+            new IceTcpConnector(messageVisitorFactory, 
                 iceAgent.isControlling());
+        tcpConnector.addIoServiceListener(stream);
         final IceCandidatePairFactory candidatePairFactory = 
             new IceCandidatePairFactoryImpl(
                 checkerFactory, udpConnector, tcpConnector);

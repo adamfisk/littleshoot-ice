@@ -10,6 +10,7 @@ import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.ExecutorThreadModel;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoHandlerAdapter;
+import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -18,6 +19,7 @@ import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
+import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
 import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
@@ -70,9 +72,11 @@ public class IceAgentImplTest
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final TurnClientListener delegateListener = null;
                 final UpnpManager upnpManager = new UpnpManagerImpl();
+                final IoServiceListener udpServiceListener = 
+                    new IoServiceListenerStub();
                 return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
                     otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener, upnpManager);
+                    delegateListener, upnpManager, udpServiceListener);
                 }
             };
         
@@ -86,9 +90,11 @@ public class IceAgentImplTest
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final TurnClientListener delegateListener = null;
                 final UpnpManager upnpManager = new UpnpManagerImpl();
+                final IoServiceListener udpServiceListener = 
+                    new IoServiceListenerStub();
                 return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
                     otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener, upnpManager);
+                    delegateListener, upnpManager, udpServiceListener);
                 }
             };
         final IceMediaFactory iceMediaFactory = new IceMediaFactory()

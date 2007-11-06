@@ -7,7 +7,7 @@ public class IceTcpConnectorStub extends IceTcpConnector
 
     public IceTcpConnectorStub()
         {
-        super(new IoServiceListenerStub(), new StunMessageVisitorFactoryStub(), true);
+        super(new StunMessageVisitorFactoryStub(), true);
         }
 
     }

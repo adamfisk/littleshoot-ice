@@ -23,6 +23,13 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
     private static final Logger m_log = 
         LoggerFactory.getLogger(IceUdpStunChecker.class);
 
+    /**
+     * Creates a new UDP STUN connectivity checker.
+     * 
+     * @param session The MINA session over which the checks will take place.
+     * @param transactionTracker The class for keeping track of STUN 
+     * transactions for checks.
+     */
     public IceUdpStunChecker(final IoSession session, 
         final StunTransactionTracker<StunMessage> transactionTracker)
         {

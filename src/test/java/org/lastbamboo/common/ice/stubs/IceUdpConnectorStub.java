@@ -8,8 +8,7 @@ public class IceUdpConnectorStub extends IceUdpConnector
 
     public IceUdpConnectorStub()
         {
-        super(new IoServiceListenerStub(), new ProtocolCodecFactoryStub(), 
-            new IoHandlerAdapter(), true);
+        super(new ProtocolCodecFactoryStub(), new IoHandlerAdapter(), true);
         }
 
     }

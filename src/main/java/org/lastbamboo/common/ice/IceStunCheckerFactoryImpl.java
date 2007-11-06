@@ -20,6 +20,8 @@ public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
     /**
      * Creates a new factory.  The checkes the factory creates can be either
      * for UDP or TCP.
+     * @param transactionTracker The class that keeps track of STUN 
+     * transactions.
      */
     public IceStunCheckerFactoryImpl(
         final StunTransactionTracker<StunMessage> transactionTracker)
