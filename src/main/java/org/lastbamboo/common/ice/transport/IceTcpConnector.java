@@ -156,7 +156,7 @@ public class IceTcpConnector implements IceConnector
             // This happens when we can't connect.
             m_log.debug("Could not connect to host: {}", remoteAddress);
             m_log.debug("Reason for no connection: ", e);
-            throw e;
+            return null;
             }
         }
     
