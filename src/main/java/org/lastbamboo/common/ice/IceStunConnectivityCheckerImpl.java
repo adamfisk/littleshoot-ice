@@ -152,6 +152,8 @@ public final class IceStunConnectivityCheckerImpl<T>
         if (mapper != null)
             {
             remoteAddress = mapper.get(binding);
+            m_log.debug("Using stored remote address (TURN CONNECTION): {}", 
+                remoteAddress);
             }
         else
             {
@@ -159,6 +161,7 @@ public final class IceStunConnectivityCheckerImpl<T>
             // This is the "normal" case, so just keep going.
             remoteAddress = 
                 (InetSocketAddress) this.m_ioSession.getRemoteAddress();
+            m_log.debug("Using normal remote address: {}", remoteAddress);
             }
 
         
