@@ -143,18 +143,10 @@ public class IceCheckListImpl implements IceCheckList
         m_log.debug("Adding triggered pair:\n{}", pair);
         synchronized (this)
             {
-            if (pair.isNominated())
+            if (!this.m_triggeredQueue.contains(pair))
                 {
-                // This can happen when we receive a Binding Request on an 
-                // existing pair that's already in progress.  In that case,
-                // we cancel the in progress transaction and add a triggered
-                // pair.  
-                //
-                // This is inconsequential, simply an odd case to take note of.
-                //Thread.dumpStack();
-                m_log.debug("Adding already nominated pair: {}", pair);
+                this.m_triggeredQueue.add(pair);
                 }
-            this.m_triggeredQueue.add(pair);
             }
         }
     
