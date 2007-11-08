@@ -20,6 +20,7 @@ import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.turn.client.TurnStunMessageMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,8 +138,29 @@ public final class IceStunConnectivityCheckerImpl<T>
         
         final InetSocketAddress localAddress = 
             (InetSocketAddress) this.m_ioSession.getLocalAddress();
-        final InetSocketAddress remoteAddress = 
-            (InetSocketAddress) this.m_ioSession.getRemoteAddress();
+        
+        // We need to implement ICE section 7.2.1.2 here for TURN 
+        // candidates.  We need to translate the remote address as seen on 
+        // the IoSession (which will be the address of the TURN server) 
+        // to the address of the remote host - the peer itself.  This is
+        // available in the REMOTE-ADDRESS attribute of a Data Indication 
+        // message.
+        final InetSocketAddress remoteAddress;
+        final TurnStunMessageMapper mapper =
+            (TurnStunMessageMapper) this.m_ioSession.getAttribute(
+                "REMOTE_ADDRESS_MAP");
+        if (mapper != null)
+            {
+            remoteAddress = mapper.get(binding);
+            }
+        else
+            {
+            // If there's no remote address map, then it's not a TURN check. 
+            // This is the "normal" case, so just keep going.
+            remoteAddress = 
+                (InetSocketAddress) this.m_ioSession.getRemoteAddress();
+            }
+
         
         // TODO: This should include other attributes!!
         final UUID transactionId = binding.getTransactionId();
@@ -158,6 +180,7 @@ public final class IceStunConnectivityCheckerImpl<T>
         final IceCandidate remoteCandidate;
         if (!this.m_iceMediaStream.hasRemoteCandidate(remoteAddress, isUdp))
             {
+            m_log.debug("New remote candidate...");
             remoteCandidate = this.m_iceMediaStream.addRemotePeerReflexive(
                 binding, localAddress, remoteAddress, isUdp);
             m_log.debug("Added peer reflexive remote candidate: {}", 

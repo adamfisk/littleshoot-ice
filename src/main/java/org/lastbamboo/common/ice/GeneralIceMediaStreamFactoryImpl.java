@@ -88,14 +88,15 @@ public class GeneralIceMediaStreamFactoryImpl
         final IceStunTcpPeer tcpStunPeer;
         if (streamDesc.isTcp())
             {
-            final TurnStunDemuxableProtocolCodecFactory mapper = 
-                new TurnStunDemuxableProtocolCodecFactory();
             final TurnClientListener turnClientListener =
                 new StunTcpFrameTurnClientListener(messageVisitorFactory, 
-                    delegateTurnClientListener, mapper);
+                    delegateTurnClientListener);
             
             final DemuxableProtocolCodecFactory tcpFramingCodecFactory =
                 new TcpFrameCodecFactory();
+            
+            final TurnStunDemuxableProtocolCodecFactory mapper = 
+                new TurnStunDemuxableProtocolCodecFactory();
             final ProtocolCodecFactory codecFactory = 
                 new DemuxingProtocolCodecFactory(mapper, 
                     tcpFramingCodecFactory);
