@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 public class IceCandidateGathererImpl implements IceCandidateGatherer
     {
     
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private final Logger m_log = LoggerFactory.getLogger(getClass());
 
     private final StunClient m_iceTcpStunPeer;
 
@@ -91,7 +91,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             iter.hasNext();)
             {
             final IceCandidate candidate = iter.next();
-            LOG.debug("Checking: {}", candidate);
+            m_log.debug("Checking: {}", candidate);
             final InetSocketAddress address = candidate.getSocketAddress();
             if (addressesToCandidates.containsKey(address))
                 {
@@ -100,7 +100,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
                 final IceCandidate base = existingCandidate.getBaseCandidate();
                 if (base.equals(candidate.getBaseCandidate()))
                     {
-                    LOG.debug("Removing redundant candidate!!!!");
+                    m_log.debug("Removing redundant candidate!!!!");
                     iter.remove();
                     }
                 }
@@ -148,7 +148,8 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             new LinkedList<IceCandidate>();
     
         // Only add the TURN candidate on the non-controlling side to save
-        // resources.
+        // resources.  This is non-standard as well, but we should only need
+        // one TURN server per session.
         if (!this.m_controlling && !NetworkUtils.isPublicAddress())
             {
             final InetSocketAddress relayAddress = client.getRelayAddress();
@@ -209,7 +210,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             }
         catch (final UnknownHostException e)
             {
-            LOG.error("Could not resolve host!", e);
+            m_log.error("Could not resolve host!", e);
             return candidates;
             }
         
