@@ -117,7 +117,10 @@ public class IceStunClientCandidateProcessor
         
         // This could be for either regular or aggressive nomination.
         final boolean includedUseCandidate;
-        if (this.m_pair.useCandidateSet())
+        // We only include the USE-CANDIDATE attribute if it's set AND we're
+        // the controlling agent.  The controlled agent never sends 
+        // USE-CANDIDATE.
+        if (this.m_pair.useCandidateSet() && isControlling)
             {
             request = new BindingRequest(priorityAttribute, controlling, 
                 new IceUseCandidateAttribute());
