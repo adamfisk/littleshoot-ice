@@ -300,7 +300,7 @@ public class IceAgentImpl implements IceAgent
             final IceCandidatePair pair = validPairs.peek();
             if (pair.isNominated())
                 {
-                m_log.error("Pair already nominated!!!");
+                m_log.debug("Pair already nominated!!!");
                 return;
                 }
             

@@ -62,6 +62,14 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final IceCandidateGatherer m_gatherer;
     private IceCheckScheduler m_checkScheduler;
     
+    /**
+     * Creates a new ICE media stream.
+     * 
+     * @param iceAgent The ICE agent.
+     * @param streamDesc The description of the stream to create.
+     * @param gatherer The class that will gather ICE candidates for the 
+     * stream.
+     */
     public IceMediaStreamImpl(final IceAgent iceAgent, 
         final IceMediaStreamDesc streamDesc, 
         final IceCandidateGatherer gatherer)
@@ -486,8 +494,15 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void addPair(final IceCandidatePair pair)
         {
-        m_log.debug("Adding pair to media stream: {}", this);
-        this.m_checkList.addPair(pair);
+        if (!this.m_nominatedPairs.isEmpty())
+            {
+            m_log.debug("Pair already nominated...not adding pair");
+            }
+        else
+            {
+            m_log.debug("Adding pair to media stream: {}", this);
+            this.m_checkList.addPair(pair);
+            }
         }
     
     public IceCheckListState getCheckListState()
