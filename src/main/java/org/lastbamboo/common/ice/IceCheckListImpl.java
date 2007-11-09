@@ -140,7 +140,7 @@ public class IceCheckListImpl implements IceCheckList
 
     public void addTriggeredPair(final IceCandidatePair pair)
         {
-        m_log.debug("Adding triggered pair:\n{}", pair);
+        m_log.debug("Adding triggered pair:{}", pair);
         synchronized (this)
             {
             if (!this.m_triggeredQueue.contains(pair))

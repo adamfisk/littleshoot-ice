@@ -9,6 +9,7 @@ import org.lastbamboo.common.ice.transport.IceConnector;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.turn.client.TurnStunMessageMapper;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,12 +115,14 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     public StunMessage check(final BindingRequest request, final long rto)
         {
         // We set the state here instead of in the check list scheduler
-        // because it's more precise and because the schedule doesn't perform
+        // because it's more precise and because the scheduler doesn't perform
         // a subsequent check until after this check has executed, so it won't
         // think a pair is waiting for frozen twice in a row (as opposed to
         // in progress).
         setState(IceCandidatePairState.IN_PROGRESS);
         
+        final InetSocketAddress remoteAddress = 
+            this.m_remoteCandidate.getSocketAddress();
         if (this.m_ioSession == null)
             {
             if (!(this.m_localCandidate instanceof IceTcpActiveCandidate) &&
@@ -132,8 +135,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
                 }
             final InetSocketAddress localAddress = 
                 this.m_localCandidate.getSocketAddress();
-            final InetSocketAddress remoteAddress = 
-                this.m_remoteCandidate.getSocketAddress();
+            
             this.m_ioSession = 
                 this.m_iceConnector.connect(localAddress, remoteAddress);
             }
@@ -144,6 +146,20 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             m_log.debug("Could not connect to the remote host: {}", 
                 this.m_remoteCandidate.getSocketAddress());
             return new ConnectErrorStunMessage();
+            }
+        
+        // We need to handle TURN here.  If this is running over a TURN
+        // connection, we don't have anything telling the Data Indication
+        // encoder the REMOTE-ADDRESS to send this request to.  The remote
+        // address is the remote candidate of the pair, and we record that here.
+        final TurnStunMessageMapper mapper =
+            (TurnStunMessageMapper) this.m_ioSession.getAttribute(
+                "REMOTE_ADDRESS_MAP");
+        if (mapper != null)
+            {
+            m_log.debug("Mapping Binding Request to the REMOTE-ADDRESS for " +
+                "this pair for use in the Send Indication");
+            mapper.mapMessage(request, remoteAddress);
             }
         this.m_currentStunChecker = 
             this.m_stunCheckerFactory.newChecker(this.m_ioSession);
