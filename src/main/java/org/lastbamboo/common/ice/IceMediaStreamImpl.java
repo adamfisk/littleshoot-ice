@@ -476,6 +476,7 @@ public class IceMediaStreamImpl implements IceMediaStream
     public void addTriggeredPair(final IceCandidatePair pair)
         {
         this.m_checkList.addTriggeredPair(pair);
+        this.m_checkScheduler.onPair();
         }
 
     public void recomputePairPriorities(final boolean controlling)

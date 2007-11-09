@@ -22,6 +22,8 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     private final IceMediaStream m_mediaStream;
     private final IceAgent m_agent;
     private final ExistingSessionIceCandidatePairFactory m_existingSessionPairFactory;
+    private volatile boolean m_queueEmpty = false;
+    private final Timer m_timer;
 
     /**
      * Creates a new scheduler for the specified pairs.
@@ -38,11 +40,6 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         m_mediaStream = stream;
         m_checkList = checkList;
         m_existingSessionPairFactory = existingSessionPairFactory;
-        }
-
-    public void scheduleChecks()
-        {
-        m_log.debug("Scheduling checks...");
         final String offererOrAnswerer;
         if (this.m_agent.isControlling())
             {
@@ -52,10 +49,14 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             {
             offererOrAnswerer = "ICE-Not-Controlling-Timer";
             }
-        final Timer timer = new Timer(offererOrAnswerer, true);
-        final TimerTask task = createTimerTask(timer);
-        
-        timer.schedule(task, 0L);
+        this.m_timer = new Timer(offererOrAnswerer, true);
+        }
+
+    public void scheduleChecks()
+        {
+        m_log.debug("Scheduling checks...");
+        final TimerTask task = createTimerTask(m_timer);
+        m_timer.schedule(task, 0L);
         }
 
     private TimerTask createTimerTask(final Timer timer)
@@ -85,18 +86,25 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         final IceCandidatePair activePair = getNextPair();
         if (activePair == null)
             {
-            // No more pairs to try.
-            timer.cancel();
+            // No more pairs to try.  Note we don't actually cancel the timer 
+            // here.  This goes against the draft, but it's because TCP
+            // checks can take unpredictable time, causing agents on either
+            // end to finish at potentially radically different times.  As
+            // a result, we always need to be ready for triggered checks.
             m_log.debug("No more active pairs...");
-            //this.m_checkList.setState(IceCheckListState.FAILED);
+            m_queueEmpty = true;
             }
         else
             {
-            m_log.debug("About to perform check on:\n{}", activePair);
+            m_log.debug("About to perform check on:{}", activePair);
             performCheck(activePair);
             m_log.debug("Scheduling new timer task...");
             final TimerTask task = createTimerTask(timer);
-            final int Ta_i = 20;
+            
+            // Section 16.2 says this SHOULD be configurable and SHOULD have
+            // a default value of 500 ms.  That would make ICE take a long 
+            // time, though, so we're more aggressive.
+            final int Ta_i = 200;
             
             // TODO: The recommended formula for this is:
             // (stunPacketSize / rtpPacketSize) * rtpPtime;
@@ -173,5 +181,14 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
                 }
             };
         return this.m_checkList.selectPair(pred);
+        }
+
+    public void onPair()
+        {
+        if (m_queueEmpty)
+            {
+            m_queueEmpty = false;
+            scheduleChecks();
+            }
         }
     }
