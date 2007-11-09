@@ -261,6 +261,7 @@ public final class IceStunConnectivityCheckerImpl<T>
                     break;
                 case SUCCEEDED:
                     // Nothing more to do.
+                    m_log.debug("Pair has already been checked and SUCCEEDED");
                     break;
                 }
             }
