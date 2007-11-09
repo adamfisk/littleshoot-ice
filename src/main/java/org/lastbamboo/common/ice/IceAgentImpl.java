@@ -191,8 +191,8 @@ public class IceAgentImpl implements IceAgent
         {
         if (m_log.isDebugEnabled())
             {
-            m_log.debug("Received nominated pair on agent.  Controlling: " + 
-                isControlling()+" pair:\n"+pair);
+            m_log.debug("Received nominated pair on agent.  " +
+                "Controlling: {} pair: {}", isControlling(), pair); 
             }
 
         // We now need to set the state of the check list as specified in
