@@ -323,7 +323,7 @@ public class IceMediaStreamImpl implements IceMediaStream
                     return candidate;
                     }
                 }
-            m_log.debug(address+" with transport UDP: "+isUdp+
+            m_log.debug(address+" with transport: "+ (isUdp ? "UDP" : "TCP") +
                 " not found in "+candidates);
             }
         
