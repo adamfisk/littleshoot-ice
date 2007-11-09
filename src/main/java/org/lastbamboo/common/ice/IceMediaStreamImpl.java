@@ -494,7 +494,7 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void addPair(final IceCandidatePair pair)
         {
-        if (!this.m_nominatedPairs.isEmpty())
+        if (this.m_iceAgent.getIceState() == IceState.COMPLETED)
             {
             m_log.debug("Pair already nominated...not adding pair");
             }
