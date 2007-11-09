@@ -43,6 +43,8 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final IceStunCheckerFactory m_stunCheckerFactory;
 
     private final IceConnector m_iceConnector;
+
+    private boolean m_turnPair;
     
     /**
      * Creates a new pair without an existing connection between the endpoints.
@@ -160,6 +162,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             m_log.debug("Mapping Binding Request to the REMOTE-ADDRESS for " +
                 "this pair for use in the Send Indication");
             mapper.mapMessage(request, remoteAddress);
+            m_turnPair = true;
             }
         this.m_currentStunChecker = 
             this.m_stunCheckerFactory.newChecker(this.m_ioSession);
@@ -378,5 +381,10 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         // Just use the other one -- it could have a public address for the
         // remote candidate or not.
         return -1;
+        }
+
+    public boolean isTurnPair()
+        {
+        return m_turnPair;
         }
     }

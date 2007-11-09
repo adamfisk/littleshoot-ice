@@ -135,4 +135,14 @@ public interface IceCandidatePair extends Comparable
      */
     void setIoSession(final IoSession session);
 
+    /**
+     * Check for whether or not this pair is for a TURN connection.  If so,
+     * we may handle it slightly differently upon nomination or at any other
+     * time.
+     * 
+     * @return <code>true</code> if the local candidate for this pair is for
+     * our connection to our TURN server (the connection over which we sent
+     * an Allocate Request).
+     */
+    boolean isTurnPair();
     }
