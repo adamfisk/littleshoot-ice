@@ -84,7 +84,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             if (m_idsToResponses.containsKey(id))
                 {
                 final StunMessage response = this.m_idsToResponses.remove(id);
-                m_log.debug("Returning STUN response: {}", response);
+                m_log.debug("Read STUN response for check: {}", response);
                 return response;
                 }
             
