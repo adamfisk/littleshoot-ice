@@ -36,15 +36,6 @@
             <artifactId>easymock</artifactId>
             </dependency>
 
-<!--
-Commented out because it depends on a ton of old
-libraries, mostly stemming from commons jxpath 
-        <dependency>
-            <groupId>net.sbbi</groupId>
-            <artifactId>sbbi-upnp</artifactId>
-            </dependency>
---> 
-
         <dependency>
             <groupId>org.lastbamboo</groupId>
             <artifactId>lastbamboo-common-offer-answer</artifactId>
