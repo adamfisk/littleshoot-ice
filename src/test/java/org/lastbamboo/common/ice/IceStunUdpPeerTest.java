@@ -2,6 +2,7 @@ package org.lastbamboo.common.ice;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.util.Collection;
@@ -271,8 +272,8 @@ public class IceStunUdpPeerTest
                 }
             }
         
-        Assert.assertEquals("Client did not receive expected messages", 
-            clientRequestsReceived.get(), expectedClientMessages);
+        Assert.assertEquals("Client did not receive expected client messages", 
+        	expectedClientMessages, clientRequestsReceived.get());
         
         // Now make sure that out of all the messages we just sent, none went
         // to the acceptor.
@@ -334,10 +335,11 @@ public class IceStunUdpPeerTest
         {
         final LinkedList<InetSocketAddress> addresses = 
             new LinkedList<InetSocketAddress>();
+        final InetAddress lh = NetworkUtils.getLocalHost();
         for (int i = 0; i < 30; i++)
             {
             final InetSocketAddress remote = 
-                new InetSocketAddress(NetworkUtils.getLocalHost(), startPort+i);
+                new InetSocketAddress(lh, startPort+i);
             addresses.add(remote);
             }
 
@@ -373,6 +375,7 @@ public class IceStunUdpPeerTest
         final DatagramConnector connector = new DatagramConnector();
         final DatagramConnectorConfig cfg = connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
+        Assert.assertTrue(cfg.getSessionConfig().isReuseAddress());
         final ProtocolCodecFactory codecFactory = 
             new StunProtocolCodecFactory();
         final ProtocolCodecFilter stunFilter = 

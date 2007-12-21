@@ -36,7 +36,7 @@ public class IceUdpConnector implements IceConnector
     /**
      * Creates a new UDP connector.
      * 
-     * @param protocolCodecFactory The class for interpretting the protocol
+     * @param protocolCodecFactory The class for interpreting the protocol
      * for the connection.
      * @param demuxingIoHandler The class for processing read and written
      * messages.
