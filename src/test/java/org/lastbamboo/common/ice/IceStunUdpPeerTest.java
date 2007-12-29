@@ -171,10 +171,15 @@ public class IceStunUdpPeerTest
      * from random external clients go to the server -- the 
      * {@link DatagramChannel} that's just bound but hasn't had connect() 
      * called on it.
+     * 
+     * NOTE:  This is not active because it turns out the connect method of
+     * DatagramSocket behaves differently on different OSes, which is allowed
+     * in it contract.  In particular, if one DatagramSocket is connected 
+     * through connect() while another one is bound to the same port,
+     * then which socket will receive incoming packets is not defined.
      *  
      * @throws Exception If any unexpected error occurs.
      */
-    @Test
     public void testUdpConnectingAndBinding() throws Exception
         {
         final AtomicInteger serverRequestsReceived = new AtomicInteger(0);
