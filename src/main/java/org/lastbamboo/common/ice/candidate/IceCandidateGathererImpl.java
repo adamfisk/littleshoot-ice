@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.lastbamboo.common.ice.IceMediaStreamDesc;
 import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.client.TcpStunClient;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,14 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         final StunClient udpStunClient, final boolean controlling, 
         final IceMediaStreamDesc desc)
         {
+        if (desc.isUdp() && udpStunClient == null)
+            {
+            throw new IllegalArgumentException("No UDP client with UDP active");
+            }
+        if (desc.isTcp() && tcpTurnClient == null)
+            {
+            throw new IllegalArgumentException("No TCP client with TCP active");
+            }
         this.m_iceTcpStunPeer = tcpTurnClient;
         this.m_iceUdpStunPeer = udpStunClient;
         this.m_controlling = controlling;

@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Processes STUN connectivity checks for ICE.  See:<p>
  * 
- * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.2
+ * http://tools.ietf.org/html/draft-ietf-mmusic-ice-19#section-7.2
  * 
  * @param <T> The type STUN message visitor methods return.
  */
@@ -163,7 +163,6 @@ public final class IceStunConnectivityCheckerImpl<T>
                 (InetSocketAddress) this.m_ioSession.getRemoteAddress();
             m_log.debug("Using normal remote address: {}", remoteAddress);
             }
-
         
         // TODO: This should include other attributes!!
         final UUID transactionId = binding.getTransactionId();
@@ -230,8 +229,6 @@ public final class IceStunConnectivityCheckerImpl<T>
                 throw new NullPointerException("Null session!!!");
                 }
             
-            //nominateOnSuccessAsNecessary(binding, computedPair);
-            
             // This is the case where the new pair is already on the 
             // check list.  See ICE section 7.2.1.4. Triggered Checks
             final IceCandidatePairState state = computedPair.getState();
@@ -297,7 +294,6 @@ public final class IceStunConnectivityCheckerImpl<T>
             
             // Add the pair the normal check list, set its state to waiting,
             // and add a triggered check.
-            //nominateOnSuccessAsNecessary(binding, computedPair);
             this.m_iceMediaStream.addPair(computedPair);
             computedPair.setState(IceCandidatePairState.WAITING);
             this.m_iceMediaStream.addTriggeredPair(computedPair);

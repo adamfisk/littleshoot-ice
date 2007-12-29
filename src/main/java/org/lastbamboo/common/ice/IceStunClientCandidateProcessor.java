@@ -59,7 +59,7 @@ public class IceStunClientCandidateProcessor
     private final ExistingSessionIceCandidatePairFactory m_existingSessionPairFactory;
 
     /**
-     * Creates a new connectiviy checker for a single UDP pair.
+     * Creates a new connectivity checker for a single UDP pair.
      * 
      * @param iceAgent The top-level ICE agent.
      * @param iceMediaStream The media stream this check is trying to establish.
@@ -188,7 +188,7 @@ public class IceStunClientCandidateProcessor
                 
                 if (matchingCandidate != null)
                     {
-                    // This will have the priority signalled in the original
+                    // This will have the priority signaled in the original
                     // SDP, as specified in 7.1.2.2.2.
                     return matchingCandidate;
                     }
@@ -270,7 +270,7 @@ public class IceStunClientCandidateProcessor
                 {
                 // See section 7.1.2.1. Failure Cases
                 // This means we never received any response to our request,
-                // interpretted as a failure.
+                // interpreted as a failure.
                 m_pair.setState(IceCandidatePairState.FAILED);
                 return null;
                 }

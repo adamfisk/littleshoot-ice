@@ -40,7 +40,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
     
     /**
      * Creates a new ICE STUN UDP peer.
-     * @param demuxingCodecFactory The class for interpretting the multiple 
+     * @param demuxingCodecFactory The class for interpreting the multiple 
      * protocols on the wire -- STUN and whatever protocol it's negotiating
      * a connection for.
      * @param demuxingIoHandler The class for handling read and written 
@@ -65,7 +65,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // NOTE: We're starting the server here before external code has
         // had the chance to add listeners.  In this case, it will be fine
         // because the caller cannot have sent the offer or answer until
-        // the listeners are added (or SHOULD not have), so there's not way
+        // the listeners are added (or SHOULD not have), so there's no way
         // of missing any relevant events.
         this.m_stunServer = 
             new UdpStunServer(demuxingCodecFactory, 
