@@ -3,14 +3,14 @@ package org.lastbamboo.common.ice.candidate;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import org.apache.commons.lang.ClassUtils;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 
 /**
  * Class that abstracts out general attributes of all ICE session candidates.
  */
-public abstract class AbstractIceCandidate implements IceCandidate, Comparable
+public abstract class AbstractIceCandidate implements IceCandidate, 
+    Comparable<AbstractIceCandidate>
     {
 
     private final InetSocketAddress m_address;
@@ -233,9 +233,8 @@ public abstract class AbstractIceCandidate implements IceCandidate, Comparable
         return true;
         }
 
-    public int compareTo(final Object obj)
+    public int compareTo(final AbstractIceCandidate other)
         {
-        final AbstractIceCandidate other = (AbstractIceCandidate) obj;
         final Long priority1 = Long.valueOf(m_priority);
         final Long priority2 = Long.valueOf(other.getPriority());
         final int priorityComparison = priority1.compareTo(priority2);
