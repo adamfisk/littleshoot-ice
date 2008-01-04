@@ -75,7 +75,7 @@ public final class IceStunConnectivityCheckerImpl<T>
     public T visitBindingRequest(final BindingRequest request)
         {
         m_log.debug("Visiting Binding Request message: {}", request);
-        // This is not standard.  Most STUN implementations will impelement
+        // This is not standard.  Most STUN implementations will implement
         // transaction state machines and will therefore filter out duplicate
         // Binding Requests.  This is not required, however, so we add this
         // check to avoid more processing if we are sent duplicate requests

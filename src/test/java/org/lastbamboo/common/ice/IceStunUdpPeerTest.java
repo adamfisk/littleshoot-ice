@@ -1,7 +1,5 @@
 package org.lastbamboo.common.ice;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
@@ -26,7 +24,6 @@ import org.junit.Test;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
 import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
-import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
@@ -100,8 +97,12 @@ public class IceStunUdpPeerTest
                     new IceMediaStreamImplStub());
                 }
             };
-        this.m_peer1 = new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true);
-        this.m_peer2 = new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true);
+        this.m_peer1 = 
+            new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true, 
+                transactionTracker);
+        this.m_peer2 = 
+            new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true, 
+                transactionTracker);
         this.m_peer1.addIoServiceListener(serviceListener);
         this.m_peer2.addIoServiceListener(serviceListener);
         m_peer1.connect();
@@ -111,7 +112,8 @@ public class IceStunUdpPeerTest
         final InetSocketAddress address2 = m_peer2.getHostAddress();
         
         Assert.assertFalse(address1.equals(address2));
-        m_log.debug("Sending STUN request to: "+address2);
+        m_log.debug("Sending STUN request to address1: "+address1);
+        m_log.debug("Sending STUN request to address2: "+address2);
         
         final StunMessageVisitor<InetSocketAddress> visitor = 
             new StunMessageVisitorAdapter<InetSocketAddress>()
@@ -131,33 +133,18 @@ public class IceStunUdpPeerTest
                 }
             };
 
-        // We use separate clients here because the ICE STUN peers aren't 
-        // designed to receive incoming Binding Requests on their connected
-        // ports -- the separate connectivity checkers take care of that.
-        final UdpStunClient stunClient1 = new UdpStunClient();
-        final UdpStunClient stunClient2 = new UdpStunClient();
-
-        stunClient1.connect();
-        stunClient2.connect();
-        final InetSocketAddress localAddress1 = stunClient1.getHostAddress();
-        final InetSocketAddress localAddress2 = stunClient2.getHostAddress();
-        assertNotNull(localAddress1);
-        assertNotNull(localAddress2);
+        m_log.debug("Sending Binding Request to: {}", address2);
+        final StunMessage msg1 = 
+            this.m_peer1.write(new BindingRequest(), address2);
+        final InetSocketAddress mappedAddress1 = msg1.accept(visitor);
+        Assert.assertEquals("Mapped address should equal the local address", 
+            address1, mappedAddress1);
         
-        for (int i = 0; i < 4; i++)
-            {
-            final StunMessage msg1 = 
-                stunClient1.write(new BindingRequest(), address2);
-            final InetSocketAddress mappedAddress1 = msg1.accept(visitor);
-            Assert.assertEquals("Mapped address should equal the local address", 
-                localAddress1, mappedAddress1);
-            
-            final StunMessage msg2 = 
-                stunClient2.write(new BindingRequest(), address1);
-            final InetSocketAddress mappedAddress2 = msg2.accept(visitor);
-            Assert.assertEquals("Mapped address should equal the local address", 
-                localAddress2, mappedAddress2);
-            }
+        final StunMessage msg2 = 
+            this.m_peer2.write(new BindingRequest(), address1);
+        final InetSocketAddress mappedAddress2 = msg2.accept(visitor);
+        Assert.assertEquals("Mapped address should equal the local address", 
+            address2, mappedAddress2);
         }
     
     /**

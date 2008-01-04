@@ -12,6 +12,7 @@ import org.lastbamboo.common.stun.server.StunServer;
 import org.lastbamboo.common.stun.server.UdpStunServer;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final StunClient m_stunClient;
     private final StunServer m_stunServer;
+    private InetSocketAddress m_serverReflexiveAddress;
     
     /**
      * Creates a new ICE STUN UDP peer.
@@ -46,10 +48,16 @@ public class IceStunUdpPeer implements StunClient, StunServer
      * @param demuxingIoHandler The class for handling read and written 
      * messages. 
      * @param controlling Whether or not this agent is controlling.
+     * @param transactionTracker 
      */
     public IceStunUdpPeer(final ProtocolCodecFactory demuxingCodecFactory, 
-        final IoHandler demuxingIoHandler, final boolean controlling)
+        final IoHandler demuxingIoHandler, final boolean controlling, 
+        final StunTransactionTracker<StunMessage> transactionTracker)
         {
+        this.m_stunClient = new UdpStunClient(transactionTracker);
+        this.m_stunClient.connect();
+        this.m_serverReflexiveAddress = 
+            this.m_stunClient.getServerReflexiveAddress();
         // We also add whether we're controlling for thread
         // naming here just to make log reading easier.
         final String controllingString;
@@ -76,15 +84,14 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // connector, as both need to be the same for ICE to function.  
         // Note this only works because both the client and server are using 
         // the SO_REUSEADDRESS option.
-        this.m_stunServer.start(null);
+        this.m_stunServer.start(this.m_stunClient.getHostAddress());
         
-        final InetSocketAddress boundAddress = 
-            this.m_stunServer.getBoundAddress();
+        m_log.debug("Started STUN client on local address: {}",
+            this.m_stunClient.getHostAddress());
+        m_log.debug("Started STUN server on local address: {}",
+            this.m_stunServer.getBoundAddress());
         
-        m_log.debug("Starting STUN client on local address: {}",boundAddress);
-        this.m_stunClient = new UdpStunClient(boundAddress);
         }
-    
 
     public void connect()
         {
@@ -103,7 +110,10 @@ public class IceStunUdpPeer implements StunClient, StunServer
 
     public InetSocketAddress getServerReflexiveAddress()
         {
-        return this.m_stunClient.getServerReflexiveAddress();
+        // We return the cached server reflexive address because we need to
+        // get it before the "server side" UDP handler binds to the same 
+        // port, as it can "steal" incoming packets on Windows.
+        return this.m_serverReflexiveAddress;
         }
 
     public InetAddress getStunServerAddress()

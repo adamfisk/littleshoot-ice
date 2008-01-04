@@ -75,7 +75,7 @@ public class GeneralIceMediaStreamFactoryImpl
             {
             udpStunPeer = 
                 new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler,
-                    iceAgent.isControlling());
+                    iceAgent.isControlling(), transactionTracker);
             udpStunPeer.addIoServiceListener(udpServiceListener);
             }
         else
