@@ -111,7 +111,12 @@ public class IceTcpConnector implements IceConnector
             {
             try
                 {
-                if (!address.isReachable(600))
+                // Note, we used to put the timeout at 600 milliseconds.  You'd
+                // think this would be way more than enough time to connect
+                // to another host on the local network, but it turns out it's
+                // not even enough time for vista to check if the address is
+                // reachable if the address is localhost!  Odd, but true.
+                if (!address.isReachable(1200))
                     {
                     m_log.debug("Address is not reachable: {}", remoteAddress);
                     return null;
