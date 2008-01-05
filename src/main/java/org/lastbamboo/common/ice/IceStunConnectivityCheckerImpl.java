@@ -72,6 +72,7 @@ public final class IceStunConnectivityCheckerImpl<T>
             new ExistingSessionIceCandidatePairFactoryImpl(checkerFactory);
         }
 
+    @Override
     public T visitBindingRequest(final BindingRequest request)
         {
         m_log.debug("Visiting Binding Request message: {}", request);

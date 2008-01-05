@@ -68,8 +68,7 @@ public class IceStunUdpPeerTest
      * 
      * @throws Exception If any unexpected error occurs.
      */
-    @Test
-    public void testIceStunUdpPeers() throws Exception
+    @Test public void testIceStunUdpPeers() throws Exception
         {
         final IceAgent iceAgent = new IceAgentStub();
         final ProtocolCodecFactory demuxingCodecFactory =
