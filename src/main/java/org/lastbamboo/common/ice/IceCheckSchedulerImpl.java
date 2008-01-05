@@ -113,7 +113,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             // relatively safe value of 20ms supported in most NATs.
             //
             // Note also that our goal isn't necessarily to keep the 
-            // bandwidth in line with the ultimate protocol, as the folmula
+            // bandwidth in line with the ultimate protocol, as the formula
             // above intends, but rather to make sure the NAT can handle
             // the number of mappings we're requesting.
             timer.schedule(task, this.m_agent.calculateDelay(Ta_i));

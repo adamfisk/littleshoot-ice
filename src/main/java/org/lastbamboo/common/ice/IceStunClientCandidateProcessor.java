@@ -150,6 +150,7 @@ public class IceStunClientCandidateProcessor
             final IceCandidateVisitor<Void> localCandidateVisitor =
                 new IceCandidateVisitorAdapter<Void>(false)
                 {
+                @Override
                 public Void visitTcpActiveCandidate(
                     final IceTcpActiveCandidate candidate)
                     {
@@ -288,6 +289,7 @@ public class IceStunClientCandidateProcessor
                 return null;
                 }
 
+            @Override
             public IceCandidate visitConnectErrorMesssage(
                 final ConnectErrorStunMessage message)
                 {

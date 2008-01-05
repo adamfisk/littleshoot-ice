@@ -345,9 +345,8 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         return true;
         }
 
-    public int compareTo(final Object obj)
+    public int compareTo(final IceCandidatePair other)
         {
-        final AbstractIceCandidatePair other = (AbstractIceCandidatePair) obj;
         final Long priority1 = Long.valueOf(m_priority);
         final Long priority2 = Long.valueOf(other.getPriority());
         final int priorityComparison = priority1.compareTo(priority2);
@@ -373,7 +372,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             }
         
         else if (NetworkUtils.isPublicAddress(
-            other.m_remoteCandidate.getSocketAddress().getAddress()))
+            other.getRemoteCandidate().getSocketAddress().getAddress()))
             {
             return 1;
             }

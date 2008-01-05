@@ -19,9 +19,7 @@ import org.slf4j.LoggerFactory;
 /**
  * ICE STUN peer class for UDP.  This is basically just a STUN client for 
  * candidate gathering and a STUN server for processing incoming requests
- * from peer reflexive candidates.  The incoming requests are generally 
- * peer reflexive because the other "connected" UDP connectivity classes take
- * care of processing requests from any candidates we know about.
+ * from peer reflexive candidates.
  * 
  * NOTE: This class takes a little work to wrap one's head around as far as
  * the socket SO_REUSEADDRESS option goes.  Basically, we run both a client
@@ -29,8 +27,15 @@ import org.slf4j.LoggerFactory;
  * framework, though, and MINA has connectors and acceptors.  MINA calls 
  * connect on the underlying DatagramChannel for the connector.  When that call
  * is made, the channel will only accept incoming data from the host it's
- * connected to.  Since we also bind to that port with an accepting channel,
- * though, so incoming data from other hosts goes to the accepting channel.  
+ * connected to.  We also bind to that port with an accepting channel,
+ * though, so incoming data from other hosts goes to the accepting channel.<p>
+ * 
+ * Note also that the behavior for what packets go where differs by operating system.  On
+ * Windows, for example, packets from a host that has had DatagramSocket.connect() 
+ * called for that host will not necessarily go to the "connected" host when there's another
+ * server socket bound to that port (using SO_REUSEADDRESS).  If you followed that 
+ * sentence, this means that both the connected "client" and the listening "server" 
+ * message handling code needs to be prepared to be prepared to handle any message. 
  */
 public class IceStunUdpPeer implements StunClient, StunServer
     {
@@ -79,9 +84,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
             new UdpStunServer(demuxingCodecFactory, 
                 demuxingIoHandler, controllingString);
         
-        // We pass null here so the server binds to any available port.
-        // We use that as both the acceptor port and the local port for the 
-        // connector, as both need to be the same for ICE to function.  
+        // Just bind to the same port as the client.
         // Note this only works because both the client and server are using 
         // the SO_REUSEADDRESS option.
         this.m_stunServer.start(this.m_stunClient.getHostAddress());

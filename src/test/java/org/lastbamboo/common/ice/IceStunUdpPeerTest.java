@@ -78,7 +78,7 @@ public class IceStunUdpPeerTest
     
         final IceStunCheckerFactory checkerFactory =
             new IceStunCheckerFactoryImpl(transactionTracker);
-        final StunMessageVisitorFactory udpMessageVisitorFactory =
+        final StunMessageVisitorFactory<StunMessage> udpMessageVisitorFactory =
             new IceStunConnectivityCheckerFactoryImpl<StunMessage>(iceAgent, 
                 transactionTracker, checkerFactory);
         final IoHandler stunIoHandler = 
@@ -90,6 +90,7 @@ public class IceStunUdpPeerTest
         
         final IoServiceListener serviceListener = new IoServiceListenerStub()
             {
+            @Override
             public void sessionCreated(final IoSession session)
                 {
                 session.setAttribute(IceMediaStream.class.getSimpleName(), 

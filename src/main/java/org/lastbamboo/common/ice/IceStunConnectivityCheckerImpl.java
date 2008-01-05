@@ -51,6 +51,9 @@ public final class IceStunConnectivityCheckerImpl<T>
      * Creates a new message visitor for the specified session.
      * 
      * @param agent The top-level ICE agent.
+     * @param session The IO session to perform the checks over.
+     * @param transactionTracker The class that keeps track of STUN transactions for
+     * the checks.
      * @param checkerFactory The factory for creating new classes for 
      * performing connectivity checks.
      * @param bindingRequestTracker Tracks Binding Requests we've already

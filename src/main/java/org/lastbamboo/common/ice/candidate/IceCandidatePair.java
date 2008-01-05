@@ -7,13 +7,13 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 /**
  * Interface for a pair of ICE candidates.
  */
-public interface IceCandidatePair extends Comparable
+public interface IceCandidatePair extends Comparable<IceCandidatePair>
     {
 
     /**
      * Accessor for the local candidate for the pair.
      * 
-     * @return The local candidiate for the pair.
+     * @return The local candidate for the pair.
      */
     IceCandidate getLocalCandidate();
     
