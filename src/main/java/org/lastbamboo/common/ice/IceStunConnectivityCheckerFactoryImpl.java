@@ -7,6 +7,12 @@ import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Factory for creating ICE connectivity checkers.
+ * 
+ * @param <T> This is also a message visitor for visiting messages on the port
+ * we're checking.  T is the class the visitors return.
+ */
 public class IceStunConnectivityCheckerFactoryImpl<T> implements
     StunMessageVisitorFactory<T>
     {
@@ -18,6 +24,14 @@ public class IceStunConnectivityCheckerFactoryImpl<T> implements
     private final IceBindingRequestTracker m_bindingRequestTracker =
         new IceBindingRequestTrackerImpl();
 
+    /**
+     * Creates a new factory for creating connectivity checkers.
+     * 
+     * @param iceAgent The agent performing the checks.
+     * @param transactionTracker The class that keeps track of STUN transactions during
+     * the checks.
+     * @param checkerFactory The class that creates new checkers.
+     */
     public IceStunConnectivityCheckerFactoryImpl(final IceAgent iceAgent, 
         final StunTransactionTracker<T> transactionTracker, 
         final IceStunCheckerFactory checkerFactory)
