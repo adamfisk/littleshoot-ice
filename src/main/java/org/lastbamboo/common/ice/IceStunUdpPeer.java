@@ -59,7 +59,15 @@ public class IceStunUdpPeer implements StunClient, StunServer
         final IoHandler demuxingIoHandler, final boolean controlling, 
         final StunTransactionTracker<StunMessage> transactionTracker)
         {
-        this.m_stunClient = new UdpStunClient(transactionTracker);
+        // We pass the IoHandler here because we need to be prepared to handle STUN
+        // and protocol specific messages on all code bound to the same local port.  This
+        // is because different OSes handle SO_REUSEADDRESS slightly differently, 
+        // particularly with regards to sockets that are "connected" to specific external
+        // hosts.  We need to use the same IoHandler for all of them to make sure it's
+        // consistent, with "all of them" meaning the STUN client and server created here
+        // as well as the separate connectors created when we're making connectivity
+        // checks.
+        this.m_stunClient = new UdpStunClient(transactionTracker, demuxingIoHandler);
         this.m_stunClient.connect();
         this.m_serverReflexiveAddress = 
             this.m_stunClient.getServerReflexiveAddress();

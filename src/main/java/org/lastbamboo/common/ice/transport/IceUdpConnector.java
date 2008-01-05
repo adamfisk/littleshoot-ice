@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Class for creating a UDP "connection" for ICE.  This really just sets up
- * the UDP transport for a UDP connnectivity check. 
+ * the UDP transport for a UDP connectivity check. 
  */
 public class IceUdpConnector implements IceConnector
     {
@@ -73,7 +73,7 @@ public class IceUdpConnector implements IceConnector
             new ProtocolCodecFilter(this.m_demuxingCodecFactory);
         cfg.setThreadModel(threadModel);
         
-        connector.getFilterChain().addLast("dexuxFilter", demuxingFilter);
+        connector.getFilterChain().addLast("demuxFilter", demuxingFilter);
 
         m_log.debug("Connecting from "+localAddress+" to "+
             remoteAddress);
