@@ -325,6 +325,7 @@ public class IceAgentImpl implements IceAgent
         {
         final IceCandidatePair pair = getNominatedPair();
         this.m_iceMediaFactory.newMedia(pair, isControlling(), mediaListener);
+        m_log.debug("Finished starting media...");
         }
 
     private IceCandidatePair getNominatedPair()
