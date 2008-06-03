@@ -5,14 +5,22 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
-import org.lastbamboo.common.tcp.frame.TcpFrameIoHandler;
 
+/**
+ * Pair factory for when there's already a session established for this pair.
+ */
 public class ExistingSessionIceCandidatePairFactoryImpl 
     implements ExistingSessionIceCandidatePairFactory
     {
     
     private final IceStunCheckerFactory m_checkerFactory;
 
+    /**
+     * Creates a new pair factory that uses an already-established session for
+     * the pair.
+     * 
+     * @param checkerFactory The class that performs STUN checks.
+     */
     public ExistingSessionIceCandidatePairFactoryImpl(
         final IceStunCheckerFactory checkerFactory)
         {

@@ -64,6 +64,8 @@ public class IceStunClientCandidateProcessor
      * @param iceAgent The top-level ICE agent.
      * @param iceMediaStream The media stream this check is trying to establish.
      * @param udpPair The candidate pair.
+     * @param existingSessionPairFactory Pair factory to use when there's a 
+     * session that's already been created prior to construction of the pair.
      */
     public IceStunClientCandidateProcessor(final IceAgent iceAgent, 
         final IceMediaStream iceMediaStream, final IceCandidatePair udpPair,
@@ -409,7 +411,7 @@ public class IceStunClientCandidateProcessor
                     createRemoteCandidate(remoteCandidate, remotePriority);
                 
                 // This is key here.  Even if the local candidate is a
-                // new peer refexive candidate, its base is still the
+                // new peer reflexive candidate, its base is still the
                 // local candidate for the pair that started this check.
                 // If it's not peer reflexive, the local candidate *is* the 
                 // local candidate of the pair that started the check.  
@@ -481,7 +483,7 @@ public class IceStunClientCandidateProcessor
      * @param validPair The valid pair.
      * @param sentUseCandidateInRequest Whether or not the USE-CANDIDATE 
      * attribute appeared in the original Binding Request.
-     * @retuen <code>true</code> if the valid pair was nominated, otherwise
+     * @return <code>true</code> if the valid pair was nominated, otherwise
      * <code>false</code>.
      */
     private boolean updateNominatedFlag(final IceCandidatePair validPair, 
@@ -563,13 +565,15 @@ public class IceStunClientCandidateProcessor
             new IceCandidateVisitorAdapter<IceCandidate>()
             {
 
+            @Override
             public IceCandidate visitTcpHostPassiveCandidate(
                 final IceTcpHostPassiveCandidate candidate)
                 {
                 return new IceTcpHostPassiveCandidate(remoteAddress, 
                     foundation, controlling, remotePriority, componentId);
                 }
-
+            
+            @Override
             public IceCandidate visitTcpPeerReflexiveCandidate(
                 final IceTcpPeerReflexiveCandidate candidate)
                 {
@@ -577,6 +581,7 @@ public class IceStunClientCandidateProcessor
                     foundation, componentId, controlling, remotePriority);
                 }
 
+            @Override
             public IceCandidate visitTcpRelayPassiveCandidate(
                 final IceTcpRelayPassiveCandidate candidate)
                 {
@@ -586,6 +591,7 @@ public class IceStunClientCandidateProcessor
                     componentId);
                 }
 
+            @Override
             public IceCandidate visitTcpServerReflexiveSoCandidate(
                 final IceTcpServerReflexiveSoCandidate candidate)
                 {
@@ -594,6 +600,7 @@ public class IceStunClientCandidateProcessor
                     controlling, remotePriority, componentId);
                 }
 
+            @Override
             public IceCandidate visitUdpHostCandidate(
                 final IceUdpHostCandidate candidate)
                 {
@@ -601,6 +608,7 @@ public class IceStunClientCandidateProcessor
                     remotePriority, controlling, componentId);
                 }
 
+            @Override
             public IceCandidate visitUdpPeerReflexiveCandidate(
                 final IceUdpPeerReflexiveCandidate candidate)
                 {
@@ -608,6 +616,7 @@ public class IceStunClientCandidateProcessor
                     foundation, componentId, controlling, remotePriority);
                 }
 
+            @Override
             public IceCandidate visitUdpRelayCandidate(
                 final IceUdpRelayCandidate candidate)
                 {
@@ -616,6 +625,7 @@ public class IceStunClientCandidateProcessor
                     relatedAddress, relatedPort);
                 }
 
+            @Override
             public IceCandidate visitUdpServerReflexiveCandidate(
                 final IceUdpServerReflexiveCandidate candidate)
                 {
