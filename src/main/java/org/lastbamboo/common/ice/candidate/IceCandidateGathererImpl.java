@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.lastbamboo.common.ice.IceMediaStreamDesc;
 import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.client.TcpStunClient;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
