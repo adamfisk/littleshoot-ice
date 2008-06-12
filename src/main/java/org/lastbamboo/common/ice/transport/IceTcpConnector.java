@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import org.apache.commons.lang.SystemUtils;
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.ExecutorThreadModel;
 import org.apache.mina.common.IoHandler;
@@ -114,9 +115,18 @@ public class IceTcpConnector implements IceConnector
                 // Note, we used to put the timeout at 600 milliseconds.  You'd
                 // think this would be way more than enough time to connect
                 // to another host on the local network, but it turns out it's
-                // not even enough time for vista to check if the address is
+                // not even enough time for Vista to check if the address is
                 // reachable if the address is localhost!  Odd, but true.
-                if (!address.isReachable(3000))
+                final int reachableTimeout;
+                if (SystemUtils.IS_OS_WINDOWS_VISTA)
+                    {
+                    reachableTimeout = 5000;
+                    }
+                else
+                    {
+                    reachableTimeout = 1000;
+                    }
+                if (!address.isReachable(reachableTimeout))
                     {
                     m_log.debug("Address is not reachable: {}", remoteAddress);
                     return null;
