@@ -82,11 +82,24 @@ public class IceTcpConnector implements IceConnector
             }
         
         final SocketConnectorConfig cfg = connector.getDefaultConfig();
+        
+        // There's a bug with keep alive and reuse address in Java for Vista,
+        // presumably related to Java's failure to properly use Vista's new
+        // networking stack.
+        // See: https://issues.apache.org/jira/browse/DIRMINA-379
+        if (SystemUtils.IS_OS_WINDOWS_VISTA)
+            {
+            cfg.getSessionConfig().setKeepAlive(false);
+            }
         cfg.getSessionConfig().setReuseAddress(true);
         
         final ThreadModel threadModel = ExecutorThreadModel.getInstance(
             getClass().getSimpleName() +
-            (this.m_controlling ? "-Controlling" : "-Not-Controlling"));
+            (this.m_controlling ? "-Controlling-" : "-Not-Controlling-") +
+            hashCode());
+        cfg.setThreadModel(threadModel);
+        connector.setDefaultConfig(cfg);
+        
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
         final DemuxableProtocolCodecFactory tcpFramingCodecFactory =
@@ -97,8 +110,6 @@ public class IceTcpConnector implements IceConnector
         
         final ProtocolCodecFilter demuxingFilter = 
             new ProtocolCodecFilter(demuxingCodecFactory);
-        
-        cfg.setThreadModel(threadModel);
         
         connector.getFilterChain().addLast("demuxingFilter", demuxingFilter);
 
