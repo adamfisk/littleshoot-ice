@@ -83,6 +83,12 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
 
     private void checkPair(final Timer timer)
         {
+        if (this.m_checkList.getState() == IceCheckListState.COMPLETED)
+            {
+            m_log.debug("Checks are completed!  Returning");
+            timer.cancel();
+            return;
+            }
         final IceCandidatePair activePair = getNextPair();
         if (activePair == null)
             {

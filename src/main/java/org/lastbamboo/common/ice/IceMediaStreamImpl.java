@@ -513,6 +513,10 @@ public class IceMediaStreamImpl implements IceMediaStream
     public void setCheckListState(final IceCheckListState state)
         {
         this.m_checkList.setState(state);
+        if (state == IceCheckListState.COMPLETED)
+            {
+            //this.m_checkScheduler.
+            }
         }
     
     public boolean hasHigherPriorityPendingPair(final IceCandidatePair pair)
