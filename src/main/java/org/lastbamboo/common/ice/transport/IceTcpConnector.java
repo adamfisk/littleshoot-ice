@@ -135,7 +135,7 @@ public class IceTcpConnector implements IceConnector
                     }
                 else
                     {
-                    reachableTimeout = 1000;
+                    reachableTimeout = 3000;
                     }
                 if (!address.isReachable(reachableTimeout))
                     {

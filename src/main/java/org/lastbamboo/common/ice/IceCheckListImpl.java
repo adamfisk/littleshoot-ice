@@ -84,7 +84,7 @@ public class IceCheckListImpl implements IceCheckList
             {
             final IceCandidatePair pair = this.m_triggeredQueue.poll();
             
-            // Don't recheck nominated pairs.
+            // Don't re-check nominated pairs.
             if (!pair.isNominated())
                 {
                 return pair;
