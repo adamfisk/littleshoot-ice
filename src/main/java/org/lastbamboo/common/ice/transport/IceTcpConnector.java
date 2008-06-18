@@ -121,6 +121,12 @@ public class IceTcpConnector implements IceConnector
         // address is just from a different local network.
         if (address.isSiteLocalAddress())
             {
+            // We used to use this "optimization" to check if an address is
+            // reachable prior to attempting a connection, but it ends up 
+            // taking a long time in many cases and is therefore not much of 
+            // an optimization.
+            
+            /*
             try
                 {
                 // Note, we used to put the timeout at 600 milliseconds.  You'd
@@ -150,10 +156,11 @@ public class IceTcpConnector implements IceConnector
                 }
             m_log.debug("Address is reachable. Connecting to: {}", 
                  remoteAddress);
+                 */
 
             // We should be able to connect to local, private addresses 
             // really quickly.  So don't wait around too long.
-            connectTimeout = 5000;
+            connectTimeout = 6000;
             }
         else
             {
