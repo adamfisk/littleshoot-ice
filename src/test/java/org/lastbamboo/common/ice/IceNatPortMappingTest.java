@@ -1,32 +1,26 @@
 package org.lastbamboo.common.ice;
 
-import java.net.InetAddress;
+import static org.junit.Assert.assertNotNull;
+
 import java.net.InetSocketAddress;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 
 /**
  * Quick test to check how the local NAT is assigning ports to new external
  * hosts.
  */
-public class IceNatPortMappingTest extends TestCase
+public class IceNatPortMappingTest
     {
 
-    public void testAssignedPorts() throws Exception
+    @Test public void testAssignedPorts() throws Exception
         {
-        final String[] servers = 
-            {
-            "stun.fwdnet.net",   
-            //"stun01.sipphone.com",
-            "stun.xten.net"
-            };
         
-        for (int i = 0; i < servers.length; i++)
+        // We do this a bunch of times because we try random servers.
+        for (int i = 0; i < 10; i++)
             {
-            final UdpStunClient client = 
-                new UdpStunClient(InetAddress.getByName(servers[i]));
+            final UdpStunClient client = new UdpStunClient();
             final InetSocketAddress srflx = client.getServerReflexiveAddress();
             //System.out.println("Got address: "+srflx);
             assertNotNull(srflx);
