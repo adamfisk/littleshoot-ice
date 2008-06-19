@@ -39,6 +39,10 @@ public class IceUdpStunChecker extends AbstractIceStunChecker
     protected StunMessage writeInternal(final BindingRequest bindingRequest, 
         final long rto)
         {
+        if (this.m_transactionCanceled)
+            {
+            return new CanceledStunMessage();
+            }
         if (this.m_writeCallsForChecker > 1)
             {
             throw new RuntimeIoException("Too many write calls: "+

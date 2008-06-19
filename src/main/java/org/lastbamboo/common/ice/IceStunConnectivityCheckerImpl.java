@@ -227,11 +227,13 @@ public final class IceStunConnectivityCheckerImpl<T>
             {
             m_log.debug("Found existing pair");
             computedPair = existingPair;
+            /*
             if (computedPair.getIoSession() == null)
                 {
                 m_log.error("Should have a session for pair: {}", computedPair);
                 throw new NullPointerException("Null session!!!");
                 }
+                */
             
             // This is the case where the new pair is already on the 
             // check list.  See ICE section 7.2.1.4. Triggered Checks

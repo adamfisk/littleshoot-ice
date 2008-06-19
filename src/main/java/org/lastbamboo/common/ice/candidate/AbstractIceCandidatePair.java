@@ -7,6 +7,7 @@ import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.transport.IceConnector;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.turn.client.TurnStunMessageMapper;
@@ -45,6 +46,8 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     private final IceConnector m_iceConnector;
 
     private boolean m_turnPair;
+
+    private volatile boolean m_transactionCanceled = false;
     
     /**
      * Creates a new pair without an existing connection between the endpoints.
@@ -164,10 +167,26 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
             mapper.mapMessage(request, remoteAddress);
             m_turnPair = true;
             }
+        
+        m_log.debug("Creating new STUN checker...");
         this.m_currentStunChecker = 
             this.m_stunCheckerFactory.newChecker(this.m_ioSession);
         
-        return this.m_currentStunChecker.write(request, rto);
+        // This check is necessary because it's possible for the transaction
+        // to be canceled before the STUN checker has been constructed.
+        if (!this.m_transactionCanceled)
+            {
+            m_log.debug("Writing request...");
+            return this.m_currentStunChecker.write(request, rto);
+            }
+        else
+            {
+            // A single cancellation works for only one transaction, so reset
+            // it here.
+            m_log.debug("The transaction was canceled...");
+            this.m_transactionCanceled = false;
+            return new CanceledStunMessage();
+            }
         }
     
     public void useCandidate()
@@ -182,7 +201,13 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
     
     public void cancelStunTransaction()
         {
-        this.m_currentStunChecker.cancelTransaction();
+        this.m_transactionCanceled = true;
+        if (this.m_currentStunChecker != null)
+            {
+            this.m_currentStunChecker.cancelTransaction();
+            // Reset cancellation state -- our work is done.
+            this.m_transactionCanceled = false;
+            }
         }
     
     public void recomputePriority()
