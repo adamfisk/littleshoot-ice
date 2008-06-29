@@ -52,8 +52,8 @@ public class GeneralIceMediaStreamFactoryImpl
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
         final ProtocolCodecFactory demuxingCodecFactory = 
-            new DemuxingProtocolCodecFactory(protocolCodecFactory,
-                stunCodecFactory);
+            new DemuxingProtocolCodecFactory(
+                stunCodecFactory, protocolCodecFactory);
         final StunTransactionTracker<StunMessage> transactionTracker =
             new StunTransactionTrackerImpl();
 
