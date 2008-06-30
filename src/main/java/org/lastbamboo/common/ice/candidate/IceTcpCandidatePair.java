@@ -57,4 +57,9 @@ public class IceTcpCandidatePair extends AbstractIceCandidatePair
         {
         return visitor.visitTcpIceCandidatePair(this);
         }
+
+    public boolean isTcp()
+        {
+        return true;
+        }
     }

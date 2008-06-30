@@ -145,4 +145,12 @@ public interface IceCandidatePair extends Comparable<IceCandidatePair>
      * an Allocate Request).
      */
     boolean isTurnPair();
+    
+    /**
+     * Returns whether or not a pair is a TCP pair.
+     * 
+     * @return <code>true</code> if the pair is TCP, otherwise 
+     * <code>false</code>.
+     */
+    boolean isTcp();
     }

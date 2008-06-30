@@ -583,6 +583,30 @@ public class IceCheckListImpl implements IceCheckList
                     case WAITING:
                         m_log.debug("Closing pair:\n{}", curPair);
                         curPair.close();
+                        /*
+                        if (curPair.isTcp())
+                            {
+                            curPair.close();
+                            }
+                        else 
+                            {
+                            final IceCandidate nominatedLocal = 
+                                pair.getLocalCandidate();
+                            final IceCandidate local = 
+                                curPair.getLocalCandidate();
+                            
+                            // For UDP, we need to check that the local 
+                            // candidate is not the same as the local 
+                            // candidate for the nominated pair.  If it is, 
+                            // this will inadvertently close the session for 
+                            // the nominated pair, which would be bad!  
+                            if (!local.getSocketAddress().equals(
+                                nominatedLocal.getSocketAddress()))
+                                {
+                                curPair.close();
+                                }
+                            }
+                            */
                         return true;
                     case IN_PROGRESS:
                         // The following is at SHOULD strength in 8.1.2.  We
@@ -592,13 +616,14 @@ public class IceCheckListImpl implements IceCheckList
                         // we should only do it for the normal check list.
                         if (curPair.getPriority() < pair.getPriority())
                             {
-                            m_log.debug("Canceling IN-PROGRESS pair...");
-                            pair.cancelStunTransaction();
+                            m_log.debug("Canceling IN-PROGRESS pair {}", 
+                                curPair);
+                            curPair.cancelStunTransaction();
                             }
                         else
                             {
                             m_log.debug("Not canceling higher priority " +
-                                "IN-PROGRESS pair: {}", pair);
+                                "IN-PROGRESS pair: {}", curPair);
                             }
                         break;
                     case SUCCEEDED:
