@@ -53,21 +53,23 @@ public class IceStunUdpPeer implements StunClient, StunServer
      * @param demuxingIoHandler The class for handling read and written 
      * messages. 
      * @param controlling Whether or not this agent is controlling.
-     * @param transactionTracker 
+     * @param transactionTracker The class for tracking STUN transactions.
      */
     public IceStunUdpPeer(final ProtocolCodecFactory demuxingCodecFactory, 
         final IoHandler demuxingIoHandler, final boolean controlling, 
         final StunTransactionTracker<StunMessage> transactionTracker)
         {
-        // We pass the IoHandler here because we need to be prepared to handle STUN
-        // and protocol specific messages on all code bound to the same local port.  This
-        // is because different OSes handle SO_REUSEADDRESS slightly differently, 
-        // particularly with regards to sockets that are "connected" to specific external
-        // hosts.  We need to use the same IoHandler for all of them to make sure it's
-        // consistent, with "all of them" meaning the STUN client and server created here
-        // as well as the separate connectors created when we're making connectivity
-        // checks.
-        this.m_stunClient = new UdpStunClient(transactionTracker, demuxingIoHandler);
+        // We pass the IoHandler here because we need to be prepared to handle 
+        // STUN and protocol specific messages on all code bound to the same 
+        // local port.  This is because different OSes handle  
+        // SO_REUSEADDRESS slightly differently, particularly with regards to 
+        // sockets that are "connected" to specific external hosts.  We need 
+        // to use the same IoHandler for all of them to make sure it's 
+        // created here as well as the separate connectors created when we're 
+        // making connectivity consistent, with "all of them" meaning the STUN 
+        // client and server checks.
+        this.m_stunClient = 
+            new UdpStunClient(transactionTracker, demuxingIoHandler);
         this.m_stunClient.connect();
         this.m_serverReflexiveAddress = 
             this.m_stunClient.getServerReflexiveAddress();
@@ -168,6 +170,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
 
     public void close()
         {
+        m_log.debug("Closing ICE UDP peer...");
         this.m_stunClient.close();
         this.m_stunServer.close();
         }
