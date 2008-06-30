@@ -567,7 +567,8 @@ public class IceCheckListImpl implements IceCheckList
         return matchesAny(pred);
         }
 
-    public void removeWaitingAndFrozenPairs(final IceCandidatePair pair)
+    public void removeWaitingAndFrozenPairs(
+        final IceCandidatePair nominatedPair)
         {
         m_log.debug("Removing waiting and frozen pairs...");
         final Predicate<IceCandidatePair> pred = 
@@ -614,7 +615,7 @@ public class IceCheckListImpl implements IceCheckList
                         // because I see no reason not to cancel the triggered
                         // one here too, although the draft seems to indicate
                         // we should only do it for the normal check list.
-                        if (curPair.getPriority() < pair.getPriority())
+                        if (curPair.getPriority() < nominatedPair.getPriority())
                             {
                             m_log.debug("Canceling IN-PROGRESS pair {}", 
                                 curPair);
