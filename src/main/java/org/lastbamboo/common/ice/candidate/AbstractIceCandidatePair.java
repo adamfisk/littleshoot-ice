@@ -182,7 +182,7 @@ public abstract class AbstractIceCandidatePair implements IceCandidatePair
         else
             {
             // A single cancellation works for only one transaction, so reset
-            // it here.
+            // the canceled state here to false.
             m_log.debug("The transaction was canceled...");
             this.m_transactionCanceled = false;
             return new CanceledStunMessage();

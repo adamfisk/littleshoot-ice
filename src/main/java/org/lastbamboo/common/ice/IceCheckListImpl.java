@@ -569,6 +569,7 @@ public class IceCheckListImpl implements IceCheckList
 
     public void removeWaitingAndFrozenPairs(final IceCandidatePair pair)
         {
+        m_log.debug("Removing waiting and frozen pairs...");
         final Predicate<IceCandidatePair> pred = 
             new Predicate<IceCandidatePair>()
             {
@@ -591,7 +592,13 @@ public class IceCheckListImpl implements IceCheckList
                         // we should only do it for the normal check list.
                         if (curPair.getPriority() < pair.getPriority())
                             {
+                            m_log.debug("Canceling IN-PROGRESS pair...");
                             pair.cancelStunTransaction();
+                            }
+                        else
+                            {
+                            m_log.debug("Not canceling higher priority " +
+                                "IN-PROGRESS pair: {}", pair);
                             }
                         break;
                     case SUCCEEDED:

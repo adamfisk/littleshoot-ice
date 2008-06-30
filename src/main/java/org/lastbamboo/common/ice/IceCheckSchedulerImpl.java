@@ -63,19 +63,17 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         {
         return new TimerTask()
             {
-            private final Logger m_taskLog = 
-                LoggerFactory.getLogger(getClass());
             @Override
             public void run()
                 {
-                m_taskLog.debug("About to check pair...");
+                m_log.debug("About to check pair...");
                 try
                     {
                     checkPair(timer);
                     }
                 catch (final Throwable t)
                     {
-                    m_taskLog.warn("Caught throwable in check", t);
+                    m_log.warn("Caught throwable in check", t);
                     }
                 }
             };
@@ -86,6 +84,9 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
         if (this.m_checkList.getState() == IceCheckListState.COMPLETED)
             {
             m_log.debug("Checks are completed!  Returning");
+            // This technically violates section 8.3.  We should be continuing
+            // to respond to checks and process any associated triggered 
+            // checks.
             timer.cancel();
             return;
             }
@@ -110,7 +111,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
             // Section 16.2 says this SHOULD be configurable and SHOULD have
             // a default value of 500 ms.  That would make ICE take a long 
             // time, though, so we're more aggressive.
-            final int Ta_i = 200;
+            final int Ta_i = 300;
             
             // TODO: The recommended formula for this is:
             // (stunPacketSize / rtpPacketSize) * rtpPtime;

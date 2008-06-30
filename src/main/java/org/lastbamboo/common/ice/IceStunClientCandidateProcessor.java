@@ -271,6 +271,7 @@ public class IceStunClientCandidateProcessor
             @Override
             public IceCandidate visitNullMessage(final NullStunMessage message)
                 {
+                m_log.debug("Visiting null message...");
                 // See section 7.1.2.1. Failure Cases
                 // This means we never received any response to our request,
                 // interpreted as a failure.
