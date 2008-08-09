@@ -48,7 +48,7 @@ public class IceUdpStunCheckerTest
         final IoHandler clientIoHandler = new IoHandlerAdapter();
         
         final InetSocketAddress remoteAddress =
-            new InetSocketAddress("stun.fwdnet.net", 3478);
+            new InetSocketAddress("stunserver.org", 3478);
         
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();

@@ -11,8 +11,10 @@ public class IceUdpStunClientTest extends TestCase
         {
         final UdpStunClient stunClient = new UdpStunClient();
         stunClient.connect();
-        assertNotNull(stunClient.getHostAddress());
-        assertNotNull(stunClient.getServerReflexiveAddress());
-        assertNotNull(stunClient.getStunServerAddress());
+        assertNotNull("null host address", stunClient.getHostAddress());
+        assertNotNull("null server reflexive address", 
+            stunClient.getServerReflexiveAddress());
+        assertNotNull("Null STUN server address", 
+            stunClient.getStunServerAddress());
         }
     }

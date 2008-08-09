@@ -23,7 +23,7 @@ public class IceNatPortMappingTest
             final UdpStunClient client = new UdpStunClient();
             final InetSocketAddress srflx = client.getServerReflexiveAddress();
             //System.out.println("Got address: "+srflx);
-            assertNotNull(srflx);
+            assertNotNull("Did not get server reflexive address", srflx);
             }
         }
     }
