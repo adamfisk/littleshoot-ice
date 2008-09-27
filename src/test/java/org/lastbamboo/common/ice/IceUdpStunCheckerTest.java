@@ -8,7 +8,6 @@ import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
-import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
 import org.lastbamboo.common.ice.transport.IceConnector;
 import org.lastbamboo.common.ice.transport.IceUdpConnector;
 import org.lastbamboo.common.ice.transport.IceUdpStunChecker;
@@ -48,7 +47,7 @@ public class IceUdpStunCheckerTest
         final IoHandler clientIoHandler = new IoHandlerAdapter();
         
         final InetSocketAddress remoteAddress =
-            new InetSocketAddress("stunserver.org", 3478);
+            new InetSocketAddress("stun01.sipphone.com", 3478);
         
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
