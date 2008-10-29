@@ -1,7 +1,5 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.candidate;
 
-import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 
 /**
  * Factory for creating ICE candidate pairs.

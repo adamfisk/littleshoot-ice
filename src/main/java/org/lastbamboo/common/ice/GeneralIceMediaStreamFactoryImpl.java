@@ -8,6 +8,8 @@ import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
+import org.lastbamboo.common.ice.candidate.IceCandidatePairFactory;
+import org.lastbamboo.common.ice.candidate.IceCandidatePairFactoryImpl;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
 import org.lastbamboo.common.ice.transport.IceUdpConnector;
 import org.lastbamboo.common.stun.client.StunClient;

@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
+import org.lastbamboo.common.ice.candidate.IceCandidatePairFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairPriorityCalculator;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;

@@ -1,9 +1,6 @@
-package org.lastbamboo.common.ice;
+package org.lastbamboo.common.ice.candidate;
 
-import org.lastbamboo.common.ice.candidate.IceCandidate;
-import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
-import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
+import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
 import org.lastbamboo.common.ice.transport.IceUdpConnector;
 
