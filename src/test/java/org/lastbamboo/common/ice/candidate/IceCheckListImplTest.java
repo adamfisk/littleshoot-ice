@@ -9,8 +9,6 @@ import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
-import org.lastbamboo.common.ice.IceCandidatePairFactory;
-import org.lastbamboo.common.ice.IceCandidatePairFactoryImpl;
 import org.lastbamboo.common.ice.IceCheckList;
 import org.lastbamboo.common.ice.IceCheckListImpl;
 import org.lastbamboo.common.ice.IcePriorityCalculator;
