@@ -65,6 +65,7 @@ public class IceAgentImplTest
             new IceMediaStreamFactory()
             {
             public IceMediaStream newStream(final IceAgent iceAgent) 
+                throws IceTcpConnectException, IceUdpConnectException 
                 {
                 final DemuxableProtocolCodecFactory otherCodecFactory =
                     new StunDemuxableProtocolCodecFactory();
@@ -82,7 +83,8 @@ public class IceAgentImplTest
         final IceMediaStreamFactory mediaStreamFactory2 = 
             new IceMediaStreamFactory()
             {
-            public IceMediaStream newStream(final IceAgent iceAgent)
+            public IceMediaStream newStream(final IceAgent iceAgent) 
+                throws IceTcpConnectException, IceUdpConnectException
                 {
                 final DemuxableProtocolCodecFactory otherCodecFactory =
                     new StunDemuxableProtocolCodecFactory();

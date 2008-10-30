@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.mina.common.ByteBuffer;
@@ -35,7 +36,7 @@ public class IceAgentImpl implements IceAgent
         new AtomicReference<IceState>(IceState.RUNNING);
 
     /**
-     * TODO: This is just a placeholder for now for the most part, as we only
+     * TODO: This is just a place holder for now for the most part, as we only
      * currently support a single media stream.
      */
     private final Collection<IceMediaStream> m_mediaStreams =
@@ -52,6 +53,8 @@ public class IceAgentImpl implements IceAgent
 
     private final IceMediaFactory m_iceMediaFactory;
 
+    private final AtomicBoolean m_closed = new AtomicBoolean(false);
+
     /**
      * Creates a new ICE agent for an answerer.  Passes the offer in the 
      * constructor.
@@ -62,9 +65,14 @@ public class IceAgentImpl implements IceAgent
      * controlling.
      * @param iceMediaFactory The factory for creating media that needs to 
      * know about ICE.
+     * @throws IceUdpConnectException If there's an error connecting the ICE
+     * UDP peer.
+     * @throws IceTcpConnectException If there's an error connecting the ICE
+     * TCP peer.
      */
     public IceAgentImpl(final IceMediaStreamFactory mediaStreamFactory, 
         final boolean controlling, final IceMediaFactory iceMediaFactory) 
+        throws IceTcpConnectException, IceUdpConnectException 
         {
         this.m_controlling = controlling;
         this.m_iceMediaFactory = iceMediaFactory;
@@ -88,6 +96,7 @@ public class IceAgentImpl implements IceAgent
             }
         else if (state == IceState.FAILED)
             {
+            m_log.debug("Got ICE failed.  Closing.");
             close();
             this.m_offerAnswerListener.onOfferAnswerFailed(this);
             }
@@ -361,6 +370,14 @@ public class IceAgentImpl implements IceAgent
 
     public void close()
         {
+        final boolean wasClosed = m_closed.getAndSet(true);
+        if (wasClosed)
+            {
+            m_log.debug("Aleady closed.");
+            return;
+            }
+
+        m_log.debug("Closing ICE agent.");
         // Close all the media streams.
         synchronized (this.m_mediaStreams)
             {

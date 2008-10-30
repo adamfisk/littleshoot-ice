@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -101,7 +102,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         this.m_stunServer.addIoServiceListener(this);
         }
 
-    public void connect()
+    public void connect() throws IOException
         {
         // We only use the TURN client for non-controlling agents to save
         // resources.

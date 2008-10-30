@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.mina.common.IoHandler;
@@ -49,7 +50,8 @@ public class GeneralIceMediaStreamFactoryImpl
         final IoHandler udpProtocolIoHandler,
         final TurnClientListener delegateTurnClientListener,
         final UpnpManager upnpManager, 
-        final IoServiceListener udpServiceListener)
+        final IoServiceListener udpServiceListener) 
+        throws IceTcpConnectException, IceUdpConnectException
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
@@ -75,9 +77,19 @@ public class GeneralIceMediaStreamFactoryImpl
         final StunClient udpStunPeer;
         if (streamDesc.isUdp())
             {
-            udpStunPeer = 
-                new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler,
-                    iceAgent.isControlling(), transactionTracker);
+            try
+                {
+                udpStunPeer = 
+                    new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler,
+                        iceAgent.isControlling(), transactionTracker);
+                }
+            catch (final IOException e)
+                {
+                // Note the constructor of the peer attempts a connection, so
+                // this is named correctly.
+                m_log.warn("Error connecting UDP peer", e);
+                throw new IceUdpConnectException("Could not create UDP peer", e);
+                }
             udpStunPeer.addIoServiceListener(udpServiceListener);
             }
         else
@@ -136,11 +148,30 @@ public class GeneralIceMediaStreamFactoryImpl
         m_log.debug("Added media stream as listener...connecting...");
         if (tcpStunPeer != null)
             {
-            tcpStunPeer.connect();
+            try
+                {
+                tcpStunPeer.connect();
+                }
+            catch (final IOException e)
+                {
+                m_log.warn("Error connecting TCP peer", e);
+                throw new IceTcpConnectException("Could not create TCP peer", e);
+                }
             }
         if (udpStunPeer != null)
             {
-            udpStunPeer.connect();
+            try
+                {
+                udpStunPeer.connect();
+                }
+            catch (final IOException e)
+                {
+                // Note this will not occur because the connect at this 
+                // point is effectively a no-op -- the connection takes place
+                // immediately in the constructor.
+                m_log.warn("Error connecting UDP peer", e);
+                throw new IceUdpConnectException("Could not create UDP peer", e);
+                }
             }
         
         final Collection<IceCandidate> localCandidates = 

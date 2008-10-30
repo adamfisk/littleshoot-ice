@@ -16,6 +16,7 @@ public interface GeneralIceMediaStreamFactory
         IceAgent iceAgent, DemuxableProtocolCodecFactory rudpCodecFactory, 
         Class<T> name, IoHandler protocolIoHandler, 
         TurnClientListener delegateListener, UpnpManager upnpManager,
-        IoServiceListener udpServiceListener);
+        IoServiceListener udpServiceListener) 
+        throws IceTcpConnectException, IceUdpConnectException;
 
     }

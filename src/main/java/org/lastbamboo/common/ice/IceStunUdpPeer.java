@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
@@ -54,10 +55,12 @@ public class IceStunUdpPeer implements StunClient, StunServer
      * messages. 
      * @param controlling Whether or not this agent is controlling.
      * @param transactionTracker The class for tracking STUN transactions.
+     * @throws IOException If there's an error connecting the client or server.
      */
     public IceStunUdpPeer(final ProtocolCodecFactory demuxingCodecFactory, 
         final IoHandler demuxingIoHandler, final boolean controlling, 
-        final StunTransactionTracker<StunMessage> transactionTracker)
+        final StunTransactionTracker<StunMessage> transactionTracker) 
+        throws IOException 
         {
         // We pass the IoHandler here because we need to be prepared to handle 
         // STUN and protocol specific messages on all code bound to the same 
@@ -106,9 +109,11 @@ public class IceStunUdpPeer implements StunClient, StunServer
         
         }
 
-    public void connect()
+    public void connect() throws IOException
         {
-        this.m_stunClient.connect();
+        // We don't do anything here because the client is already connected
+        // in the constructor!!
+        //this.m_stunClient.connect();
         }
 
     public InetSocketAddress getHostAddress()

@@ -1,10 +1,9 @@
 package org.lastbamboo.common.ice;
 
-import java.io.IOException;
-
 import org.apache.mina.common.ByteBuffer;
 import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
+import org.lastbamboo.common.offer.answer.OfferAnswerConnectException;
 import org.lastbamboo.common.offer.answer.OfferAnswerFactory;
 
 /**
@@ -32,22 +31,48 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
         m_mediaFactory = mediaFactory;
         }
 
-    public OfferAnswer createOfferer()
+    public OfferAnswer createOfferer() throws OfferAnswerConnectException
         {
         return createMediaOfferer();
         }
     
     public MediaOfferAnswer createAnswerer(final ByteBuffer offer) 
-        throws IOException
+        throws OfferAnswerConnectException 
         {
-        final IceAgent agent = new IceAgentImpl( 
-            this.m_mediaStreamFactory, false, this.m_mediaFactory);
-        return agent;
+        try
+            {
+            return new IceAgentImpl( 
+                this.m_mediaStreamFactory, false, this.m_mediaFactory);
+            }
+        catch (final IceTcpConnectException e)
+            {
+            throw new OfferAnswerConnectException(
+                "Could not create TCP connection", e);
+            }
+        catch (final IceUdpConnectException e)
+            {
+            throw new OfferAnswerConnectException(
+                "Could not create UDP connection", e);
+            }
         }
 
-    public MediaOfferAnswer createMediaOfferer()
+    public MediaOfferAnswer createMediaOfferer() 
+        throws OfferAnswerConnectException 
         {
-        return new IceAgentImpl(
-            this.m_mediaStreamFactory, true, this.m_mediaFactory);
+        try
+            {
+            return new IceAgentImpl(
+                this.m_mediaStreamFactory, true, this.m_mediaFactory);
+            }
+        catch (final IceTcpConnectException e)
+            {
+            throw new OfferAnswerConnectException(
+                "Could not create TCP connection", e);
+            }
+        catch (final IceUdpConnectException e)
+            {
+            throw new OfferAnswerConnectException(
+                "Could not create UDP connection", e);
+            }
         }
     }
