@@ -103,8 +103,8 @@ public class GeneralIceMediaStreamFactoryImpl
                 new DemuxingProtocolCodecFactory(mapper, 
                     tcpFramingCodecFactory);
             
-            // We should only start a TURN client on the answerer to 
-            // save resources.
+            // We only start a TURN client on the answerer to save resources --
+            // handled internally -- see IceStunTcpPeer connect.
             final StunClient tcpTurnClient = 
                 new TcpTurnClient(turnClientListener, codecFactory);
                 
