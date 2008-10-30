@@ -71,6 +71,10 @@ public class IceAgentImpl implements IceAgent
         this.m_tieBreaker = new IceTieBreaker();
                 
         // TODO: We only currently support a single media stream!!
+        
+        // Much of the action takes place as a result of the following call.
+        // When this call completes, the TCP and UDP clients and servers
+        // are both started, the candidates are gathered, etc.
         this.m_mediaStream = mediaStreamFactory.newStream(this);
         this.m_mediaStreams.add(this.m_mediaStream);
         }
@@ -84,6 +88,7 @@ public class IceAgentImpl implements IceAgent
             }
         else if (state == IceState.FAILED)
             {
+            close();
             this.m_offerAnswerListener.onOfferAnswerFailed(this);
             }
         }
@@ -148,33 +153,50 @@ public class IceAgentImpl implements IceAgent
         }
 
     public void processOffer(final ByteBuffer offer, 
-        final OfferAnswerListener offerAnswerListener) throws IOException
+        final OfferAnswerListener offerAnswerListener)
         {
         this.m_offerAnswerListener = offerAnswerListener;
         processRemoteCandidates(offer);
         }
 
     public void processAnswer(final ByteBuffer answer, 
-        final OfferAnswerListener offerAnswerListener) throws IOException
+        final OfferAnswerListener offerAnswerListener)
         {
         this.m_offerAnswerListener = offerAnswerListener;
         processRemoteCandidates(answer);
         }
         
     private void processRemoteCandidates(final ByteBuffer encodedCandidates) 
-        throws IOException
         {
         // TODO: We should process all possible media streams.
         
         // Note we set the controlling status of remote candidates to 
         // whatever we are not!!
         final IceCandidateSdpDecoder decoder = new IceCandidateSdpDecoderImpl();
-        final Collection<IceCandidate> remoteCandidates = 
-            decoder.decode(encodedCandidates, !this.m_controlling);
+        final Collection<IceCandidate> remoteCandidates;
+        try
+            {
+            remoteCandidates = 
+                decoder.decode(encodedCandidates, !this.m_controlling);
+            }
+        catch (final IOException e)
+            {
+            m_log.warn("Could not process remote candidates", e);
+            setIceState(IceState.FAILED);
+            return;
+            }
 
         // This should result in the stream entering either the Completed or
         // the Failed state.
-        this.m_mediaStream.establishStream(remoteCandidates);
+        try
+            {
+            this.m_mediaStream.establishStream(remoteCandidates);
+            }
+        catch (final RuntimeException e)
+            {
+            m_log.error("Error establishing stream", e);
+            setIceState(IceState.FAILED);
+            }
         }
 
     public Collection<IceMediaStream> getMediaStreams()

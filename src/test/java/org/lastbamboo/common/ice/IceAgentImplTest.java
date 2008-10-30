@@ -1,6 +1,5 @@
 package org.lastbamboo.common.ice;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -169,14 +168,7 @@ public class IceAgentImplTest
             {
             public void run()
                 {
-                try
-                    {
-                    answerer.processOffer(ByteBuffer.wrap(offer), answererStateListener);
-                    }
-                catch (final IOException e)
-                    {
-                    threadFailed.set(true);
-                    }
+                answerer.processOffer(ByteBuffer.wrap(offer), answererStateListener);
                 }
             });
         

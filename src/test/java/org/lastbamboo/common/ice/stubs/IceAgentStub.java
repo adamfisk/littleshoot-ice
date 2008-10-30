@@ -142,13 +142,13 @@ public class IceAgentStub implements IceAgent
         return null;
         }
 
-    public void processAnswer(ByteBuffer answer, OfferAnswerListener offerAnswerListener) throws IOException
+    public void processAnswer(ByteBuffer answer, OfferAnswerListener offerAnswerListener)
         {
         // TODO Auto-generated method stub
         
         }
 
-    public void processOffer(ByteBuffer offer, OfferAnswerListener offerAnswerListener) throws IOException
+    public void processOffer(ByteBuffer offer, OfferAnswerListener offerAnswerListener)
         {
         // TODO Auto-generated method stub
         
