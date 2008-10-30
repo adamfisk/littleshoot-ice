@@ -70,9 +70,6 @@ public class IceAgentImpl implements IceAgent
         this.m_iceMediaFactory = iceMediaFactory;
         this.m_tieBreaker = new IceTieBreaker();
                 
-        //m_log.debug("Created agent with tie breaker: "+
-        //    ByteBufferHexDumper.getHexdump(
-        //        ByteBuffer.wrap(this.m_tieBreaker.toByteArray())));
         // TODO: We only currently support a single media stream!!
         this.m_mediaStream = mediaStreamFactory.newStream(this);
         this.m_mediaStreams.add(this.m_mediaStream);
