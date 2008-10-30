@@ -50,10 +50,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             m_log.debug("Already closed");
             return new CanceledStunMessage();
             }
-        
-        // This method will retransmit the same request multiple times because
-        // it's being sent unreliably.  All of these requests will be 
-        // identical, using the same transaction ID.
+
         final UUID id = bindingRequest.getTransactionId();
         final InetSocketAddress localAddress = 
             (InetSocketAddress) this.m_ioSession.getLocalAddress();
@@ -69,10 +66,7 @@ public class IceTcpStunChecker extends AbstractIceStunChecker
             this.m_transactionCanceled = false;
             m_log.debug("Sending Binding Request...");
             this.m_ioSession.write(bindingRequest);
-            
-            // Now we wait for 1.6 seconds after the last request was sent.
-            // If we still don't receive a response, then the transaction 
-            // has failed.  
+             
             if (!this.m_transactionCanceled)
                 {
                 waitIfNoResponse(bindingRequest, 7900);
