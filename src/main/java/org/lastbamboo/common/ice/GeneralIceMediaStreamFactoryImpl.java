@@ -170,6 +170,11 @@ public class GeneralIceMediaStreamFactoryImpl
                 // point is effectively a no-op -- the connection takes place
                 // immediately in the constructor.
                 m_log.warn("Error connecting UDP peer", e);
+                if (tcpStunPeer != null)
+                    {
+                    // We've got to make sure to close TCP too!!
+                    tcpStunPeer.close();
+                    }
                 throw new IceUdpConnectException("Could not create UDP peer", e);
                 }
             }
