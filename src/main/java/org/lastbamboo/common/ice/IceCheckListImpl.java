@@ -134,7 +134,7 @@ public class IceCheckListImpl implements IceCheckList
     public boolean isActive()
         {
         // TODO: I believe this should depend on the state of the check list.  
-        // The active state is used in determing the value of N in timer
+        // The active state is used in determining the value of N in timer
         // computations.
         return false;
         }
