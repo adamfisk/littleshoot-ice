@@ -1,6 +1,5 @@
 package org.lastbamboo.common.ice.transport;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -9,6 +8,8 @@ import java.util.LinkedList;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.ExecutorThreadModel;
+import org.apache.mina.common.IoFuture;
+import org.apache.mina.common.IoFutureListener;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
@@ -72,7 +73,10 @@ public class IceTcpConnector implements IceConnector
     public IoSession connect(final InetSocketAddress localAddress,
         final InetSocketAddress remoteAddress)
         {
+        m_log.debug("Creating TCP connection from "+localAddress+" to "+
+            remoteAddress);
         final SocketConnector connector = new SocketConnector();
+        
         synchronized (this.m_serviceListeners)
             {
             for (final IoServiceListener listener : this.m_serviceListeners)
@@ -80,7 +84,7 @@ public class IceTcpConnector implements IceConnector
                 connector.addListener(listener);
                 }
             }
-        
+
         final SocketConnectorConfig cfg = connector.getDefaultConfig();
         
         // There's a bug with keep alive and reuse address in Java for Vista,
@@ -99,6 +103,7 @@ public class IceTcpConnector implements IceConnector
             hashCode());
         cfg.setThreadModel(threadModel);
         connector.setDefaultConfig(cfg);
+        
         
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
@@ -169,8 +174,16 @@ public class IceTcpConnector implements IceConnector
         
         m_log.debug("Connecting with timeout: {}", connectTimeout);
         final ConnectFuture cf = 
-            connector.connect(remoteAddress, localAddress, 
-                 this.m_demuxingIoHandler);
+            connector.connect(remoteAddress, this.m_demuxingIoHandler);
+        final IoFutureListener futureListener = new IoFutureListener()
+            {
+            public void operationComplete(final IoFuture future)
+                {
+                m_log.debug("Got future: {}", future);
+                m_log.debug("Ready: {}", future.isReady());
+                }
+            };
+        cf.addListener(futureListener);
         cf.join(connectTimeout);
         m_log.debug("Successfully joined...");
         try
