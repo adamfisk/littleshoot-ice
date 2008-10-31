@@ -110,4 +110,9 @@ public interface IceAgent extends MediaOfferAnswer
      */
     void onValidPairs(IceMediaStream mediaStream);
 
+    /**
+     * Called when there are no more pairs to process.
+     */
+    void onNoMorePairs();
+
     }

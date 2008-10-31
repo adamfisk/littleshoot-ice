@@ -24,6 +24,8 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
     private final ExistingSessionIceCandidatePairFactory m_existingSessionPairFactory;
     private volatile boolean m_queueEmpty = false;
     private final Timer m_timer;
+    
+    private final Object m_queueLock = new Object();
 
     /**
      * Creates a new scheduler for the specified pairs.
@@ -74,6 +76,30 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
                 catch (final Throwable t)
                     {
                     m_log.warn("Caught throwable in check", t);
+                    }
+                // This means there are no more pairs we know about, but we 
+                // might get a triggered pair.  We wait to see if we do
+                // before giving up.
+                synchronized (m_queueLock)
+                    {
+                    if (m_queueEmpty)
+                        {
+                        try
+                            {
+                            m_queueLock.wait(10000);
+                            }
+                        catch (final InterruptedException e)
+                            {
+                            // Won't happen.
+                            }
+                        
+                        // If the queue is still empty, we're done.
+                        if (m_queueEmpty)
+                            {
+                            timer.cancel();
+                            m_agent.onNoMorePairs();
+                            }
+                        }                            
                     }
                 }
             };
@@ -192,10 +218,14 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler
 
     public void onPair()
         {
-        if (m_queueEmpty)
+        synchronized (m_queueLock)
             {
-            m_queueEmpty = false;
-            scheduleChecks();
+            if (m_queueEmpty)
+                {
+                m_queueEmpty = false;
+                scheduleChecks();
+                }
+            m_queueLock.notifyAll();
             }
         }
     }

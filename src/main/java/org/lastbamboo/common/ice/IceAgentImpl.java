@@ -387,4 +387,15 @@ public class IceAgentImpl implements IceAgent
                 }
             }
         }
+
+    public void onNoMorePairs()
+        {
+        m_log.debug("No more pairs.");
+        if (this.m_iceState.get() != IceState.COMPLETED &&
+            this.m_iceState.get() != IceState.FAILED)
+            {
+            m_log.debug("Setting ice state to failed -- no more pairs.");
+            setIceState(IceState.FAILED);
+            }
+        }
     }

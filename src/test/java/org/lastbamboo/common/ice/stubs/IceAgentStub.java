@@ -20,8 +20,6 @@ import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
  */
 public class IceAgentStub implements IceAgent
     {
-    
-
 
     public IceTieBreaker getTieBreaker()
         {
@@ -167,6 +165,12 @@ public class IceAgentStub implements IceAgent
         }
 
     public void close()
+        {
+        // TODO Auto-generated method stub
+        
+        }
+
+    public void onNoMorePairs()
         {
         // TODO Auto-generated method stub
         
