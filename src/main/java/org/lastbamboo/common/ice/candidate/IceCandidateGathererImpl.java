@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice.candidate;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -120,7 +121,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         }
 
     private Collection<IceCandidate> createUdpCandidates(
-        final StunClient client)
+        final StunClient client) 
         {
         final Collection<IceCandidate> candidates =
             new LinkedList<IceCandidate>();
@@ -137,8 +138,16 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             new IceUdpHostCandidate(hostAddress, this.m_controlling);
         candidates.add(hostCandidate);
         
-        this.m_udpServerReflexiveAddress = 
-            client.getServerReflexiveAddress();
+        try
+            {
+            this.m_udpServerReflexiveAddress = 
+                client.getServerReflexiveAddress();
+            }
+        catch (final IOException e)
+            {
+            m_log.error("Could not get UDP server reflexive candidate", e);
+            return candidates;
+            }
         
         final IceUdpServerReflexiveCandidate serverReflexiveCandidate =
             new IceUdpServerReflexiveCandidate(m_udpServerReflexiveAddress, 
@@ -160,22 +169,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         // one TURN server per session.
         if (!this.m_controlling && !NetworkUtils.isPublicAddress())
             {
-            final InetSocketAddress relayAddress = client.getRelayAddress();
-            
-            // For relayed candidates, the related address is the mapped 
-            // address.
-            final InetSocketAddress relatedAddress = 
-                client.getServerReflexiveAddress();
-            
-            final InetAddress stunServerAddress = client.getStunServerAddress();
-            
-            // Add the relay candidate.  Note that for relay candidates, the 
-            // base candidate is the relay candidate itself. 
-            final IceCandidate relayCandidate = 
-                new IceTcpRelayPassiveCandidate(relayAddress, 
-                    stunServerAddress, relatedAddress.getAddress(), 
-                    relatedAddress.getPort(), this.m_controlling);
-            candidates.add(relayCandidate);
+            addTcpTurnCandidate(client, candidates);
             }
             
         // Add the host candidate.  Note the host candidate is also used as
@@ -223,6 +217,36 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             }
         
         return candidates;
+        }
+
+    private void addTcpTurnCandidate(final StunClient client,
+        final Collection<IceCandidate> candidates)
+        {
+        final InetSocketAddress relayAddress = client.getRelayAddress();
+        
+        // For relayed candidates, the related address is the mapped 
+        // address.
+        final InetSocketAddress relatedAddress;
+        try
+            {
+            relatedAddress = client.getServerReflexiveAddress();
+            }
+        catch (final IOException e)
+            {
+            m_log.error("Could not get server reflexive address and " +
+                "therefore TURN candidate", e);
+            return;
+            }
+        
+        final InetAddress stunServerAddress = client.getStunServerAddress();
+        
+        // Add the relay candidate.  Note that for relay candidates, the 
+        // base candidate is the relay candidate itself. 
+        final IceCandidate relayCandidate = 
+            new IceTcpRelayPassiveCandidate(relayAddress, 
+                stunServerAddress, relatedAddress.getAddress(), 
+                relatedAddress.getPort(), this.m_controlling);
+        candidates.add(relayCandidate);
         }
 
     public void close()

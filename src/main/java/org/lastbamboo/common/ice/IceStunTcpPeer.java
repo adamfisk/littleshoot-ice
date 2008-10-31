@@ -131,7 +131,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         return this.m_stunClient.getRelayAddress();
         }
 
-    public InetSocketAddress getServerReflexiveAddress()
+    public InetSocketAddress getServerReflexiveAddress() throws IOException
         {
         return this.m_stunClient.getServerReflexiveAddress();
         }
@@ -142,13 +142,14 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         }
 
     public StunMessage write(final BindingRequest request, 
-        final InetSocketAddress remoteAddress)
+        final InetSocketAddress remoteAddress) throws IOException
         {
         return this.m_stunClient.write(request, remoteAddress);
         }
     
     public StunMessage write(final BindingRequest request, 
-        final InetSocketAddress remoteAddress, final long rto)
+        final InetSocketAddress remoteAddress, final long rto) 
+        throws IOException
         {
         return this.m_stunClient.write(request, remoteAddress, rto);
         }
