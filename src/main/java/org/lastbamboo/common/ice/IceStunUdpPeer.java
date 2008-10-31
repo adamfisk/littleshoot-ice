@@ -76,6 +76,13 @@ public class IceStunUdpPeer implements StunClient, StunServer
         this.m_stunClient.connect();
         this.m_serverReflexiveAddress = 
             this.m_stunClient.getServerReflexiveAddress();
+        if (this.m_serverReflexiveAddress == null)
+            {
+            final String msg = "Could not get server reflexive address.  " +
+                "Did STUN server respond??";
+            m_log.error(msg);
+            throw new IOException(msg);
+            }
         // We also add whether we're controlling for thread
         // naming here just to make log reading easier.
         final String controllingString;

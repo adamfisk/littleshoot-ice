@@ -481,17 +481,29 @@ public class IceMediaStreamImpl implements IceMediaStream
         this.m_checkList.executeOnPairs(closure);
         }
 
-    public void addTriggeredPair(final IceCandidatePair pair)
-        {
-        this.m_checkList.addTriggeredPair(pair);
-        this.m_checkScheduler.onPair();
-        }
-
     public void recomputePairPriorities(final boolean controlling)
         {
         this.m_checkList.recomputePairPriorities(controlling);
         }
 
+
+    public void addTriggeredPair(final IceCandidatePair pair)
+        {
+        if (this.m_iceAgent.getIceState() == IceState.COMPLETED)
+            {
+            m_log.debug("Pair already nominated...not adding pair");
+            }
+        else
+            {
+            m_log.debug("Adding triggered pair to media stream: {}", this);
+            this.m_checkList.addTriggeredPair(pair);
+            
+            // This call notifies the scheduler to start scheduling again in
+            // the case where we've run out of pairs.
+            this.m_checkScheduler.onPair();
+            }
+        }
+    
     public void addPair(final IceCandidatePair pair)
         {
         if (this.m_iceAgent.getIceState() == IceState.COMPLETED)

@@ -86,7 +86,7 @@ public class GeneralIceMediaStreamFactoryImpl
             catch (final IOException e)
                 {
                 // Note the constructor of the peer attempts a connection, so
-                // this is named correctly.
+                // the exception is named correctly.
                 m_log.warn("Error connecting UDP peer", e);
                 throw new IceUdpConnectException("Could not create UDP peer", e);
                 }
