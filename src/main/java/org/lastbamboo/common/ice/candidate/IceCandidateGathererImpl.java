@@ -191,7 +191,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         // a new candidate because we always make an effort to map our TCP
         // host port with UPnP.  This is not a simultaneous open candidate,
         // although there may be cases where this actually succeeds when UPnP
-        // mapping failed do to simultaneous open behavior on the NAT.
+        // mapping failed due to simultaneous open behavior on the NAT.
         if (this.m_udpServerReflexiveAddress != null && client.hostPortMapped())
             {
             // The port mapping maps the local port to the same port on the 

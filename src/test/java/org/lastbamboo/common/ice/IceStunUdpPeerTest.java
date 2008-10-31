@@ -41,7 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Test sending of STUN messages between ICE STUN UDP peers.
+ * Test ICE STUN UDP peers.  There's not too much to test here because the
+ * peers just act as proxies for the underlying client and server classes.
  */
 public class IceStunUdpPeerTest 
     {
@@ -63,6 +64,7 @@ public class IceStunUdpPeerTest
             }
         }
     
+
     /**
      * Tests BOTH the client and server side of STUN UDP peers.
      * 
@@ -125,7 +127,8 @@ public class IceStunUdpPeerTest
                 {
                 return response.getMappedAddress();
                 }
-
+            
+            @Override
             public InetSocketAddress visitBindingErrorResponse(
                 final BindingErrorResponse response)
                 {
@@ -133,6 +136,11 @@ public class IceStunUdpPeerTest
                 }
             };
 
+         
+        // Disabled because writes are no longer supported on peers -- the
+        // underlying client and server classes handle it all.
+       
+        /*
         m_log.debug("Sending Binding Request to: {}", address2);
         final StunMessage msg1 = 
             this.m_peer1.write(new BindingRequest(), address2);
@@ -145,6 +153,7 @@ public class IceStunUdpPeerTest
         final InetSocketAddress mappedAddress2 = msg2.accept(visitor);
         Assert.assertEquals("Mapped address should equal the local address", 
             address2, mappedAddress2);
+         */
         }
     
     /**

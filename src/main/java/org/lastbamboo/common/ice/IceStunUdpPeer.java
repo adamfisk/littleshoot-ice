@@ -31,12 +31,13 @@ import org.slf4j.LoggerFactory;
  * connected to.  We also bind to that port with an accepting channel,
  * though, so incoming data from other hosts goes to the accepting channel.<p>
  * 
- * Note also that the behavior for what packets go where differs by operating system.  On
- * Windows, for example, packets from a host that has had DatagramSocket.connect() 
- * called for that host will not necessarily go to the "connected" host when there's another
- * server socket bound to that port (using SO_REUSEADDRESS).  If you followed that 
- * sentence, this means that both the connected "client" and the listening "server" 
- * message handling code needs to be prepared to be prepared to handle any message. 
+ * Note also that the behavior for what packets go where differs by operating 
+ * system.  On Windows, for example, packets from a host that has had 
+ * DatagramSocket.connect() called for that host will not necessarily go to 
+ * the "connected" host when there's another server socket bound to that port 
+ * (using SO_REUSEADDRESS).  If you followed that sentence, this means that 
+ * both the connected "client" and the listening "server" message handling 
+ * code needs to be prepared to be prepared to handle any message. 
  */
 public class IceStunUdpPeer implements StunClient, StunServer
     {
@@ -149,13 +150,17 @@ public class IceStunUdpPeer implements StunClient, StunServer
     public StunMessage write(final BindingRequest request, 
         final InetSocketAddress remoteAddress)
         {
-        return this.m_stunClient.write(request, remoteAddress);
+        //return this.m_stunClient.write(request, remoteAddress);
+        m_log.error("Unsupported!!!!!!!");
+        throw new IllegalStateException("Not implemented.");
         }
     
     public StunMessage write(final BindingRequest request, 
         final InetSocketAddress remoteAddress, final long rto)
         {
-        return this.m_stunClient.write(request, remoteAddress, rto);
+        //return this.m_stunClient.write(request, remoteAddress, rto);
+        m_log.error("Unsupported!!!!!!!");
+        throw new IllegalStateException("Not implemented.");
         }
 
     public void start()
