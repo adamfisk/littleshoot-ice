@@ -73,7 +73,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             final Collection<IceCandidate> udpCandidates =
                 createUdpCandidates(this.m_iceUdpStunPeer);
     
-            // 4.1.1.3. Eliminating Redundant Candidates.
+            // 4.1.3. Eliminating Redundant Candidates.
             eliminateRedundantCandidates(udpCandidates);
             candidates.addAll(udpCandidates);
             }
@@ -83,7 +83,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             final Collection<IceCandidate> tcpCandidates = 
                 createTcpCandidates(this.m_iceTcpStunPeer);
             
-            // 4.1.1.3. Eliminating Redundant Candidates.
+            // 4.1.3. Eliminating Redundant Candidates.
             eliminateRedundantCandidates(tcpCandidates);
             candidates.addAll(tcpCandidates);
             }
@@ -91,6 +91,9 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         return candidates; 
         }
     
+    /**
+     * Section 4.1.3.
+     */
     private void eliminateRedundantCandidates(
         final Collection<IceCandidate> candidates)
         {

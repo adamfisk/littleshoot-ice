@@ -97,7 +97,7 @@ public class IceAgentImpl implements IceAgent
         else if (state == IceState.FAILED)
             {
             m_log.debug("Got ICE failed.  Closing.");
-            close();
+            //close();
             this.m_offerAnswerListener.onOfferAnswerFailed(this);
             }
         }
