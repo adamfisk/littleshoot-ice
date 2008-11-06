@@ -139,8 +139,19 @@ public interface IceCheckList
     boolean matchesAny(Predicate<IceCandidatePair> pred);
 
     /**
+     * Returns whether all the pairs in the check list fit the given predicate.
+     * 
+     * @param pred The {@link Predicate} to match against.
+     * @return <code>true</code> if all pairs match the specified criteria,
+     * otherwise <code>false</code>.
+     */
+    boolean matchesAll(Predicate<IceCandidatePair> pred);
+    
+    /**
      * Close all candidates pair connections.
      */
     void close();
+
+    
 
     }

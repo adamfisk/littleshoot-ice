@@ -247,6 +247,7 @@ public class IceAgentImpl implements IceAgent
             {
             if (allCheckListsInState(IceCheckListState.FAILED))
                 {
+                m_log.debug("All check lists are failed...agent is failed");
                 setIceState(IceState.FAILED);
                 }
             else if (anyCheckListInState(IceCheckListState.COMPLETED))

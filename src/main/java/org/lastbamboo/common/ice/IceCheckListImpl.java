@@ -120,7 +120,10 @@ public class IceCheckListImpl implements IceCheckList
                 {
                 try
                     {
-                    wait(40000);
+                    // This doesn't wait forever simply as a fail safe to 
+                    // avoid blocking the thread indefinitely if something
+                    // goes wrong.
+                    wait(60000);
                     }
                 catch (final InterruptedException e)
                     {
@@ -692,6 +695,11 @@ public class IceCheckListImpl implements IceCheckList
         {
         return matchesAny(this.m_pairs, pred);
         }
+    
+    public boolean matchesAll(final Predicate<IceCandidatePair> pred)
+        {
+        return matchesAll(this.m_pairs, pred);
+        }
 
     private boolean matchesAny(final Collection<IceCandidatePair> pairs,
         final Predicate<IceCandidatePair> pred)
@@ -700,6 +708,16 @@ public class IceCheckListImpl implements IceCheckList
             {
             final CollectionUtils utils = new CollectionUtilsImpl();
             return utils.matchesAny(pairs, pred);
+            }
+        }
+    
+    private boolean matchesAll(final Collection<IceCandidatePair> pairs,
+        final Predicate<IceCandidatePair> pred)
+        {
+        synchronized (this)
+            {
+            final CollectionUtils utils = new CollectionUtilsImpl();
+            return utils.matchesAll(pairs, pred);
             }
         }
     

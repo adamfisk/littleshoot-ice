@@ -387,7 +387,8 @@ public class IceMediaStreamImpl implements IceMediaStream
         if (allFailedOrSucceeded())
             {
             // 1) Set the check list to failed if there is not a pair in the 
-            // valid list for all componenents.
+            // valid list for all components.
+            m_log.debug("All check lists are either failed or succeeded");
             
             // TODO: We only currently have one component!!
             if (this.m_validPairs.isEmpty())
@@ -441,7 +442,7 @@ public class IceMediaStreamImpl implements IceMediaStream
                 }
             };
         
-        return this.m_checkList.matchesAny(pred);
+        return this.m_checkList.matchesAll(pred);
         }
 
     public void addValidPair(final IceCandidatePair pair)
