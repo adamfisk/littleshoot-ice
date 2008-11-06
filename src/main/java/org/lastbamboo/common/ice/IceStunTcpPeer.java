@@ -106,7 +106,7 @@ public class IceStunTcpPeer<T> implements StunClient, StunServer,
         {
         // We only use the TURN client for non-controlling agents to save
         // resources.
-        if (!this.m_controlling && !NetworkUtils.isPublicAddress())
+        if (!NetworkUtils.isPublicAddress())
             {
             this.m_stunClient.connect();
             this.m_stunServer.start(m_stunClient.getHostAddress());

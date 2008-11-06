@@ -170,10 +170,10 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         // Only add the TURN candidate on the non-controlling side to save
         // resources.  This is non-standard as well, but we should only need
         // one TURN server per session.
-        if (!this.m_controlling && !NetworkUtils.isPublicAddress())
-            {
+        //if (!this.m_controlling && !NetworkUtils.isPublicAddress())
+          //  {
             addTcpTurnCandidate(client, candidates);
-            }
+            //}
             
         // Add the host candidate.  Note the host candidate is also used as
         // the BASE candidate for the server reflexive candidate below.
