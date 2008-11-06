@@ -307,6 +307,11 @@ public class IceStunClientCandidateProcessor
         if (response == null)
             {
             m_log.debug("No response -- could not connect?");
+            
+            // See ICE 7.1.2.3.  Check List and Timer State Updates --
+            // we need to update the check list and timer states in a 
+            // failure case as well.
+            m_mediaStream.updateCheckListAndTimerStates();
             return;
             }
             
@@ -315,6 +320,11 @@ public class IceStunClientCandidateProcessor
             {
             m_log.debug("Check failed or was canceled -- should happen " +
                 "quite often");
+            
+            // See ICE 7.1.2.3.  Check List and Timer State Updates --
+            // we need to update the check list and timer states in a 
+            // failure case as well.
+            m_mediaStream.updateCheckListAndTimerStates();
             return;
             }
         else

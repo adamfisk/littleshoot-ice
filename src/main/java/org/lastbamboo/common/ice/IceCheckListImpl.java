@@ -120,7 +120,7 @@ public class IceCheckListImpl implements IceCheckList
                 {
                 try
                     {
-                    wait();
+                    wait(40000);
                     }
                 catch (final InterruptedException e)
                     {
