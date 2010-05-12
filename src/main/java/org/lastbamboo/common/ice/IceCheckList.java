@@ -2,7 +2,6 @@ package org.lastbamboo.common.ice;
 
 import java.util.Collection;
 
-import org.apache.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.util.Closure;
