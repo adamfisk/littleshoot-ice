@@ -1,6 +1,6 @@
 package org.lastbamboo.common.ice.stubs;
 
-import org.apache.mina.common.IoSession;
+import org.littleshoot.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
 

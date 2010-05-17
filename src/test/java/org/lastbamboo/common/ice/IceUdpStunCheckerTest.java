@@ -2,10 +2,10 @@ package org.lastbamboo.common.ice;
 
 import java.net.InetSocketAddress;
 
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoHandlerAdapter;
-import org.apache.mina.common.IoSession;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
+import org.littleshoot.mina.common.IoHandler;
+import org.littleshoot.mina.common.IoHandlerAdapter;
+import org.littleshoot.mina.common.IoSession;
+import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.lastbamboo.common.ice.transport.IceConnector;

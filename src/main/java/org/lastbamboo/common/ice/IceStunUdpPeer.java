@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoServiceListener;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
+import org.littleshoot.mina.common.IoHandler;
+import org.littleshoot.mina.common.IoServiceListener;
+import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.server.StunServer;

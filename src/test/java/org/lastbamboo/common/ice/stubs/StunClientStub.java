@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 import org.apache.commons.lang.math.RandomUtils;
-import org.apache.mina.common.IoServiceListener;
+import org.littleshoot.mina.common.IoServiceListener;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;

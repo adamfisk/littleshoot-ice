@@ -1,7 +1,7 @@
 package org.lastbamboo.common.ice;
 
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoServiceListener;
+import org.littleshoot.mina.common.IoHandler;
+import org.littleshoot.mina.common.IoServiceListener;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.upnp.UpnpManager;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;

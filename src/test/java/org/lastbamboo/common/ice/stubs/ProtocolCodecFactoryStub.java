@@ -1,8 +1,8 @@
 package org.lastbamboo.common.ice.stubs;
 
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
-import org.apache.mina.filter.codec.ProtocolDecoder;
-import org.apache.mina.filter.codec.ProtocolEncoder;
+import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
+import org.littleshoot.mina.filter.codec.ProtocolDecoder;
+import org.littleshoot.mina.filter.codec.ProtocolEncoder;
 
 public class ProtocolCodecFactoryStub implements ProtocolCodecFactory
     {

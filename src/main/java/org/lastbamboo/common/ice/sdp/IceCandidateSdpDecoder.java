@@ -3,7 +3,7 @@ package org.lastbamboo.common.ice.sdp;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.mina.common.ByteBuffer;
+import org.littleshoot.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 
 /**

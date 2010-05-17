@@ -2,7 +2,7 @@ package org.lastbamboo.common.ice.stubs;
 
 import java.net.InetSocketAddress;
 
-import org.apache.mina.common.IoSession;
+import org.littleshoot.mina.common.IoSession;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 
 public class TurnClientListenerStub implements TurnClientListener

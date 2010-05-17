@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.Queue;
 
-import org.apache.mina.common.ByteBuffer;
+import org.littleshoot.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.IceAgent;
 import org.lastbamboo.common.ice.IceMediaStream;
 import org.lastbamboo.common.ice.IceState;

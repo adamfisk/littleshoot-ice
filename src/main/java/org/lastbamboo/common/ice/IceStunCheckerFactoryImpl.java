@@ -1,7 +1,7 @@
 package org.lastbamboo.common.ice;
 
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.TransportType;
+import org.littleshoot.mina.common.IoSession;
+import org.littleshoot.mina.common.TransportType;
 import org.lastbamboo.common.ice.transport.IceTcpStunChecker;
 import org.lastbamboo.common.ice.transport.IceUdpStunChecker;
 import org.lastbamboo.common.stun.stack.message.StunMessage;

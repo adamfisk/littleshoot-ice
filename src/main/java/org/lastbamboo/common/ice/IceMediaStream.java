@@ -4,7 +4,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Queue;
 
-import org.apache.mina.common.IoServiceListener;
+import org.littleshoot.mina.common.IoServiceListener;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;

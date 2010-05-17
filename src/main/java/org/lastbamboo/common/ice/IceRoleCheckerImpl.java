@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.Map;
 
 import org.apache.commons.id.uuid.UUID;
-import org.apache.mina.common.IoSession;
+import org.littleshoot.mina.common.IoSession;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;

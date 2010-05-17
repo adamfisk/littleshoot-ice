@@ -1,6 +1,6 @@
 package org.lastbamboo.common.ice;
 
-import org.apache.mina.common.IoSession;
+import org.littleshoot.mina.common.IoSession;
 
 /**
  * Interface for classes that create new ICE STUN connectivity check classes

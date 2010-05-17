@@ -4,17 +4,17 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import org.apache.mina.common.ConnectFuture;
-import org.apache.mina.common.ExecutorThreadModel;
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoServiceListener;
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.RuntimeIOException;
-import org.apache.mina.common.ThreadModel;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.transport.socket.nio.DatagramConnector;
-import org.apache.mina.transport.socket.nio.DatagramConnectorConfig;
+import org.littleshoot.mina.common.ConnectFuture;
+import org.littleshoot.mina.common.ExecutorThreadModel;
+import org.littleshoot.mina.common.IoHandler;
+import org.littleshoot.mina.common.IoServiceListener;
+import org.littleshoot.mina.common.IoSession;
+import org.littleshoot.mina.common.RuntimeIOException;
+import org.littleshoot.mina.common.ThreadModel;
+import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
+import org.littleshoot.mina.filter.codec.ProtocolCodecFilter;
+import org.littleshoot.mina.transport.socket.nio.DatagramConnector;
+import org.littleshoot.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

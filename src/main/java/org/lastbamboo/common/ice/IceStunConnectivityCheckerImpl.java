@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.commons.id.uuid.UUID;
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.TransportType;
+import org.littleshoot.mina.common.IoSession;
+import org.littleshoot.mina.common.TransportType;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;

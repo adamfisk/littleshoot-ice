@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.id.uuid.UUID;
-import org.apache.mina.common.CloseFuture;
-import org.apache.mina.common.IoSession;
+import org.littleshoot.mina.common.CloseFuture;
+import org.littleshoot.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;

@@ -3,9 +3,9 @@ package org.lastbamboo.common.ice;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoServiceListener;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
+import org.littleshoot.mina.common.IoHandler;
+import org.littleshoot.mina.common.IoServiceListener;
+import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;

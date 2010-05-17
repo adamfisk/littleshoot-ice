@@ -2,11 +2,11 @@ package org.lastbamboo.common.ice.stubs;
 
 import java.net.SocketAddress;
 
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoService;
-import org.apache.mina.common.IoServiceConfig;
-import org.apache.mina.common.IoServiceListener;
-import org.apache.mina.common.IoSession;
+import org.littleshoot.mina.common.IoHandler;
+import org.littleshoot.mina.common.IoService;
+import org.littleshoot.mina.common.IoServiceConfig;
+import org.littleshoot.mina.common.IoServiceListener;
+import org.littleshoot.mina.common.IoSession;
 
 public class IoServiceListenerStub implements IoServiceListener
     {

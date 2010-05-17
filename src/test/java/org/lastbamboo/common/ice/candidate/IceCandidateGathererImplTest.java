@@ -7,7 +7,7 @@ import java.util.Collection;
 
 import junit.framework.TestCase;
 
-import org.apache.mina.common.IoServiceListener;
+import org.littleshoot.mina.common.IoServiceListener;
 import org.lastbamboo.common.ice.IceMediaStreamDesc;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;

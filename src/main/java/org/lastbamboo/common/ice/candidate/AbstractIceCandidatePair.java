@@ -2,7 +2,7 @@ package org.lastbamboo.common.ice.candidate;
 
 import java.net.InetSocketAddress;
 
-import org.apache.mina.common.IoSession;
+import org.littleshoot.mina.common.IoSession;
 import org.lastbamboo.common.ice.IceStunChecker;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.transport.IceConnector;

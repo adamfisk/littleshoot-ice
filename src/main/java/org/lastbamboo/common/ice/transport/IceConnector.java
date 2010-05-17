@@ -2,8 +2,8 @@ package org.lastbamboo.common.ice.transport;
 
 import java.net.InetSocketAddress;
 
-import org.apache.mina.common.IoServiceListener;
-import org.apache.mina.common.IoSession;
+import org.littleshoot.mina.common.IoServiceListener;
+import org.littleshoot.mina.common.IoSession;
 
 /**
  * Interface for classes that establish the transport layer for connectivity 
