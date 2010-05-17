@@ -101,10 +101,10 @@ public class IceStunUdpPeerTest
             };
         this.m_peer1 = 
             new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true, 
-                transactionTracker);
+                transactionTracker, "_stun._udp.littleshoot.org");
         this.m_peer2 = 
             new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true, 
-                transactionTracker);
+                transactionTracker, "_stun._udp.littleshoot.org");
         this.m_peer1.addIoServiceListener(serviceListener);
         this.m_peer2.addIoServiceListener(serviceListener);
         m_peer1.connect();

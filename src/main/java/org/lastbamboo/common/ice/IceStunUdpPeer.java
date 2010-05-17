@@ -60,7 +60,8 @@ public class IceStunUdpPeer implements StunClient, StunServer
      */
     public IceStunUdpPeer(final ProtocolCodecFactory demuxingCodecFactory, 
         final IoHandler demuxingIoHandler, final boolean controlling, 
-        final StunTransactionTracker<StunMessage> transactionTracker) 
+        final StunTransactionTracker<StunMessage> transactionTracker,
+        final String stunSrvAddress) 
         throws IOException 
         {
         // We pass the IoHandler here because we need to be prepared to handle 
@@ -73,7 +74,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // making connectivity consistent, with "all of them" meaning the STUN 
         // client and server checks.
         this.m_stunClient = 
-            new UdpStunClient(transactionTracker, demuxingIoHandler);
+            new UdpStunClient(transactionTracker, demuxingIoHandler, stunSrvAddress);
         this.m_stunClient.connect();
         this.m_serverReflexiveAddress = 
             this.m_stunClient.getServerReflexiveAddress();

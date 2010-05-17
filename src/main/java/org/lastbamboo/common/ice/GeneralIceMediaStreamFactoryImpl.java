@@ -1,6 +1,7 @@
 package org.lastbamboo.common.ice;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 
 import org.littleshoot.mina.common.IoHandler;
@@ -24,8 +25,10 @@ import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
 import org.lastbamboo.common.turn.client.StunTcpFrameTurnClientListener;
 import org.lastbamboo.common.turn.client.TcpTurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
+import org.lastbamboo.common.turn.client.TurnServerCandidateProvider;
 import org.lastbamboo.common.turn.client.TurnStunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.upnp.UpnpManager;
+import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
@@ -42,6 +45,16 @@ public class GeneralIceMediaStreamFactoryImpl
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
+    private final String m_stunSrvAddress;
+    private final CandidateProvider<InetSocketAddress> m_turnCandidateProvider;
+    
+    public GeneralIceMediaStreamFactoryImpl(
+        final CandidateProvider<InetSocketAddress> turnCandidateProvider,
+        final String srvAddress) 
+        {
+        this.m_turnCandidateProvider = turnCandidateProvider;
+        this.m_stunSrvAddress = srvAddress;
+        }
     
     public <T> IceMediaStream newIceMediaStream(
         final IceMediaStreamDesc streamDesc, final IceAgent iceAgent, 
@@ -81,7 +94,8 @@ public class GeneralIceMediaStreamFactoryImpl
                 {
                 udpStunPeer = 
                     new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler,
-                        iceAgent.isControlling(), transactionTracker);
+                        iceAgent.isControlling(), transactionTracker, 
+                        this.m_stunSrvAddress);
                 }
             catch (final IOException e)
                 {
@@ -118,7 +132,8 @@ public class GeneralIceMediaStreamFactoryImpl
             // We only start a TURN client on the answerer to save resources --
             // handled internally -- see IceStunTcpPeer connect.
             final StunClient tcpTurnClient = 
-                new TcpTurnClient(turnClientListener, codecFactory);
+                new TcpTurnClient(turnClientListener, m_turnCandidateProvider, 
+                    codecFactory);
                 
             tcpStunPeer = 
                 new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 

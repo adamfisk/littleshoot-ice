@@ -31,6 +31,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.turn.client.TurnClientListener;
+import org.lastbamboo.common.turn.client.TurnServerCandidateProvider;
 import org.lastbamboo.common.upnp.UpnpManager;
 import org.lastbamboo.common.upnp.UpnpManagerImpl;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
@@ -59,7 +60,8 @@ public class IceAgentImplTest
             new IceMediaStreamDesc(false, true, "message", "http", 1);
             
         final GeneralIceMediaStreamFactory generalStreamFactory =
-            new GeneralIceMediaStreamFactoryImpl();
+            new GeneralIceMediaStreamFactoryImpl(new TurnServerCandidateProvider(),
+                "_stun._udp.littleshoot.org");
         
         final IceMediaStreamFactory mediaStreamFactory1 = 
             new IceMediaStreamFactory()

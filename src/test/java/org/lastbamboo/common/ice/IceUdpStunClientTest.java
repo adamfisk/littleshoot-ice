@@ -9,7 +9,7 @@ public class IceUdpStunClientTest extends TestCase
 
     public void testClient() throws Exception
         {
-        final UdpStunClient stunClient = new UdpStunClient();
+        final UdpStunClient stunClient = new UdpStunClient("_stun._udp.littleshoot.org");
         stunClient.connect();
         assertNotNull("null host address", stunClient.getHostAddress());
         assertNotNull("null server reflexive address", 
