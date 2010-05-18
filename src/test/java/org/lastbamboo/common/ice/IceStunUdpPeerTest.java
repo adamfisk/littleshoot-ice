@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.stubs.IceMediaStreamImplStub;
 import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
+import org.lastbamboo.common.stun.stack.StunConstants;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
@@ -35,7 +36,11 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
+import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.NetworkUtils;
+import org.lastbamboo.common.util.SrvCandidateProvider;
+import org.lastbamboo.common.util.SrvUtil;
+import org.lastbamboo.common.util.SrvUtilImpl;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,12 +104,17 @@ public class IceStunUdpPeerTest
                     new IceMediaStreamImplStub());
                 }
             };
+        final SrvUtil srv = new SrvUtilImpl();
+        final CandidateProvider<InetSocketAddress> stunCandidateProvider =
+            new SrvCandidateProvider(srv, "_stun._udp.littleshoot.org", 
+                new InetSocketAddress("stun.littleshoot.org", 
+                    StunConstants.STUN_PORT));
         this.m_peer1 = 
             new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true, 
-                transactionTracker, "_stun._udp.littleshoot.org");
+                transactionTracker, stunCandidateProvider);
         this.m_peer2 = 
             new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler, true, 
-                transactionTracker, "_stun._udp.littleshoot.org");
+                transactionTracker, stunCandidateProvider);
         this.m_peer1.addIoServiceListener(serviceListener);
         this.m_peer2.addIoServiceListener(serviceListener);
         m_peer1.connect();

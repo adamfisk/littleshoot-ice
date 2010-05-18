@@ -4,6 +4,30 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.lastbamboo.common.ice.candidate.IceCandidatePair;
+import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
+import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
+import org.lastbamboo.common.offer.answer.OfferAnswerListener;
+import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
+import org.lastbamboo.common.stun.stack.StunConstants;
+import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
+import org.lastbamboo.common.stun.stack.StunIoHandler;
+import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
+import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
+import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
+import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
+import org.lastbamboo.common.turn.client.TurnClientListener;
+import org.lastbamboo.common.upnp.UpnpManager;
+import org.lastbamboo.common.upnp.UpnpManagerImpl;
+import org.lastbamboo.common.util.CandidateProvider;
+import org.lastbamboo.common.util.SrvCandidateProvider;
+import org.lastbamboo.common.util.SrvUtil;
+import org.lastbamboo.common.util.SrvUtilImpl;
+import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.littleshoot.mina.common.ConnectFuture;
 import org.littleshoot.mina.common.ExecutorThreadModel;
@@ -15,26 +39,6 @@ import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.littleshoot.mina.filter.codec.ProtocolCodecFilter;
 import org.littleshoot.mina.transport.socket.nio.DatagramConnector;
 import org.littleshoot.mina.transport.socket.nio.DatagramConnectorConfig;
-import org.junit.Assert;
-import org.junit.Test;
-import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
-import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
-import org.lastbamboo.common.offer.answer.OfferAnswerListener;
-import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
-import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
-import org.lastbamboo.common.stun.stack.StunIoHandler;
-import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
-import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
-import org.lastbamboo.common.turn.client.TurnClientListener;
-import org.lastbamboo.common.turn.client.TurnServerCandidateProvider;
-import org.lastbamboo.common.upnp.UpnpManager;
-import org.lastbamboo.common.upnp.UpnpManagerImpl;
-import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,10 +62,22 @@ public class IceAgentImplTest
         {
         final IceMediaStreamDesc desc = 
             new IceMediaStreamDesc(false, true, "message", "http", 1);
-            
+        
+        final SrvUtil srv = new SrvUtilImpl();
+        final CandidateProvider<InetSocketAddress> stunCandidateProvider =
+            new SrvCandidateProvider(srv, "_stun._udp.littleshoot.org", 
+                new InetSocketAddress("stun.littleshoot.org", 
+                    StunConstants.STUN_PORT));
+        
+        // Note TURN uses the same port as STUN.
+        final CandidateProvider<InetSocketAddress> turnCandidateProvider =
+            new SrvCandidateProvider(srv, "_turn._tcp.littleshoot.org", 
+                new InetSocketAddress("turn2.littleshoot.org", 
+                    StunConstants.STUN_PORT));
+        
         final GeneralIceMediaStreamFactory generalStreamFactory =
-            new GeneralIceMediaStreamFactoryImpl(new TurnServerCandidateProvider(),
-                "_stun._udp.littleshoot.org");
+            new GeneralIceMediaStreamFactoryImpl(turnCandidateProvider,
+                stunCandidateProvider);
         
         final IceMediaStreamFactory mediaStreamFactory1 = 
             new IceMediaStreamFactory()

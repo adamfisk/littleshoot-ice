@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
-import org.littleshoot.mina.common.IoHandler;
-import org.littleshoot.mina.common.IoServiceListener;
-import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
@@ -25,13 +22,15 @@ import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
 import org.lastbamboo.common.turn.client.StunTcpFrameTurnClientListener;
 import org.lastbamboo.common.turn.client.TcpTurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
-import org.lastbamboo.common.turn.client.TurnServerCandidateProvider;
 import org.lastbamboo.common.turn.client.TurnStunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.upnp.UpnpManager;
 import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
+import org.littleshoot.mina.common.IoHandler;
+import org.littleshoot.mina.common.IoServiceListener;
+import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,15 +44,22 @@ public class GeneralIceMediaStreamFactoryImpl
     {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
-    private final String m_stunSrvAddress;
+    private final CandidateProvider<InetSocketAddress> m_stunServerCandidateProvider;
     private final CandidateProvider<InetSocketAddress> m_turnCandidateProvider;
     
+    /**
+     * Creates a new ICE media stream factory with the specified candidate 
+     * providers for connecting to TURN and STUN servers.
+     * 
+     * @param turnCandidateProvider The TURN server address provider.
+     * @param stunServerCandidateProvider The STUN server address provider.
+     */
     public GeneralIceMediaStreamFactoryImpl(
         final CandidateProvider<InetSocketAddress> turnCandidateProvider,
-        final String srvAddress) 
+        final CandidateProvider<InetSocketAddress> stunServerCandidateProvider) 
         {
         this.m_turnCandidateProvider = turnCandidateProvider;
-        this.m_stunSrvAddress = srvAddress;
+        this.m_stunServerCandidateProvider = stunServerCandidateProvider;
         }
     
     public <T> IceMediaStream newIceMediaStream(
@@ -95,7 +101,7 @@ public class GeneralIceMediaStreamFactoryImpl
                 udpStunPeer = 
                     new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler,
                         iceAgent.isControlling(), transactionTracker, 
-                        this.m_stunSrvAddress);
+                        this.m_stunServerCandidateProvider);
                 }
             catch (final IOException e)
                 {

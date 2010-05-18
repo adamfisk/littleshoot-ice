@@ -14,6 +14,7 @@ import org.lastbamboo.common.stun.server.UdpStunServer;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.lastbamboo.common.util.CandidateProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
     public IceStunUdpPeer(final ProtocolCodecFactory demuxingCodecFactory, 
         final IoHandler demuxingIoHandler, final boolean controlling, 
         final StunTransactionTracker<StunMessage> transactionTracker,
-        final String stunSrvAddress) 
+        final CandidateProvider<InetSocketAddress> stunServerCandidateProvider) 
         throws IOException 
         {
         // We pass the IoHandler here because we need to be prepared to handle 
@@ -74,7 +75,8 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // making connectivity consistent, with "all of them" meaning the STUN 
         // client and server checks.
         this.m_stunClient = 
-            new UdpStunClient(transactionTracker, demuxingIoHandler, stunSrvAddress);
+            new UdpStunClient(transactionTracker, demuxingIoHandler, 
+                stunServerCandidateProvider);
         this.m_stunClient.connect();
         this.m_serverReflexiveAddress = 
             this.m_stunClient.getServerReflexiveAddress();

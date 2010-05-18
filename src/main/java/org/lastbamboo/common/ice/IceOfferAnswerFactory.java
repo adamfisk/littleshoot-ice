@@ -5,6 +5,8 @@ import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerConnectException;
 import org.lastbamboo.common.offer.answer.OfferAnswerFactory;
+import org.lastbamboo.common.offer.answer.OfferAnswerListener;
+import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 
 /**
  * Class for creating ICE agents that process ICE offers and answers.
@@ -59,9 +61,10 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
     public MediaOfferAnswer createMediaOfferer() 
         throws OfferAnswerConnectException 
         {
+        final MediaOfferAnswer udp;
         try
             {
-            return new IceAgentImpl(
+            udp = new IceAgentImpl(
                 this.m_mediaStreamFactory, true, this.m_mediaFactory);
             }
         catch (final IceTcpConnectException e)
@@ -74,5 +77,49 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
             throw new OfferAnswerConnectException(
                 "Could not create UDP connection", e);
             }
+        
+        final MediaOfferAnswer tcp = new TcpMediaOfferAnswer();
+        
+        // We create a high-level class that starts a race between the TCP
+        // and UDP connections. The TCP approach does not use ICE, instead
+        // simplifying things significantly through using straight sockets, 
+        // either via UPnP, directly over an internal network, or when one of
+        // the peers is on the public Internet.
+        return new MediaOfferAnswer() {
+            
+            public void processOffer(final ByteBuffer offer,
+                final OfferAnswerListener offerAnswerListener) 
+                {
+                udp.processOffer(offer, offerAnswerListener);
+                }
+            
+            public void processAnswer(final ByteBuffer answer,
+                final OfferAnswerListener offerAnswerListener) 
+                {
+                udp.processAnswer(answer, offerAnswerListener);
+                }
+            
+            public byte[] generateOffer() 
+                {
+                return udp.generateOffer();
+                }
+            
+            public byte[] generateAnswer() 
+                {
+                return udp.generateAnswer();
+                }
+            
+            public void startMedia(final OfferAnswerMediaListener mediaListener) 
+                {
+                // TODO: Thread this?!?!?!?!?
+                //tcp.startMedia(mediaListener);
+                udp.startMedia(mediaListener);
+                }
+            
+            public void close() 
+                {
+                udp.close();
+                }
+            };
         }
     }
