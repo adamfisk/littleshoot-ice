@@ -10,8 +10,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
@@ -43,8 +43,7 @@ public final class IceCandidateSdpDecoderImpl implements IceCandidateSdpDecoder
     /**
      * Logger for this class.
      */
-    private static final Log LOG = 
-        LogFactory.getLog(IceCandidateSdpDecoderImpl.class);
+    private final Logger LOG = LoggerFactory.getLogger(IceCandidateSdpDecoderImpl.class);
     
     private static final String CANDIDATE_KEY = "candidate";
 

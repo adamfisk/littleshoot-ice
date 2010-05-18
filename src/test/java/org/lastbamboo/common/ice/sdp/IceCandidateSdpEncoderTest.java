@@ -12,8 +12,8 @@ import java.util.Vector;
 import junit.framework.TestCase;
 
 import org.apache.commons.lang.math.NumberUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateType;
@@ -35,8 +35,7 @@ public final class IceCandidateSdpEncoderTest extends TestCase
     /**
      * Logger for this class.
      */
-    private static final Log LOG = 
-        LogFactory.getLog(IceCandidateSdpEncoderTest.class);
+    private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     /**
      * Tests the method for creating SDP for the local host.

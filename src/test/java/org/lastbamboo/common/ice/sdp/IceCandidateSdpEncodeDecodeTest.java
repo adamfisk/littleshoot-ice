@@ -7,8 +7,8 @@ import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
@@ -22,13 +22,6 @@ import org.lastbamboo.common.util.NetworkUtils;
  */
 public final class IceCandidateSdpEncodeDecodeTest extends TestCase
     {
-
-    /**
-     * Logger for this class.
-     */
-    private static final Log LOG = 
-        LogFactory.getLog(IceCandidateSdpEncodeDecodeTest.class);
-    
 
     /**
      * Tests the method for creating SDP for the local host.
