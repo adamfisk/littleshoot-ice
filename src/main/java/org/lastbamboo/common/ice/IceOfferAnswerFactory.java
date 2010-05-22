@@ -111,13 +111,13 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
             
             public void startMedia(final OfferAnswerMediaListener mediaListener) 
                 {
-                // TODO: Thread this?!?!?!?!?
-                //tcp.startMedia(mediaListener);
+                tcp.startMedia(mediaListener);
                 udp.startMedia(mediaListener);
                 }
             
             public void close() 
                 {
+                tcp.close();
                 udp.close();
                 }
             };
