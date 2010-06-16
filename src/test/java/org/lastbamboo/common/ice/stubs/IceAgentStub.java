@@ -1,6 +1,7 @@
 package org.lastbamboo.common.ice.stubs;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.Queue;
@@ -98,7 +99,7 @@ public class IceAgentStub implements IceAgent
         return null;
         }
 
-    public void processOffer(ByteBuffer offer) throws IOException
+    public void processOffer(ByteBuffer offer) 
         {
         // TODO Auto-generated method stub
         
@@ -122,7 +123,7 @@ public class IceAgentStub implements IceAgent
         return null;
         }
 
-    public void processAnswer(ByteBuffer answer) throws IOException
+    public void processAnswer(ByteBuffer answer)
         {
         // TODO Auto-generated method stub
         
@@ -175,5 +176,25 @@ public class IceAgentStub implements IceAgent
         // TODO Auto-generated method stub
         
         }
+
+	public void closeTcp() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void closeUdp() {
+		// TODO Auto-generated method stub
+		
+	}
+
+    public InetAddress getPublicAdress() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void useRelay() {
+        // TODO Auto-generated method stub
+        
+    }
 
     }

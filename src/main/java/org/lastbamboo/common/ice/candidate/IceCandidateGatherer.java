@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice.candidate;
 
+import java.net.InetAddress;
 import java.util.Collection;
 
 
@@ -20,5 +21,12 @@ public interface IceCandidateGatherer
      * Close any resources associated with the gatherer.
      */
     void close();
+    
+    /**
+     * Accessor for the public address of the machine.
+     * 
+     * @return The public address of the machine.
+     */
+    InetAddress getPublicAddress();
 
     }

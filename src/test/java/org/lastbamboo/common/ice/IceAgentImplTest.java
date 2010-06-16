@@ -1,44 +1,25 @@
 package org.lastbamboo.common.ice;
 
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
-import org.lastbamboo.common.offer.answer.MediaOfferAnswer;
+import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
-import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
-import org.lastbamboo.common.stun.stack.StunConstants;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
-import org.lastbamboo.common.stun.stack.StunIoHandler;
-import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
-import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitor;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
-import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.turn.client.TurnClientListener;
-import org.lastbamboo.common.upnp.UpnpManager;
-import org.lastbamboo.common.upnp.UpnpManagerImpl;
 import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.SrvCandidateProvider;
-import org.lastbamboo.common.util.SrvUtil;
-import org.lastbamboo.common.util.SrvUtilImpl;
+import org.lastbamboo.common.util.DnsSrvCandidateProvider;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.littleshoot.mina.common.ByteBuffer;
-import org.littleshoot.mina.common.ConnectFuture;
-import org.littleshoot.mina.common.ExecutorThreadModel;
 import org.littleshoot.mina.common.IoHandler;
 import org.littleshoot.mina.common.IoHandlerAdapter;
 import org.littleshoot.mina.common.IoServiceListener;
 import org.littleshoot.mina.common.IoSession;
-import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
-import org.littleshoot.mina.filter.codec.ProtocolCodecFilter;
-import org.littleshoot.mina.transport.socket.nio.DatagramConnector;
-import org.littleshoot.mina.transport.socket.nio.DatagramConnectorConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +31,6 @@ public class IceAgentImplTest
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
-    private final AtomicBoolean m_gotIcmpError = new AtomicBoolean(false);
-    
     /**
      * Tests creating a local UDP connection using ICE.
      * 
@@ -61,92 +40,30 @@ public class IceAgentImplTest
     public void testLocalUdpConnection() throws Exception
         {
         final IceMediaStreamDesc desc = 
-            new IceMediaStreamDesc(false, true, "message", "http", 1);
+            new IceMediaStreamDesc(false, true, "message", "http", 1, true);
         
-        final SrvUtil srv = new SrvUtilImpl();
         final CandidateProvider<InetSocketAddress> stunCandidateProvider =
-            new SrvCandidateProvider(srv, "_stun._udp.littleshoot.org", 
-                new InetSocketAddress("stun.littleshoot.org", 
-                    StunConstants.STUN_PORT));
+            new DnsSrvCandidateProvider("_stun._udp.littleshoot.org");
         
-        // Note TURN uses the same port as STUN.
         final CandidateProvider<InetSocketAddress> turnCandidateProvider =
-            new SrvCandidateProvider(srv, "_turn._tcp.littleshoot.org", 
-                new InetSocketAddress("turn2.littleshoot.org", 
-                    StunConstants.STUN_PORT));
+            new DnsSrvCandidateProvider("_turn._tcp.littleshoot.org");
         
-        final GeneralIceMediaStreamFactory generalStreamFactory =
-            new GeneralIceMediaStreamFactoryImpl(turnCandidateProvider,
-                stunCandidateProvider);
-        
-        final IceMediaStreamFactory mediaStreamFactory1 = 
-            new IceMediaStreamFactory()
-            {
-            public IceMediaStream newStream(final IceAgent iceAgent) 
-                throws IceTcpConnectException, IceUdpConnectException 
-                {
-                final DemuxableProtocolCodecFactory otherCodecFactory =
-                    new StunDemuxableProtocolCodecFactory();
-                final IoHandler clientIoHandler = new IoHandlerAdapter();
-                final TurnClientListener delegateListener = null;
-                final UpnpManager upnpManager = new UpnpManagerImpl();
-                final IoServiceListener udpServiceListener = 
-                    new IoServiceListenerStub();
-                return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener, upnpManager, udpServiceListener);
-                }
-            };
-        
-        final IceMediaStreamFactory mediaStreamFactory2 = 
-            new IceMediaStreamFactory()
-            {
-            public IceMediaStream newStream(final IceAgent iceAgent) 
-                throws IceTcpConnectException, IceUdpConnectException
-                {
-                final DemuxableProtocolCodecFactory otherCodecFactory =
-                    new StunDemuxableProtocolCodecFactory();
-                final IoHandler clientIoHandler = new IoHandlerAdapter();
-                final TurnClientListener delegateListener = null;
-                final UpnpManager upnpManager = new UpnpManagerImpl();
-                final IoServiceListener udpServiceListener = 
-                    new IoServiceListenerStub();
-                return generalStreamFactory.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener, upnpManager, udpServiceListener);
-                }
-            };
-        final IceMediaFactory iceMediaFactory = new IceMediaFactory()
-            {
-            public void newMedia(IceCandidatePair pair, boolean client, 
-                final OfferAnswerMediaListener mediaListener)
-                {
-                }
-            };
-        
-        final IceAgent offerer = new IceAgentImpl(
-            mediaStreamFactory1, true, iceMediaFactory);
-        final byte[] offer = offerer.generateOffer();
 
-        m_log.debug("Telling answerer to process offer: {}", new String(offer));
-        
-        
-        final IceAgent answerer = new IceAgentImpl(
-            mediaStreamFactory2, false, iceMediaFactory);
-        
-        Assert.assertFalse(answerer.isControlling());
-        
-        m_log.debug("About to generate answer...");
-        final byte[] answer = answerer.generateAnswer();
-        
-        m_log.debug("Generated answer: {}", new String(answer));
-        
         final AtomicBoolean answererCompleted = new AtomicBoolean(false);
         final AtomicBoolean offererCompleted = new AtomicBoolean(false);
         final OfferAnswerListener offererStateListener =
             new OfferAnswerListener()
             {
-            public void onOfferAnswerComplete(final MediaOfferAnswer offerAnswer)
+
+            public void onOfferAnswerFailed(final OfferAnswer mediaOfferAnswer)
+                {
+                synchronized (offererCompleted)
+                    {
+                    offererCompleted.notifyAll();
+                    }
+                }
+
+            public void onTcpSocket(Socket sock) 
                 {
                 synchronized (offererCompleted)
                     {
@@ -155,10 +72,11 @@ public class IceAgentImplTest
                     }
                 }
 
-            public void onOfferAnswerFailed(final MediaOfferAnswer mediaOfferAnswer)
+            public void onUdpSocket(Socket sock) 
                 {
                 synchronized (offererCompleted)
                     {
+                    offererCompleted.set(true);
                     offererCompleted.notifyAll();
                     }
                 }
@@ -166,29 +84,126 @@ public class IceAgentImplTest
         final OfferAnswerListener answererStateListener =
             new OfferAnswerListener()
             {
-            public void onOfferAnswerComplete(final MediaOfferAnswer offerAnswer)
+            public void onOfferAnswerFailed(final OfferAnswer mediaOfferAnswer)
+                {
+                synchronized (answererCompleted)
+                    {
+                    answererCompleted.notifyAll();
+                    }
+                }
+
+            public void onTcpSocket(Socket sock) 
+                {
+                synchronized (answererCompleted)
+                    {
+                    answererCompleted.set(true);
+                    answererCompleted.notifyAll();
+                    }                
+                }
+            public void onUdpSocket(Socket sock) 
                 {
                 synchronized (answererCompleted)
                     {
                     answererCompleted.set(true);
                     answererCompleted.notifyAll();
                     }
-                }
-            public void onOfferAnswerFailed(final MediaOfferAnswer mediaOfferAnswer)
-                {
-                synchronized (offererCompleted)
-                    {
-                    offererCompleted.notifyAll();
-                    }
                 } 
             };
+        
+        /*
+        final InetAddress publicAddress = InetAddress.getByName("77.77.77.77");
+        final NatPmpService natPmpService = new NatPmpServiceStub();
+        final UpnpService upnpService = new UpnpServiceStub();
+        
+        final MappedTcpAnswererServer answererServer =
+            new MappedTcpAnswererServer(natPmpService, upnpService);
+        
+        final TcpOfferAnswer tcp1 = 
+            new TcpOfferAnswer(publicAddress, offererStateListener, true,
+                natPmpService, upnpService, answererServer);
+
+        final TcpOfferAnswer tcp2 = 
+            new TcpOfferAnswer(publicAddress, answererStateListener, false,
+                natPmpService, upnpService, answererServer);
+        */
+        
+        final GeneralIceMediaStreamFactory generalStreamFactory1 =
+            new GeneralIceMediaStreamFactoryImpl(stunCandidateProvider);
+        final GeneralIceMediaStreamFactory generalStreamFactory2 =
+            new GeneralIceMediaStreamFactoryImpl(stunCandidateProvider);
+        
+        final IceMediaStreamFactory mediaStreamFactory1 = 
+            new IceMediaStreamFactory()
+            {
+
+            public IceMediaStream newStream(final IceAgent iceAgent) 
+                throws IceUdpConnectException
+                {
+                final DemuxableProtocolCodecFactory otherCodecFactory =
+                    new StunDemuxableProtocolCodecFactory();
+                final IoHandler clientIoHandler = new IoHandlerAdapter();
+                final TurnClientListener delegateListener = null;
+                final IoServiceListener udpServiceListener = 
+                    new IoServiceListenerStub();
+                return generalStreamFactory1.newIceMediaStream(desc, iceAgent, 
+                    otherCodecFactory, Void.class, clientIoHandler, 
+                    delegateListener, udpServiceListener);
+                }
+            };
+        
+        final IceMediaStreamFactory mediaStreamFactory2 = 
+            new IceMediaStreamFactory()
+            {
+
+            public IceMediaStream newStream(final IceAgent iceAgent) 
+                throws  IceUdpConnectException
+                {
+                final DemuxableProtocolCodecFactory otherCodecFactory =
+                    new StunDemuxableProtocolCodecFactory();
+                final IoHandler clientIoHandler = new IoHandlerAdapter();
+                final TurnClientListener delegateListener = null;
+                final IoServiceListener udpServiceListener = 
+                    new IoServiceListenerStub();
+                return generalStreamFactory2.newIceMediaStream(desc, iceAgent, 
+                    otherCodecFactory, Void.class, clientIoHandler, 
+                    delegateListener, udpServiceListener);
+                }
+            };
+        
+        final UdpSocketFactory udpSocketFactory = new UdpSocketFactory() 
+            {
+            
+            public void newSocket(final IoSession session, 
+                final boolean controlling, 
+                final OfferAnswerListener offerAnswerListener) 
+                {
+                offerAnswerListener.onUdpSocket(new Socket());
+                }
+            };
+            
+        final IceAgent offerer = new IceAgentImpl(mediaStreamFactory1, 
+            true, offererStateListener, udpSocketFactory);
+        final byte[] offer = offerer.generateOffer();
+
+        m_log.debug("Telling answerer to process offer: {}", new String(offer));
+        
+        final IceAgent answerer = new IceAgentImpl(mediaStreamFactory2, 
+            false, answererStateListener, udpSocketFactory);
+        
+        Assert.assertFalse(answerer.isControlling());
+        
+        m_log.debug("About to generate answer...");
+        final byte[] answer = answerer.generateAnswer();
+        
+        m_log.debug("Generated answer: {}", new String(answer));
+        
 
         final AtomicBoolean threadFailed = new AtomicBoolean(false);
         final Thread answerThread = new Thread(new Runnable()
             {
             public void run()
                 {
-                answerer.processOffer(ByteBuffer.wrap(offer), answererStateListener);
+                answerer.processOffer(ByteBuffer.wrap(offer));
                 }
             });
         
@@ -203,7 +218,7 @@ public class IceAgentImplTest
         // constantly in the "In Progress" state and keep resetting themselves.
         // This sleep should make that happen less often.
         Thread.sleep(200);
-        offerer.processAnswer(ByteBuffer.wrap(answer), offererStateListener);
+        offerer.processAnswer(ByteBuffer.wrap(answer));
         
         //final Socket sock = offerer.createSocket();
         
@@ -223,94 +238,5 @@ public class IceAgentImplTest
         
         Assert.assertTrue("Did not complete offer", offererCompleted.get());
         Assert.assertTrue("Did not complete answer", answererCompleted.get());
-        }
-
-    /*
-     NOTE: The address used in this test only worked on a specific network --
-     one where we could consistently generate ICMP errors.
-    public void testPortUnreachable() throws Exception
-        {
-        
-        final InetSocketAddress localAddress = 
-            new InetSocketAddress(NetworkUtils.getLocalHost(), 44252);
-        final InetSocketAddress remoteAddress =
-            new InetSocketAddress("141.157.201.230", 54911);
-        final IoSession session = 
-            createClientSession(localAddress, remoteAddress);
-        
-        assertTrue(session.isConnected());
-        
-        m_gotIcmpError.set(false);
-        session.write(new BindingRequest());
-        
-        synchronized (this.m_gotIcmpError)
-            {
-            this.m_gotIcmpError.wait(2000);
-            }
-        assertTrue("Did not get ICMP error", m_gotIcmpError.get());
-        }
-        */
-    
-    private IoSession createClientSession(final InetSocketAddress localAddress, 
-        final InetSocketAddress remoteAddress) 
-        {
-        final DatagramConnector connector = new DatagramConnector();
-        
-        final DatagramConnectorConfig cfg = connector.getDefaultConfig();
-        cfg.getSessionConfig().setReuseAddress(true);
-
-        final String controlling = "Whatever";
-        
-        cfg.setThreadModel(
-            ExecutorThreadModel.getInstance(
-                "IceUdpStunChecker-"+controlling));
-        final ProtocolCodecFactory codecFactory = 
-            new StunProtocolCodecFactory();
-        final ProtocolCodecFilter stunFilter = 
-            new ProtocolCodecFilter(codecFactory);
-        
-        connector.getFilterChain().addLast("stunFilter", stunFilter);
-        
-        final StunMessageVisitorFactory visitorFactory =
-            new StunMessageVisitorFactory<StunMessage>()
-            {
-
-            public StunMessageVisitor<StunMessage> createVisitor(
-                final IoSession session)
-                {
-                final StunMessageVisitor<StunMessage> visitor = 
-                    new StunMessageVisitorAdapter<StunMessage>()
-                    {
-
-                    public StunMessage visitConnectErrorMesssage(
-                        final ConnectErrorStunMessage message)
-                        {
-                        m_log.debug("Got ICMP error!!");
-                        m_gotIcmpError.set(true);
-                        synchronized (m_gotIcmpError)
-                            {
-                            m_gotIcmpError.notify();
-                            }
-                        return message;
-                        }
-                    };
-                return visitor;
-                }
-            };
-        final IoHandler ioHandler = 
-            new StunIoHandler<StunMessage>(visitorFactory);
-        m_log.debug("Connecting from "+localAddress+" to "+remoteAddress);
-        final ConnectFuture cf = 
-            connector.connect(remoteAddress, localAddress, ioHandler);
-        cf.join();
-        final IoSession session = cf.getSession();
-        
-        if (session == null)
-            {
-            m_log.error("Could not create session from "+
-                localAddress +" to "+remoteAddress);
-            throw new NullPointerException("Could not create session!!");
-            }
-        return session;
         }
     }

@@ -176,6 +176,7 @@ public class IceStunClientCandidateProcessor
             public IceCandidate visitBindingSuccessResponse(
                 final BindingSuccessResponse bsr)
                 {
+                m_log.info("Visiting binding success response...");
                 // Now check the mapped address and see if it matches
                 // any of the local candidates we know about.  If it 
                 // does not, it's a new peer reflexive candidate.

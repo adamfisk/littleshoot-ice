@@ -43,6 +43,11 @@
                            
         <dependency>
             <groupId>org.lastbamboo</groupId>
+            <artifactId>lastbamboo-common-portmapping</artifactId>
+            </dependency>
+  
+        <dependency>
+            <groupId>org.lastbamboo</groupId>
             <artifactId>lastbamboo-common-sdp</artifactId>
             </dependency>
   
@@ -69,6 +74,11 @@
         <dependency>
             <groupId>org.lastbamboo</groupId>
             <artifactId>lastbamboo-common-turn-client</artifactId>
+            </dependency>
+        
+        <dependency>
+            <groupId>org.lastbamboo</groupId>
+            <artifactId>lastbamboo-common-turn-http-server</artifactId>
             </dependency>
         
         <dependency>

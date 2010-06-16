@@ -6,9 +6,9 @@ import java.util.Collection;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
-import org.lastbamboo.common.ice.candidate.IceCandidateGathererImpl;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairFactoryImpl;
+import org.lastbamboo.common.ice.candidate.UdpIceCandidateGatherer;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
 import org.lastbamboo.common.ice.transport.IceUdpConnector;
 import org.lastbamboo.common.stun.client.StunClient;
@@ -18,12 +18,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
-import org.lastbamboo.common.tcp.frame.TcpFrameCodecFactory;
-import org.lastbamboo.common.turn.client.StunTcpFrameTurnClientListener;
-import org.lastbamboo.common.turn.client.TcpTurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
-import org.lastbamboo.common.turn.client.TurnStunDemuxableProtocolCodecFactory;
-import org.lastbamboo.common.upnp.UpnpManager;
 import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingIoHandler;
@@ -45,20 +40,16 @@ public class GeneralIceMediaStreamFactoryImpl
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final CandidateProvider<InetSocketAddress> m_stunServerCandidateProvider;
-    private final CandidateProvider<InetSocketAddress> m_turnCandidateProvider;
     
     /**
      * Creates a new ICE media stream factory with the specified candidate 
      * providers for connecting to TURN and STUN servers.
      * 
-     * @param turnCandidateProvider The TURN server address provider.
      * @param stunServerCandidateProvider The STUN server address provider.
      */
     public GeneralIceMediaStreamFactoryImpl(
-        final CandidateProvider<InetSocketAddress> turnCandidateProvider,
         final CandidateProvider<InetSocketAddress> stunServerCandidateProvider) 
         {
-        this.m_turnCandidateProvider = turnCandidateProvider;
         this.m_stunServerCandidateProvider = stunServerCandidateProvider;
         }
     
@@ -68,9 +59,8 @@ public class GeneralIceMediaStreamFactoryImpl
         final Class<T> protocolMessageClass, 
         final IoHandler udpProtocolIoHandler,
         final TurnClientListener delegateTurnClientListener,
-        final UpnpManager upnpManager, 
         final IoServiceListener udpServiceListener) 
-        throws IceTcpConnectException, IceUdpConnectException
+        throws IceUdpConnectException
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
             new StunDemuxableProtocolCodecFactory();
@@ -118,7 +108,7 @@ public class GeneralIceMediaStreamFactoryImpl
             }
         
         // This class just decodes the TCP frames.
-
+        /*
         final IceStunTcpPeer tcpStunPeer;
         if (streamDesc.isTcp())
             {
@@ -149,24 +139,31 @@ public class GeneralIceMediaStreamFactoryImpl
             {
             tcpStunPeer = null;
             }
+            */
         
         final IceCandidateGatherer gatherer =
-            new IceCandidateGathererImpl(tcpStunPeer, udpStunPeer, 
+            new UdpIceCandidateGatherer(udpStunPeer, 
                 iceAgent.isControlling(), streamDesc);
+            //new IceCandidateGathererImpl(tcpStunPeer, udpStunPeer, 
+            //    iceAgent.isControlling(), streamDesc);
         
         final IceMediaStreamImpl stream = new IceMediaStreamImpl(iceAgent, 
             streamDesc, gatherer);
         
+        /*
         if (tcpStunPeer != null)
             {
             tcpStunPeer.addIoServiceListener(stream);
             }
+        */
+        
         if (udpStunPeer != null)
             {
             udpStunPeer.addIoServiceListener(stream);
             }
         
         m_log.debug("Added media stream as listener...connecting...");
+        /*
         if (tcpStunPeer != null)
             {
             try
@@ -179,6 +176,7 @@ public class GeneralIceMediaStreamFactoryImpl
                 throw new IceTcpConnectException("Could not create TCP peer", e);
                 }
             }
+            */
         if (udpStunPeer != null)
             {
             try
@@ -191,17 +189,15 @@ public class GeneralIceMediaStreamFactoryImpl
                 // point is effectively a no-op -- the connection takes place
                 // immediately in the constructor.
                 m_log.warn("Error connecting UDP peer", e);
-                if (tcpStunPeer != null)
-                    {
-                    // We've got to make sure to close TCP too!!
-                    tcpStunPeer.close();
-                    }
+                // We've got to make sure to close TCP too!!
+                udpStunPeer.close();
                 throw new IceUdpConnectException("Could not create UDP peer", e);
                 }
             }
         
         final Collection<IceCandidate> localCandidates = 
             gatherer.gatherCandidates();
+        //localCandidates.addAll(this.m_tcpCandidates);
         
         final IceUdpConnector udpConnector = 
             new IceUdpConnector(demuxingCodecFactory,

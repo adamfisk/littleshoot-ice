@@ -1,6 +1,7 @@
 package org.lastbamboo.common.ice;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -8,18 +9,18 @@ import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.littleshoot.mina.common.ByteBuffer;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
-import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
+import org.littleshoot.mina.common.ByteBuffer;
+import org.littleshoot.mina.common.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of an ICE agent.  An agent can contain multiple media 
+ * Implementation of an ICE agent. An agent can contain multiple media 
  * streams and manages the top level of an ICE exchange. 
  */
 public class IceAgentImpl implements IceAgent
@@ -49,11 +50,11 @@ public class IceAgentImpl implements IceAgent
 
     private final IceMediaStream m_mediaStream;
 
-    private OfferAnswerListener m_offerAnswerListener;
-
-    private final IceMediaFactory m_iceMediaFactory;
+    private final OfferAnswerListener m_offerAnswerListener;
 
     private final AtomicBoolean m_closed = new AtomicBoolean(false);
+
+    private final UdpSocketFactory m_udpSocketFactory;
 
     /**
      * Creates a new ICE agent for an answerer.  Passes the offer in the 
@@ -63,19 +64,18 @@ public class IceAgentImpl implements IceAgent
      * using ICE to establish.
      * @param controlling Whether or not the agent will start out as 
      * controlling.
-     * @param iceMediaFactory The factory for creating media that needs to 
-     * know about ICE.
      * @throws IceUdpConnectException If there's an error connecting the ICE
      * UDP peer.
-     * @throws IceTcpConnectException If there's an error connecting the ICE
-     * TCP peer.
      */
     public IceAgentImpl(final IceMediaStreamFactory mediaStreamFactory, 
-        final boolean controlling, final IceMediaFactory iceMediaFactory) 
-        throws IceTcpConnectException, IceUdpConnectException 
+        final boolean controlling, 
+        final OfferAnswerListener offerAnswerListener,
+        final UdpSocketFactory udpSocketFactory) 
+        throws IceUdpConnectException 
         {
         this.m_controlling = controlling;
-        this.m_iceMediaFactory = iceMediaFactory;
+        this.m_offerAnswerListener = offerAnswerListener;
+        this.m_udpSocketFactory = udpSocketFactory;
         this.m_tieBreaker = new IceTieBreaker();
                 
         // TODO: We only currently support a single media stream!!
@@ -92,7 +92,10 @@ public class IceAgentImpl implements IceAgent
         this.m_iceState.set(state);
         if (state == IceState.COMPLETED) 
             {
-            this.m_offerAnswerListener.onOfferAnswerComplete(this);
+            final IceCandidatePair pair = getNominatedPair();
+            final IoSession session = pair.getIoSession();
+            m_udpSocketFactory.newSocket(session, isControlling(), 
+                this.m_offerAnswerListener);
             }
         else if (state == IceState.FAILED)
             {
@@ -101,7 +104,7 @@ public class IceAgentImpl implements IceAgent
             this.m_offerAnswerListener.onOfferAnswerFailed(this);
             }
         }
-    
+
     public void checkValidPairsForAllComponents(final IceMediaStream mediaStream)
         {
         // See ICE section 7.1.2.2.3.  This indicates the media stream has a
@@ -161,17 +164,18 @@ public class IceAgentImpl implements IceAgent
         return m_mediaStream.encodeCandidates();
         }
 
-    public void processOffer(final ByteBuffer offer, 
-        final OfferAnswerListener offerAnswerListener)
+    public void processOffer(final ByteBuffer offer)
         {
-        this.m_offerAnswerListener = offerAnswerListener;
         processRemoteCandidates(offer);
         }
 
-    public void processAnswer(final ByteBuffer answer, 
-        final OfferAnswerListener offerAnswerListener)
+    public void processAnswer(final ByteBuffer answer)
         {
-        this.m_offerAnswerListener = offerAnswerListener;
+        if (this.m_closed.get())
+            {
+            m_log.info("UDP ICE agent is already closed! Ignoring answer.");
+            return;
+            }
         processRemoteCandidates(answer);
         }
         
@@ -349,12 +353,14 @@ public class IceAgentImpl implements IceAgent
             }
         }
 
+    /*
     public void startMedia(final OfferAnswerMediaListener mediaListener)
         {
         final IceCandidatePair pair = getNominatedPair();
         this.m_iceMediaFactory.newMedia(pair, isControlling(), mediaListener);
         m_log.debug("Finished starting media...");
         }
+        */
 
     private IceCandidatePair getNominatedPair()
         {
@@ -398,5 +404,30 @@ public class IceAgentImpl implements IceAgent
             m_log.debug("Setting ice state to failed -- no more pairs.");
             setIceState(IceState.FAILED);
             }
+        }
+
+    public void closeTcp()
+        {
+        // Ignored.
+        }
+
+    public void closeUdp()
+        {
+        close();
+        }
+
+    public Collection<? extends IceCandidate> gatherCandidates() 
+        {
+        return this.m_mediaStream.getLocalCandidates();
+        }
+
+    public InetAddress getPublicAdress() 
+        {
+        return this.m_mediaStream.getPublicAddress();
+        }
+
+    public void useRelay() 
+        {
+        // We don't use UDP relays.
         }
     }

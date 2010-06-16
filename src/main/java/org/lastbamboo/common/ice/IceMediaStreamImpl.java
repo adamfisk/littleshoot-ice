@@ -1,7 +1,9 @@
 package org.lastbamboo.common.ice;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -93,7 +95,7 @@ public class IceMediaStreamImpl implements IceMediaStream
         final IceCandidateSdpEncoder encoder = 
             new IceCandidateSdpEncoder(m_desc.getMimeContentType(), 
                 m_desc.getMimeContentSubtype());
-        encoder.visitCandidates(m_localCandidates);
+        encoder.visitCandidates(getLocalCandidates());
         return encoder.getSdp();
         }
     
@@ -149,7 +151,7 @@ public class IceMediaStreamImpl implements IceMediaStream
             synchronized (this)
                 {
                 m_log.warn("Could not find local candidate "+localAddress+
-                    " in: "+ this.m_localCandidates+".  Aborting.");
+                    " in: "+ this.getLocalCandidates()+".  Aborting.");
                 }
             return null;
             }
@@ -272,16 +274,16 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void addLocalCandidate(final IceCandidate localCandidate)
         {
-        synchronized (this.m_localCandidates)
+        synchronized (this.getLocalCandidates())
             {
-            this.m_localCandidates.add(localCandidate);
+            this.getLocalCandidates().add(localCandidate);
             }
         }
 
     public IceCandidate getLocalCandidate(final InetSocketAddress localAddress,
         final boolean isUdp)
         {
-        return getCandidate(this.m_localCandidates, localAddress, isUdp);
+        return getCandidate(this.getLocalCandidates(), localAddress, isUdp);
         }
 
     public IceCandidate getRemoteCandidate(
@@ -608,6 +610,19 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         this.m_checkList.close();
         this.m_gatherer.close();
+        }
+    
+    public Collection<IceCandidate> getLocalCandidates() 
+        {
+        synchronized (this.m_localCandidates)
+            {
+            return new ArrayList<IceCandidate>(this.m_localCandidates);
+            }
+        }
+    
+    public InetAddress getPublicAddress() 
+        {
+        return this.m_gatherer.getPublicAddress();
         }
     
     @Override

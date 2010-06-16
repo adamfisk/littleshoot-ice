@@ -29,7 +29,7 @@ public class IceCandidateGathererImplTest extends TestCase
         final StunClient turnClient = new HostAndServerReflexiveSame();
         final StunClient udpStunClient = new HostAndServerReflexiveSame();
         final IceMediaStreamDesc desc = 
-            new IceMediaStreamDesc(true, true, "message", "http", 1);
+            new IceMediaStreamDesc(true, true, "message", "http", 1, true);
         
         final IceCandidateGatherer gatherer = 
             new IceCandidateGathererImpl(turnClient, udpStunClient, true, desc);

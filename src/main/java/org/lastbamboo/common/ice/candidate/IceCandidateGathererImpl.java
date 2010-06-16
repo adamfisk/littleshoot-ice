@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.lastbamboo.common.ice.IceMediaStreamDesc;
 import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.stack.StunAddressProvider;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
 
-    private final StunClient m_iceTcpStunPeer;
+    private final StunAddressProvider m_iceTcpStunPeer;
 
     private final StunClient m_iceUdpStunPeer;
     
@@ -45,7 +46,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
      * start of processing.
      * @param desc The description of the media stream to create.
      */
-    public IceCandidateGathererImpl(final StunClient tcpTurnClient, 
+    public IceCandidateGathererImpl(final StunAddressProvider tcpTurnClient, 
         final StunClient udpStunClient, final boolean controlling, 
         final IceMediaStreamDesc desc)
         {
@@ -162,7 +163,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         }
 
     private Collection<IceCandidate> createTcpCandidates(
-        final StunClient client)
+        final StunAddressProvider client)
         {
         final Collection<IceCandidate> candidates = 
             new LinkedList<IceCandidate>();
@@ -222,7 +223,7 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
         return candidates;
         }
 
-    private void addTcpTurnCandidate(final StunClient client,
+    private void addTcpTurnCandidate(final StunAddressProvider client,
         final Collection<IceCandidate> candidates)
         {
         final InetSocketAddress relayAddress = client.getRelayAddress();
@@ -262,5 +263,10 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer
             {
             this.m_iceUdpStunPeer.close();
             }
+        }
+
+    public InetAddress getPublicAddress()
+        {
+        return this.m_udpServerReflexiveAddress.getAddress();
         }
     }

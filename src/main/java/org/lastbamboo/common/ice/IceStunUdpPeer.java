@@ -139,6 +139,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
 
     public InetSocketAddress getServerReflexiveAddress()
         {
+        m_log.info("Getting server reflexive address");
         // We return the cached server reflexive address because we need to
         // get it before the "server side" UDP handler binds to the same 
         // port, as it can "steal" incoming packets on Windows.

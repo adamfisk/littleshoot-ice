@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Queue;
@@ -224,5 +225,14 @@ public interface IceMediaStream extends IoServiceListener
      * Perform any necessary close operations for the media stream.
      */
     void close();
+    
+    /**
+     * Accessor for the local candidates for this stream.
+     * 
+     * @return The local candidates for this stream.
+     */
+    Collection<IceCandidate> getLocalCandidates();
+
+    InetAddress getPublicAddress(); 
 
     }

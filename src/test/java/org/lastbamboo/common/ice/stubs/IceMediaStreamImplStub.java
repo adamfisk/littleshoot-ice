@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice.stubs;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
@@ -194,5 +195,15 @@ public class IceMediaStreamImplStub implements IceMediaStream
         // TODO Auto-generated method stub
         return null;
         }
+
+    public Collection<IceCandidate> getLocalCandidates() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public InetAddress getPublicAddress() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     }
