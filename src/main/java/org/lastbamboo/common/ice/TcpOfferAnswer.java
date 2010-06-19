@@ -104,6 +104,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
 
     public void close() 
         {
+        m_log.info("Closing!!");
         final Socket sock = m_socketRef.get();
         if (sock != null)
             {
