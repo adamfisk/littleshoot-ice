@@ -361,6 +361,11 @@ public class IceStunClientCandidateProcessor
         final long bindingRequestPriority)
         {
         m_log.debug("Processing success...");
+        if (this.m_iceAgent.isClosed())
+            {
+            m_log.info("Agent already closed...ignoring success.");
+            return;
+            }
         final InetSocketAddress remoteAddress = 
             remoteCandidate.getSocketAddress();
         

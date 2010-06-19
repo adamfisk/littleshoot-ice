@@ -63,6 +63,7 @@ public class IceMediaStreamImpl implements IceMediaStream
         new LinkedList<IceCandidate>();
     private final IceCandidateGatherer m_gatherer;
     private IceCheckScheduler m_checkScheduler;
+    private boolean m_closed;
     
     /**
      * Creates a new ICE media stream.
@@ -581,6 +582,12 @@ public class IceMediaStreamImpl implements IceMediaStream
     public void sessionCreated(final IoSession session)
         {
         m_log.debug("Setting media stream on session");
+        if (m_closed)
+            {
+            m_log.info("Already closed. Closing session.");
+            session.close();
+            return;
+            }
         session.setAttribute(IceMediaStream.class.getSimpleName(), this);
         
         final InetSocketAddress localAddress = 
@@ -608,6 +615,7 @@ public class IceMediaStreamImpl implements IceMediaStream
 
     public void close()
         {
+        this.m_closed = true;
         this.m_checkList.close();
         this.m_gatherer.close();
         }

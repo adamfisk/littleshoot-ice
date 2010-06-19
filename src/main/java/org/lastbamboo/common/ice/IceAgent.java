@@ -115,4 +115,11 @@ public interface IceAgent extends IceOfferAnswer
      */
     void onNoMorePairs();
 
+    /**
+     * Whether or not the check list is closed.
+     * 
+     * @return Whether or not the check list is closed.
+     */
+    boolean isClosed();
+
     }

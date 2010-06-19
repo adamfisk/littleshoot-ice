@@ -226,6 +226,11 @@ public class IceAgentImpl implements IceAgent
                 "Controlling: {} pair: {}", isControlling(), pair); 
             }
 
+        if (this.m_closed.get())
+            {
+            m_log.info("Agent closed. Ignoring nomination.");
+            return;
+            }
         // We now need to set the state of the check list as specified in
         // 8.1.2. Updating States
         final IceCheckListState state = mediaStream.getCheckListState();
@@ -319,6 +324,12 @@ public class IceAgentImpl implements IceAgent
         // In this case, we have few enough candidates that we can nominate
         // pairs once we've completed checks for all high priority pairs.
         m_log.debug("Processing valid pair...");
+        
+        if (this.m_closed.get())
+            {
+            m_log.info("Already closed...ingoring");
+            return;
+            }
         
         if (!isControlling())
             {
@@ -429,5 +440,10 @@ public class IceAgentImpl implements IceAgent
     public void useRelay() 
         {
         // We don't use UDP relays.
+        }
+
+    public boolean isClosed() 
+        {
+        return this.m_closed.get();
         }
     }
