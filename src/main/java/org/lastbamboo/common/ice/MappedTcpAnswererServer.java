@@ -68,6 +68,7 @@ public class MappedTcpAnswererServer implements PortMapListener
                     try
                         {
                         final Socket sock = m_serverSocket.accept();
+                        sock.setSoTimeout(40 * 60 * 1000);
                         m_log.info("ACCEPTED INCOMING SOCKET!!");
                         relayingSocketHandler.onSocket(sock);
                         }
