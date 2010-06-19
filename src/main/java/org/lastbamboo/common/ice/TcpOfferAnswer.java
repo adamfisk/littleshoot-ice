@@ -239,7 +239,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         try
             {
             // Note the second argument doesn't matter at all.
-            remoteCandidates = decoder.decode(encodedCandidates, false);
+            remoteCandidates = decoder.decode(encodedCandidates, m_controlling);
             }
         catch (final IOException e)
             {
@@ -288,12 +288,13 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     m_log.info("Connecting to: {}", candidate);
                     sock = new Socket();
                     sock.connect(candidate.getSocketAddress(), 16*1000);
-                    m_log.info("Connected to: {}", candidate);
+                    m_log.info("Client socket connected to: {}", candidate);
                     onSocket(sock);
                     // Close this at the end in case it throws an exception.
                     }
                 catch (final IOException e)
                     {
+                    m_log.info("IO Exception connecting", e);
                     }
                 
                 // If we've successfully created an outgoing socket, we need
@@ -314,7 +315,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 }
             };
         final Thread connectorThread = 
-            new Thread(threadRunner, "ICE-TCP-Connect-"+candidate);
+            new Thread(threadRunner, "ICE-TCP-Connect-For-Candidate-"+candidate);
         connectorThread.setDaemon(true);
         connectorThread.start();
         return null;
