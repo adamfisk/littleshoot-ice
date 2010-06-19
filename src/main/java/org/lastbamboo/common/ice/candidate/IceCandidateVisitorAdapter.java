@@ -47,7 +47,7 @@ public abstract class IceCandidateVisitorAdapter<T>
 
     public T visitTcpActiveCandidate(final IceTcpActiveCandidate candidate)
         {
-        m_log.warn("Visiting unhandled candidate: {}", candidate);
+        m_log.info("Visiting unhandled candidate: {}", candidate);
         return null;
         }
 
@@ -56,7 +56,7 @@ public abstract class IceCandidateVisitorAdapter<T>
         {
         if (this.m_warn)
             {
-            m_log.warn("Visiting unhandled candidate: {}", candidate);
+            m_log.info("Visiting unhandled candidate: {}", candidate);
             }
         else
             {
@@ -70,7 +70,7 @@ public abstract class IceCandidateVisitorAdapter<T>
         {
         if (this.m_warn)
             {
-            m_log.warn("Visiting unhandled candidate: {}", candidate);
+            m_log.info("Visiting unhandled candidate: {}", candidate);
             }
         else
             {
@@ -84,7 +84,7 @@ public abstract class IceCandidateVisitorAdapter<T>
         {
         if (this.m_warn)
             {
-            m_log.warn("Visiting unhandled candidate: {}", candidate);
+            m_log.info("Visiting unhandled candidate: {}", candidate);
             }
         else
             {
@@ -98,7 +98,7 @@ public abstract class IceCandidateVisitorAdapter<T>
         {
         if (this.m_warn)
             {
-            m_log.warn("Visiting unhandled candidate: {}", candidate);
+            m_log.info("Visiting unhandled candidate: {}", candidate);
             }
         else
             {
@@ -111,7 +111,7 @@ public abstract class IceCandidateVisitorAdapter<T>
         {
         if (this.m_warn)
             {
-            m_log.warn("Visiting unhandled candidate: {}", candidate);
+            m_log.info("Visiting unhandled candidate: {}", candidate);
             }
         else
             {
@@ -125,7 +125,7 @@ public abstract class IceCandidateVisitorAdapter<T>
         {
         if (this.m_warn)
             {
-            m_log.warn("Visiting unhandled candidate: {}", candidate);
+            m_log.info("Visiting unhandled candidate: {}", candidate);
             }
         else
             {
@@ -138,7 +138,7 @@ public abstract class IceCandidateVisitorAdapter<T>
         {
         if (this.m_warn)
             {
-            m_log.warn("Visiting unhandled candidate: {}", candidate);
+            m_log.info("Visiting unhandled candidate: {}", candidate);
             }
         else
             {
@@ -152,7 +152,7 @@ public abstract class IceCandidateVisitorAdapter<T>
         {
         if (this.m_warn)
             {
-            m_log.warn("Visiting unhandled candidate: {}", candidate);
+            m_log.info("Visiting unhandled candidate: {}", candidate);
             }
         else
             {
