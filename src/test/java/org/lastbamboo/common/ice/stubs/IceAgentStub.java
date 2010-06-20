@@ -197,4 +197,9 @@ public class IceAgentStub implements IceAgent
         
     }
 
+    public boolean isClosed() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
     }
