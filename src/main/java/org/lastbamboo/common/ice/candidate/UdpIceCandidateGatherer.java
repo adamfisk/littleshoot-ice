@@ -118,7 +118,7 @@ public class UdpIceCandidateGatherer implements IceCandidateGatherer
         
         final IceUdpHostCandidate hostCandidate = 
             new IceUdpHostCandidate(hostAddress, this.m_controlling);
-        //candidates.add(hostCandidate);
+        candidates.add(hostCandidate);
 
         try
             {
