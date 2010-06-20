@@ -30,8 +30,6 @@ public class UdpIceCandidateGatherer implements IceCandidateGatherer
 
     private InetSocketAddress m_udpServerReflexiveAddress;
 
-    //private final Collection<IceCandidate> m_tcpCandidates;
-
     /**
      * Creates a new class for gathering ICE candidates.
      * 
@@ -120,7 +118,7 @@ public class UdpIceCandidateGatherer implements IceCandidateGatherer
         
         final IceUdpHostCandidate hostCandidate = 
             new IceUdpHostCandidate(hostAddress, this.m_controlling);
-        candidates.add(hostCandidate);
+        //candidates.add(hostCandidate);
 
         try
             {
