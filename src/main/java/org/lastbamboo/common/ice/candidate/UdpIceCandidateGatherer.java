@@ -39,9 +39,8 @@ public class UdpIceCandidateGatherer implements IceCandidateGatherer
      * start of processing.
      * @param desc The description of the media stream to create.
      */
-    public UdpIceCandidateGatherer(
-        final StunClient udpStunClient, final boolean controlling, 
-        final IceMediaStreamDesc desc)
+    public UdpIceCandidateGatherer(final StunClient udpStunClient, 
+        final boolean controlling, final IceMediaStreamDesc desc)
         {
         if (desc.isUdp() && udpStunClient == null)
             {
@@ -108,13 +107,11 @@ public class UdpIceCandidateGatherer implements IceCandidateGatherer
         final Collection<IceCandidate> candidates =
             new LinkedList<IceCandidate>();
 
-        final InetAddress stunServerAddress = 
-            client.getStunServerAddress();
+        final InetAddress stunServerAddress = client.getStunServerAddress();
         
-        // Add the host candidate.  Note the host candidate is also used as
+        // Add the host candidate. Note the host candidate is also used as
         // the BASE candidate for the server reflexive candidate below.
-        final InetSocketAddress hostAddress = 
-            client.getHostAddress();
+        final InetSocketAddress hostAddress = client.getHostAddress();
         
         final IceUdpHostCandidate hostCandidate = 
             new IceUdpHostCandidate(hostAddress, this.m_controlling);
