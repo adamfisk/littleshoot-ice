@@ -182,6 +182,11 @@ public class IceAgentImpl implements IceAgent
     private void processRemoteCandidates(final ByteBuffer encodedCandidates) 
         {
         // TODO: We should process all possible media streams.
+        if (this.m_closed.get())
+            {
+            m_log.info("Already closed -- not processing remote candidates");
+            return;
+            }
         
         // Note we set the controlling status of remote candidates to 
         // whatever we are not!!

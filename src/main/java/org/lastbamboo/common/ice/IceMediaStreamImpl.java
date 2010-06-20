@@ -121,8 +121,13 @@ public class IceMediaStreamImpl implements IceMediaStream
         
         processPairGroups();
         
+        if (this.m_closed)
+            {
+            m_log.info("Already closed - not scheduling checks!!");
+            return;
+            }
+        
         this.m_checkScheduler.scheduleChecks();
-
         m_checkList.check();
         }
     
