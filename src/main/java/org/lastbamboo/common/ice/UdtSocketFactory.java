@@ -105,15 +105,19 @@ public class UdtSocketFactory implements UdpSocketFactory
         m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
         dgChannel.disconnect();
         dgChannel.close();
+        /*
         int tries = 0;
         while (dgSock.isBound() && tries < 30)
             {
+            m_log.info("Sleeping");
             Thread.sleep(400);
             tries++;
             }
         
         m_log.info("Socket closed? "+dgSock.isClosed());
         m_log.info("Socket bound? "+dgSock.isBound());
+        */
+        Thread.sleep(6 * 1000);
         
         m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
@@ -141,6 +145,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
         dgChannel.disconnect();
         dgChannel.close();
+        /*
         int tries = 0;
         while (dgSock.isBound() && tries < 30)
             {
@@ -150,6 +155,9 @@ public class UdtSocketFactory implements UdpSocketFactory
 
         m_log.info("Socket closed? "+dgSock.isClosed());
         m_log.info("Socket bound? "+dgSock.isBound());
+        */
+        
+        Thread.sleep(6 * 1000);
         //final UDTServerSocket server = 
         //    new UDTServerSocket(local.getAddress(), local.getPort());
         
