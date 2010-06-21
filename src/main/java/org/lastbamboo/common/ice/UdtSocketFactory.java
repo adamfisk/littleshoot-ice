@@ -95,6 +95,7 @@ public class UdtSocketFactory implements UdpSocketFactory
             (InetSocketAddress) session.getRemoteAddress();
         
         session.close();
+        Thread.sleep(400);
         
         final UDTClient client = 
             new UDTClient(local.getAddress(),local.getPort());
@@ -111,7 +112,8 @@ public class UdtSocketFactory implements UdpSocketFactory
             (InetSocketAddress) session.getLocalAddress();
 
         session.close();
-        
+        Thread.sleep(400);
+
         final UDTServerSocket server = 
             new UDTServerSocket(local.getAddress(), local.getPort());
         final UDTSocket sock = server.accept();
