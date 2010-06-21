@@ -126,7 +126,8 @@ public class UdtSocketFactory implements UdpSocketFactory
         
         //final UDTClient client = new UDTClient(new UDPEndPoint(dgSock));
         //final UDTClient client = new UDTClient(local.getAddress(), local.getPort());
-        final UDTClient client = new UDTClient(new UDPEndPoint(dgChannel.socket()));
+        //final UDTClient client = new UDTClient(new UDPEndPoint(dgChannel.socket()));
+        final UDTClient client = new UDTClient(new UDPEndPoint(local.getPort()));
         
         client.connect(remote.getAddress(), remote.getPort());
         final Socket sock = client.getSocket();
@@ -163,13 +164,14 @@ public class UdtSocketFactory implements UdpSocketFactory
         */
         
         Thread.sleep(6 * 1000);
-        //final UDTServerSocket server = 
-        //    new UDTServerSocket(local.getAddress(), local.getPort());
+
         
         m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
         final UDTServerSocket server = 
-            new UDTServerSocket(new UDPEndPoint(dgChannel.socket()));
+            new UDTServerSocket(local.getAddress(), local.getPort());
+        //final UDTServerSocket server = 
+        //    new UDTServerSocket(new UDPEndPoint(dgChannel.socket()));
         
         final UDTSocket sock = server.accept();
         socketListener.onUdpSocket(sock);
