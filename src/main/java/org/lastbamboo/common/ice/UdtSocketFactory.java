@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.channels.DatagramChannel;
 
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
@@ -98,29 +96,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         final InetSocketAddress remote = 
             (InetSocketAddress) session.getRemoteAddress();
 
-        
-        final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
-        final DatagramChannel dgChannel = dgSession.getChannel();
-        //dgChannel.configureBlocking(true);
-        final DatagramSocket dgSock = dgChannel.socket();
-        m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
-        session.close().join(10 * 1000);
-        dgChannel.disconnect();
-        dgChannel.close();
-        
-        /*
-        int tries = 0;
-        while (dgSock.isBound() && tries < 30)
-            {
-            m_log.info("Sleeping");
-            Thread.sleep(400);
-            tries++;
-            }
-        
-        m_log.info("Socket closed? "+dgSock.isClosed());
-        m_log.info("Socket bound? "+dgSock.isBound());
-        */
-        //Thread.sleep(6 * 1000);
+        clear(session);
         
         m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
@@ -142,30 +118,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
 
-        //session.close();
-        final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
-        final DatagramChannel dgChannel = dgSession.getChannel();
-        
-        final DatagramSocket dgSock = dgChannel.socket();
-        m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
-        session.close().join(10 * 1000);
-        dgChannel.disconnect();
-        dgChannel.close();
-
-        /*
-        int tries = 0;
-        while (dgSock.isBound() && tries < 30)
-            {
-            Thread.sleep(400);
-            tries++;
-            }
-
-        m_log.info("Socket closed? "+dgSock.isClosed());
-        m_log.info("Socket bound? "+dgSock.isBound());
-        */
-        
-        //Thread.sleep(6 * 1000);
-
+        clear(session);
         
         m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
@@ -176,5 +129,27 @@ public class UdtSocketFactory implements UdpSocketFactory
         
         final UDTSocket sock = server.accept();
         socketListener.onUdpSocket(sock);
+        }
+    
+    private void clear(final IoSession session) 
+        {
+        m_log.info("Clearing session!!");
+        final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
+        final DatagramChannel dgChannel = dgSession.getChannel();
+        final DatagramSocket dgSock = dgChannel.socket();
+        m_log.info("Closing socket on local address: {}", 
+            dgSock.getLocalSocketAddress());
+        session.close().join(10 * 1000);
+        
+        try
+            {
+            session.getService().getFilterChain().clear();
+            dgChannel.disconnect();
+            dgChannel.close();
+            }
+        catch (final Exception e)
+            {
+            m_log.error("Error clearing session!!", e);
+            }
         }
     }
