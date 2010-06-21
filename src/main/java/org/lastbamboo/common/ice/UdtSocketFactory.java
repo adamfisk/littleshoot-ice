@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.channels.DatagramChannel;
 
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.littleshoot.mina.common.IoSession;
@@ -99,10 +100,11 @@ public class UdtSocketFactory implements UdpSocketFactory
 
         
         final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
-        final DatagramSocket dgSock = dgSession.getSocket();
+        final DatagramChannel dgChannel = dgSession.getChannel();
+        final DatagramSocket dgSock = dgChannel.socket();
         m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
-        //session.close();
-        dgSock.close();
+        dgChannel.disconnect();
+        dgChannel.close();
         Thread.sleep(4000);
         
         m_log.info("Binding to port: {}", local.getPort());
@@ -119,17 +121,19 @@ public class UdtSocketFactory implements UdpSocketFactory
         }
 
     protected void openServerSocket(final IoSession session,
-        final OfferAnswerListener socketListener) throws SocketException, 
-        UnknownHostException, InterruptedException 
+        final OfferAnswerListener socketListener) 
+        throws InterruptedException, IOException 
         {
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
 
         //session.close();
         final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
-        final DatagramSocket dgSock = dgSession.getSocket();
+        final DatagramChannel dgChannel = dgSession.getChannel();
+        final DatagramSocket dgSock = dgChannel.socket();
         m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
-        dgSock.close();
+        dgChannel.disconnect();
+        dgChannel.close();
         Thread.sleep(4000);
 
         //final UDTServerSocket server = 
