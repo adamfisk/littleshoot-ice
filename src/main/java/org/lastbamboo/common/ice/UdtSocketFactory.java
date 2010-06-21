@@ -104,6 +104,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         //dgChannel.configureBlocking(true);
         final DatagramSocket dgSock = dgChannel.socket();
         m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
+        session.close();
         dgChannel.disconnect();
         dgChannel.close();
         
@@ -144,10 +145,10 @@ public class UdtSocketFactory implements UdpSocketFactory
         //session.close();
         final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
         final DatagramChannel dgChannel = dgSession.getChannel();
-        //dgChannel.configureBlocking(true);
         
         final DatagramSocket dgSock = dgChannel.socket();
         m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
+        session.close();
         dgChannel.disconnect();
         dgChannel.close();
 
