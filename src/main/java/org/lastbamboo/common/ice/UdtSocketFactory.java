@@ -146,6 +146,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         try
             {
             final IoService service = session.getService();
+            m_log.info("Service is: {}", service);
             if (IoAcceptor.class.isAssignableFrom(service.getClass()))
                 {
                 m_log.info("Unbinding all!!");
