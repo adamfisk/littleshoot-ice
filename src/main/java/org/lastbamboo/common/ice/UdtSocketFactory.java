@@ -105,11 +105,18 @@ public class UdtSocketFactory implements UdpSocketFactory
         m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
         dgChannel.disconnect();
         dgChannel.close();
-        Thread.sleep(4000);
+        int tries = 0;
+        while (dgSock.isBound() && tries < 30)
+            {
+            Thread.sleep(400);
+            tries++;
+            }
         
+        m_log.info("Socket closed? "+dgSock.isClosed());
+        m_log.info("Socket bound? "+dgSock.isBound());
+        
+        m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
-        //final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
-        //final DatagramSocket dgSock = dgSession.getSocket();
         
         //final UDTClient client = new UDTClient(new UDPEndPoint(dgSock));
         //final UDTClient client = new UDTClient(local.getAddress(), local.getPort());
@@ -134,11 +141,19 @@ public class UdtSocketFactory implements UdpSocketFactory
         m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
         dgChannel.disconnect();
         dgChannel.close();
-        Thread.sleep(4000);
+        int tries = 0;
+        while (dgSock.isBound() && tries < 30)
+            {
+            Thread.sleep(400);
+            tries++;
+            }
 
+        m_log.info("Socket closed? "+dgSock.isClosed());
+        m_log.info("Socket bound? "+dgSock.isBound());
         //final UDTServerSocket server = 
         //    new UDTServerSocket(local.getAddress(), local.getPort());
         
+        m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
         final UDTServerSocket server = 
             new UDTServerSocket(new UDPEndPoint(local.getPort()));
