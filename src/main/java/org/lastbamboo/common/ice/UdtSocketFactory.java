@@ -97,11 +97,13 @@ public class UdtSocketFactory implements UdpSocketFactory
         final InetSocketAddress remote = 
             (InetSocketAddress) session.getRemoteAddress();
 
-        session.close();
+        
         final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
         final DatagramSocket dgSock = dgSession.getSocket();
+        m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
+        //session.close();
         dgSock.close();
-        Thread.sleep(2000);
+        Thread.sleep(4000);
         
         //final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
         //final DatagramSocket dgSock = dgSession.getSocket();
@@ -122,11 +124,12 @@ public class UdtSocketFactory implements UdpSocketFactory
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
 
-        session.close();
+        //session.close();
         final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
         final DatagramSocket dgSock = dgSession.getSocket();
+        m_log.info("Closing socket on local address: {}", dgSock.getLocalSocketAddress());
         dgSock.close();
-        Thread.sleep(2000);
+        Thread.sleep(4000);
 
         //final UDTServerSocket server = 
         //    new UDTServerSocket(local.getAddress(), local.getPort());
