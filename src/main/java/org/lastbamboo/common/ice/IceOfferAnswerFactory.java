@@ -134,7 +134,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
                 {
                 if (m_streamDesc.isTcp() && tcp != null)
                     {
-                    tcp.processAnswer(answer);
+                    //tcp.processAnswer(answer);
                     }
                 if (m_streamDesc.isUdp() && udp != null)
                     {
@@ -142,7 +142,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
                     }
                 if (m_streamDesc.isUseRelay() && turnOfferAnswer != null)
                     {
-                    turnOfferAnswer.processAnswer(answer);
+                    //turnOfferAnswer.processAnswer(answer);
                     }
                 }
 
@@ -150,7 +150,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
                 {
                 if (m_streamDesc.isTcp() && tcp != null)
                     {
-                    tcp.processOffer(offer);
+                    //tcp.processOffer(offer);
                     }
                 if (m_streamDesc.isUdp() && udp != null)
                     {
@@ -158,7 +158,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
                     }
                 if (m_streamDesc.isUseRelay() && turnOfferAnswer != null)
                     {
-                    turnOfferAnswer.processOffer(offer);
+                    //turnOfferAnswer.processOffer(offer);
                     }
                 }
 
@@ -231,7 +231,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
             new HashSet<IceCandidate>();
         if (tcp != null)
             {
-            localCandidates.addAll(tcp.gatherCandidates());
+            //localCandidates.addAll(tcp.gatherCandidates());
             }
         if (udp != null)
             {
@@ -239,7 +239,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
             }
         if (!controlling && m_streamDesc.isUseRelay() && tcpTurn != null)
             {
-            localCandidates.addAll(tcpTurn.gatherCandidates());
+            //localCandidates.addAll(tcpTurn.gatherCandidates());
             }
         encoder.visitCandidates(localCandidates);
         return encoder.getSdp();

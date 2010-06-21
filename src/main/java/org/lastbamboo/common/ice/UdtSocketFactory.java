@@ -13,7 +13,6 @@ import org.littleshoot.mina.transport.socket.nio.support.DatagramSessionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import udt.UDPEndPoint;
 import udt.UDTClient;
 import udt.UDTReceiver;
 import udt.UDTServerSocket;
@@ -96,10 +95,18 @@ public class UdtSocketFactory implements UdpSocketFactory
             (InetSocketAddress) session.getLocalAddress();
         final InetSocketAddress remote = 
             (InetSocketAddress) session.getRemoteAddress();
-        
+
+        session.close();
         final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
         final DatagramSocket dgSock = dgSession.getSocket();
-        final UDTClient client = new UDTClient(new UDPEndPoint(dgSock));
+        dgSock.close();
+        Thread.sleep(2000);
+        
+        //final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
+        //final DatagramSocket dgSock = dgSession.getSocket();
+        
+        //final UDTClient client = new UDTClient(new UDPEndPoint(dgSock));
+        final UDTClient client = new UDTClient(local.getAddress(), local.getPort());
         
         client.connect(remote.getAddress(), remote.getPort());
         final Socket sock = client.getSocket();
@@ -113,13 +120,14 @@ public class UdtSocketFactory implements UdpSocketFactory
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
 
-        //session.close();
-        //Thread.sleep(400);
-
+        session.close();
         final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
         final DatagramSocket dgSock = dgSession.getSocket();
+        dgSock.close();
+        Thread.sleep(2000);
+
         final UDTServerSocket server = 
-            new UDTServerSocket(new UDPEndPoint(dgSock));
+            new UDTServerSocket(local.getAddress(), local.getPort());
         
         final UDTSocket sock = server.accept();
         socketListener.onUdpSocket(sock);
