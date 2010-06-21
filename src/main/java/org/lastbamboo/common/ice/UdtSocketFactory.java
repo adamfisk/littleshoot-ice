@@ -105,6 +105,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         dgSock.close();
         Thread.sleep(4000);
         
+        m_log.info("Binding to port: {}", local.getPort());
         //final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
         //final DatagramSocket dgSock = dgSession.getSocket();
         
@@ -134,6 +135,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         //final UDTServerSocket server = 
         //    new UDTServerSocket(local.getAddress(), local.getPort());
         
+        m_log.info("Binding to port: {}", local.getPort());
         final UDTServerSocket server = 
             new UDTServerSocket(new UDPEndPoint(local.getPort()));
         
