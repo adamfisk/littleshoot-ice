@@ -120,7 +120,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         m_log.info("Socket closed? "+dgSock.isClosed());
         m_log.info("Socket bound? "+dgSock.isBound());
         */
-        Thread.sleep(6 * 1000);
+        //Thread.sleep(6 * 1000);
         
         m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
@@ -164,7 +164,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         m_log.info("Socket bound? "+dgSock.isBound());
         */
         
-        Thread.sleep(6 * 1000);
+        //Thread.sleep(6 * 1000);
 
         
         m_log.info("Session local was: {}", local);
