@@ -1,6 +1,7 @@
 package org.lastbamboo.common.ice;
 
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -8,9 +9,11 @@ import java.net.UnknownHostException;
 
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.littleshoot.mina.common.IoSession;
+import org.littleshoot.mina.transport.socket.nio.support.DatagramSessionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import udt.UDPEndPoint;
 import udt.UDTClient;
 import udt.UDTReceiver;
 import udt.UDTServerSocket;
@@ -94,11 +97,10 @@ public class UdtSocketFactory implements UdpSocketFactory
         final InetSocketAddress remote = 
             (InetSocketAddress) session.getRemoteAddress();
         
-        session.close();
-        Thread.sleep(400);
+        final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
+        final DatagramSocket dgSock = dgSession.getSocket();
+        final UDTClient client = new UDTClient(new UDPEndPoint(dgSock));
         
-        final UDTClient client = 
-            new UDTClient(local.getAddress(),local.getPort());
         client.connect(remote.getAddress(), remote.getPort());
         final Socket sock = client.getSocket();
         socketListener.onUdpSocket(sock);
@@ -111,11 +113,14 @@ public class UdtSocketFactory implements UdpSocketFactory
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
 
-        session.close();
-        Thread.sleep(400);
+        //session.close();
+        //Thread.sleep(400);
 
+        final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
+        final DatagramSocket dgSock = dgSession.getSocket();
         final UDTServerSocket server = 
-            new UDTServerSocket(local.getAddress(), local.getPort());
+            new UDTServerSocket(new UDPEndPoint(dgSock));
+        
         final UDTSocket sock = server.accept();
         socketListener.onUdpSocket(sock);
         }
