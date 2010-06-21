@@ -13,6 +13,7 @@ import org.littleshoot.mina.transport.socket.nio.support.DatagramSessionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import udt.UDPEndPoint;
 import udt.UDTClient;
 import udt.UDTReceiver;
 import udt.UDTServerSocket;
@@ -106,7 +107,8 @@ public class UdtSocketFactory implements UdpSocketFactory
         //final DatagramSocket dgSock = dgSession.getSocket();
         
         //final UDTClient client = new UDTClient(new UDPEndPoint(dgSock));
-        final UDTClient client = new UDTClient(local.getAddress(), local.getPort());
+        //final UDTClient client = new UDTClient(local.getAddress(), local.getPort());
+        final UDTClient client = new UDTClient(new UDPEndPoint(local.getPort()));
         
         client.connect(remote.getAddress(), remote.getPort());
         final Socket sock = client.getSocket();
@@ -126,8 +128,11 @@ public class UdtSocketFactory implements UdpSocketFactory
         dgSock.close();
         Thread.sleep(2000);
 
+        //final UDTServerSocket server = 
+        //    new UDTServerSocket(local.getAddress(), local.getPort());
+        
         final UDTServerSocket server = 
-            new UDTServerSocket(local.getAddress(), local.getPort());
+            new UDTServerSocket(new UDPEndPoint(local.getPort()));
         
         final UDTSocket sock = server.accept();
         socketListener.onUdpSocket(sock);
