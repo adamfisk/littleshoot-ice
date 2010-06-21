@@ -7,6 +7,8 @@ import java.net.Socket;
 import java.nio.channels.DatagramChannel;
 
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
+import org.littleshoot.mina.common.IoAcceptor;
+import org.littleshoot.mina.common.IoService;
 import org.littleshoot.mina.common.IoSession;
 import org.littleshoot.mina.transport.socket.nio.support.DatagramSessionImpl;
 import org.slf4j.Logger;
@@ -143,9 +145,17 @@ public class UdtSocketFactory implements UdpSocketFactory
         
         try
             {
+            final IoService service = session.getService();
+            if (IoAcceptor.class.isAssignableFrom(service.getClass()))
+                {
+                m_log.info("Unbinding all!!");
+                final IoAcceptor acceptor = (IoAcceptor) service;
+                acceptor.unbindAll();
+                }
             session.getService().getFilterChain().clear();
             dgChannel.disconnect();
             dgChannel.close();
+            Thread.sleep(2000);
             }
         catch (final Exception e)
             {
