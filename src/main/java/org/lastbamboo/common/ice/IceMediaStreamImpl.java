@@ -64,6 +64,7 @@ public class IceMediaStreamImpl implements IceMediaStream
     private final IceCandidateGatherer m_gatherer;
     private IceCheckScheduler m_checkScheduler;
     private boolean m_closed;
+    private final IceStunUdpPeer m_udpPeer;
     
     /**
      * Creates a new ICE media stream.
@@ -75,11 +76,13 @@ public class IceMediaStreamImpl implements IceMediaStream
      */
     public IceMediaStreamImpl(final IceAgent iceAgent, 
         final IceMediaStreamDesc streamDesc, 
-        final IceCandidateGatherer gatherer)
+        final IceCandidateGatherer gatherer,
+        final IceStunUdpPeer udpPeer)
         {
         m_iceAgent = iceAgent;
         m_desc = streamDesc;
         m_gatherer = gatherer;
+        this.m_udpPeer = udpPeer;
         }
 
     public void start(final IceCheckList checkList, 
@@ -643,5 +646,10 @@ public class IceMediaStreamImpl implements IceMediaStream
         {
         return getClass().getSimpleName() + " controlling: "+
             this.m_iceAgent.isControlling();
+        }
+
+    public IceStunUdpPeer getStunUdpPeer() 
+        {
+        return this.m_udpPeer;
         }
     }

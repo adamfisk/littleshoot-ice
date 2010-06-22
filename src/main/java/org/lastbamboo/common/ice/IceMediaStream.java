@@ -233,6 +233,8 @@ public interface IceMediaStream extends IoServiceListener
      */
     Collection<IceCandidate> getLocalCandidates();
 
-    InetAddress getPublicAddress(); 
+    InetAddress getPublicAddress();
+
+    IceStunUdpPeer getStunUdpPeer(); 
 
     }

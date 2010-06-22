@@ -46,6 +46,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final StunClient m_stunClient;
     private final StunServer m_stunServer;
+
     private InetSocketAddress m_serverReflexiveAddress;
     
     /**
@@ -200,6 +201,11 @@ public class IceStunUdpPeer implements StunClient, StunServer
         {
         // We don't currently do any mapping for UDP.
         return false;
+        }
+    
+    public StunServer getStunServer() 
+        {
+        return m_stunServer;
         }
     
     @Override

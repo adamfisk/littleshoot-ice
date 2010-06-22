@@ -56,6 +56,8 @@ public class IceAgentImpl implements IceAgent
 
     private final UdpSocketFactory m_udpSocketFactory;
 
+    private final IceStunUdpPeer m_stunUdpPeer;
+
     /**
      * Creates a new ICE agent for an answerer.  Passes the offer in the 
      * constructor.
@@ -84,6 +86,7 @@ public class IceAgentImpl implements IceAgent
         // When this call completes, the TCP and UDP clients and servers
         // are both started, the candidates are gathered, etc.
         this.m_mediaStream = mediaStreamFactory.newStream(this);
+        this.m_stunUdpPeer = this.m_mediaStream.getStunUdpPeer();
         this.m_mediaStreams.add(this.m_mediaStream);
         }
 
@@ -95,7 +98,7 @@ public class IceAgentImpl implements IceAgent
             final IceCandidatePair pair = getNominatedPair();
             final IoSession session = pair.getIoSession();
             m_udpSocketFactory.newSocket(session, isControlling(), 
-                this.m_offerAnswerListener);
+                this.m_offerAnswerListener, this.m_stunUdpPeer);
             }
         else if (state == IceState.FAILED)
             {
@@ -368,15 +371,6 @@ public class IceAgentImpl implements IceAgent
                 }
             }
         }
-
-    /*
-    public void startMedia(final OfferAnswerMediaListener mediaListener)
-        {
-        final IceCandidatePair pair = getNominatedPair();
-        this.m_iceMediaFactory.newMedia(pair, isControlling(), mediaListener);
-        m_log.debug("Finished starting media...");
-        }
-        */
 
     private IceCandidatePair getNominatedPair()
         {

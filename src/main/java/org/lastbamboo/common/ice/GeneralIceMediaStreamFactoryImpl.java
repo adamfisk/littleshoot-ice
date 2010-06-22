@@ -11,7 +11,6 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePairFactoryImpl;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidateGatherer;
 import org.lastbamboo.common.ice.transport.IceTcpConnector;
 import org.lastbamboo.common.ice.transport.IceUdpConnector;
-import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
@@ -83,7 +82,7 @@ public class GeneralIceMediaStreamFactoryImpl
                 StunMessage.class, stunIoHandler, protocolMessageClass, 
                 udpProtocolIoHandler);
 
-        final StunClient udpStunPeer;
+        final IceStunUdpPeer udpStunPeer;
         if (streamDesc.isUdp())
             {
             try
@@ -107,76 +106,20 @@ public class GeneralIceMediaStreamFactoryImpl
             udpStunPeer = null;
             }
         
-        // This class just decodes the TCP frames.
-        /*
-        final IceStunTcpPeer tcpStunPeer;
-        if (streamDesc.isTcp())
-            {
-            final TurnClientListener turnClientListener =
-                new StunTcpFrameTurnClientListener(messageVisitorFactory, 
-                    delegateTurnClientListener);
-            
-            final DemuxableProtocolCodecFactory tcpFramingCodecFactory =
-                new TcpFrameCodecFactory();
-            
-            final TurnStunDemuxableProtocolCodecFactory mapper = 
-                new TurnStunDemuxableProtocolCodecFactory();
-            final ProtocolCodecFactory codecFactory = 
-                new DemuxingProtocolCodecFactory(mapper, 
-                    tcpFramingCodecFactory);
-            
-            // We only start a TURN client on the answerer to save resources --
-            // handled internally -- see IceStunTcpPeer connect.
-            final StunClient tcpTurnClient = 
-                new TcpTurnClient(turnClientListener, m_turnCandidateProvider, 
-                    codecFactory);
-                
-            tcpStunPeer = 
-                new IceStunTcpPeer(tcpTurnClient, messageVisitorFactory, 
-                    iceAgent.isControlling(), upnpManager);
-            }
-        else
-            {
-            tcpStunPeer = null;
-            }
-            */
-        
         final IceCandidateGatherer gatherer =
             new UdpIceCandidateGatherer(udpStunPeer, 
                 iceAgent.isControlling(), streamDesc);
-            //new IceCandidateGathererImpl(tcpStunPeer, udpStunPeer, 
-            //    iceAgent.isControlling(), streamDesc);
         
         final IceMediaStreamImpl stream = new IceMediaStreamImpl(iceAgent, 
-            streamDesc, gatherer);
-        
-        /*
-        if (tcpStunPeer != null)
-            {
-            tcpStunPeer.addIoServiceListener(stream);
-            }
-        */
-        
+            streamDesc, gatherer, udpStunPeer);
+
         if (udpStunPeer != null)
             {
             udpStunPeer.addIoServiceListener(stream);
             }
         
         m_log.debug("Added media stream as listener...connecting...");
-        /*
-        if (tcpStunPeer != null)
-            {
-            try
-                {
-                tcpStunPeer.connect();
-                }
-            catch (final IOException e)
-                {
-                m_log.warn("Error connecting TCP peer", e);
-                throw new IceTcpConnectException("Could not create TCP peer", e);
-                }
-            }
-            */
+        
         if (udpStunPeer != null)
             {
             try
@@ -197,7 +140,6 @@ public class GeneralIceMediaStreamFactoryImpl
         
         final Collection<IceCandidate> localCandidates = 
             gatherer.gatherCandidates();
-        //localCandidates.addAll(this.m_tcpCandidates);
         
         final IceUdpConnector udpConnector = 
             new IceUdpConnector(demuxingCodecFactory,

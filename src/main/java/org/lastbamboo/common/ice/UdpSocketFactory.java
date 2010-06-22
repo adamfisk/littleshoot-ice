@@ -17,8 +17,9 @@ public interface UdpSocketFactory
      * @param controlling Whether or not the caller is the controlling ICE
      * agent.
      * @param offerAnswerListener The listener for the socket.
+     * @param stunUdpPeer The STUN UDP peer class.
      */
     void newSocket(IoSession session, boolean controlling, 
-        OfferAnswerListener offerAnswerListener);
+        OfferAnswerListener offerAnswerListener, IceStunUdpPeer stunUdpPeer);
 
     }

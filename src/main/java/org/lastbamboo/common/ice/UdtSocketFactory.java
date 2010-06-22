@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.nio.channels.DatagramChannel;
 
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
+import org.lastbamboo.common.stun.server.StunServer;
 import org.littleshoot.mina.common.IoAcceptor;
 import org.littleshoot.mina.common.IoService;
 import org.littleshoot.mina.common.IoSession;
@@ -26,7 +27,8 @@ public class UdtSocketFactory implements UdpSocketFactory
     private final Logger m_log = LoggerFactory.getLogger(getClass());
 
     public void newSocket(final IoSession session, final boolean controlling,
-        final OfferAnswerListener socketListener) 
+        final OfferAnswerListener socketListener, 
+        final IceStunUdpPeer stunUdpPeer) 
         {
         if (session == null)
             {
@@ -35,6 +37,7 @@ public class UdtSocketFactory implements UdpSocketFactory
             }
         
         UDTReceiver.connectionExpiryDisabled=true;
+        clear(session, stunUdpPeer);
         if (!controlling)
             {
             m_log.debug(
@@ -98,8 +101,6 @@ public class UdtSocketFactory implements UdpSocketFactory
         final InetSocketAddress remote = 
             (InetSocketAddress) session.getRemoteAddress();
 
-        clear(session);
-        
         m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
         
@@ -120,8 +121,6 @@ public class UdtSocketFactory implements UdpSocketFactory
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
 
-        clear(session);
-        
         m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
         final UDTServerSocket server = 
@@ -133,7 +132,8 @@ public class UdtSocketFactory implements UdpSocketFactory
         socketListener.onUdpSocket(sock);
         }
     
-    private void clear(final IoSession session) 
+    private void clear(final IoSession session, 
+        final IceStunUdpPeer stunUdpPeer) 
         {
         m_log.info("Clearing session!!");
         final DatagramSessionImpl dgSession = (DatagramSessionImpl)session;
@@ -143,6 +143,8 @@ public class UdtSocketFactory implements UdpSocketFactory
             dgSock.getLocalSocketAddress());
         session.close().join(10 * 1000);
         
+        final StunServer stunServer = stunUdpPeer.getStunServer();
+        stunServer.close();
         try
             {
             final IoService service = session.getService();
