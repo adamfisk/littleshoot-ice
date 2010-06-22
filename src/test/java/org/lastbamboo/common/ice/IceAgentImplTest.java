@@ -175,7 +175,8 @@ public class IceAgentImplTest
             
             public void newSocket(final IoSession session, 
                 final boolean controlling, 
-                final OfferAnswerListener offerAnswerListener) 
+                final OfferAnswerListener offerAnswerListener, 
+                final IceStunUdpPeer stunUdpPeer) 
                 {
                 offerAnswerListener.onUdpSocket(new Socket());
                 }

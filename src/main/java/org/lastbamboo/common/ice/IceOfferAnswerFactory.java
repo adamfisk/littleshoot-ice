@@ -3,7 +3,6 @@ package org.lastbamboo.common.ice;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -15,8 +14,8 @@ import org.lastbamboo.common.offer.answer.OfferAnswerFactory;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.UpnpService;
+import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.NetworkUtils;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +36,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
     private final UpnpService m_upnpService;
     private final MappedTcpAnswererServer m_answererServer;
 
+    private final TurnClientListener m_turnClientListener;
+
     /**
      * Creates a new ICE agent factory.  The factory maintains a reference to
      * the TCP TURN client because the client holds a persistent connection
@@ -56,7 +57,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
         final CandidateProvider<InetSocketAddress> turnCandidateProvider,
         final NatPmpService natPmpService,
         final UpnpService upnpService, 
-        final MappedTcpAnswererServer answererServer)
+        final MappedTcpAnswererServer answererServer,
+        final TurnClientListener turnClientListener)
         {
         this.m_mediaStreamFactory = mediaStreamFactory;
         this.m_udpSocketFactory = udpSocketFactory;
@@ -65,6 +67,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
         this.m_natPmpService = natPmpService;
         this.m_upnpService = upnpService;
         this.m_answererServer = answererServer;
+        this.m_turnClientListener = turnClientListener;
         }
     
     public OfferAnswer createAnswerer(
@@ -259,21 +262,13 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
             {
             return null;
             }
-        final InetAddress serverAddress;
-        try
-            {
-            serverAddress = NetworkUtils.getLocalHost();
-            }
-        catch (final UnknownHostException e)
-            {
-            m_log.warn("Could not get local host!!", e);
-            return null;
-            }
+
         try 
             {
             final TcpTurnOfferAnswer turn = 
                 new TcpTurnOfferAnswer(m_turnCandidateProvider, 
-                    serverAddress, controlling, offerAnswerListener);
+                    controlling, offerAnswerListener, 
+                    m_turnClientListener);
             
             // We only actually connect to the TURN server on the answerer/
             // non-controlling client.

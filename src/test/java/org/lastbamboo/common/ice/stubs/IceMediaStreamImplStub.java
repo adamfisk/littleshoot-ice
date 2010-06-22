@@ -15,6 +15,7 @@ import org.lastbamboo.common.ice.IceCheckList;
 import org.lastbamboo.common.ice.IceCheckListState;
 import org.lastbamboo.common.ice.IceCheckScheduler;
 import org.lastbamboo.common.ice.IceMediaStream;
+import org.lastbamboo.common.ice.IceStunUdpPeer;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
@@ -202,6 +203,11 @@ public class IceMediaStreamImplStub implements IceMediaStream
     }
 
     public InetAddress getPublicAddress() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public IceStunUdpPeer getStunUdpPeer() {
         // TODO Auto-generated method stub
         return null;
     }

@@ -17,9 +17,7 @@ import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
 import org.lastbamboo.common.turn.client.TcpTurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
-import org.lastbamboo.common.turn.http.server.ServerDataFeeder;
 import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.ShootConstants;
 import org.lastbamboo.common.util.ThreadUtils;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
@@ -50,19 +48,14 @@ public class TcpTurnOfferAnswer implements IceOfferAnswer
      */
     public TcpTurnOfferAnswer(
         final CandidateProvider<InetSocketAddress> turnCandidateProvider,
-        final InetAddress localServerAddress,
         final boolean controlling,
-        final OfferAnswerListener offerAnswerListener) 
+        final OfferAnswerListener offerAnswerListener,
+        final TurnClientListener clientListener) 
         {
         this.m_controlling = controlling;
         this.m_offerAnswerListener = offerAnswerListener;
         final ProtocolCodecFactory codecFactory = 
             new StunProtocolCodecFactory();
-        final InetSocketAddress httpServerAddress =
-            new InetSocketAddress(localServerAddress, ShootConstants.HTTP_PORT);
-        final TurnClientListener clientListener =
-            new ServerDataFeeder(httpServerAddress);
-        
         this.m_turnClient = 
             new TcpTurnClient(clientListener, turnCandidateProvider, 
                 codecFactory);
