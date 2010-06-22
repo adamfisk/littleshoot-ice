@@ -48,7 +48,7 @@ public class UdtSocketFactory implements UdpSocketFactory
                     {
                     try
                         {
-                        openClientSocket(session, socketListener);
+                        openAnswererSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
@@ -77,7 +77,7 @@ public class UdtSocketFactory implements UdpSocketFactory
                     {
                     try
                         {
-                        openServerSocket(session, socketListener);
+                        openOffererSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
@@ -92,7 +92,7 @@ public class UdtSocketFactory implements UdpSocketFactory
             }
         }
 
-    protected void openClientSocket(final IoSession session,
+    protected void openAnswererSocket(final IoSession session,
         final OfferAnswerListener socketListener) 
         throws InterruptedException, IOException 
         {
@@ -111,10 +111,12 @@ public class UdtSocketFactory implements UdpSocketFactory
         
         client.connect(remote.getAddress(), remote.getPort());
         final Socket sock = client.getSocket();
+        m_log.info("Got socket...notifying listener");
         socketListener.onUdpSocket(sock);
+        m_log.info("Exiting...");
         }
 
-    protected void openServerSocket(final IoSession session,
+    protected void openOffererSocket(final IoSession session,
         final OfferAnswerListener socketListener) 
         throws InterruptedException, IOException 
         {
