@@ -166,12 +166,12 @@ public class UdtSocketFactory implements UdpSocketFactory
             try {
                 InputStream in=sock.getInputStream();
                 //OutputStream out=sock.getOutputStream();
-                byte[]readBuf=new byte[32768];
+                byte[]readBuf=new byte[4];
                 //ByteBuffer bb=ByteBuffer.wrap(readBuf);
                 
                 while(in.read(readBuf)==0)Thread.sleep(100);
                 
-                System.out.println("NOTIFYING SOCKET LISTENER!!");
+                m_log.info("NOTIFYING SOCKET LISTENER!!");
                 socketListener.onUdpSocket(sock);
             } catch (final IOException e) {
                 m_log.error("IOException!!", e);
@@ -209,7 +209,7 @@ public class UdtSocketFactory implements UdpSocketFactory
             session.getService().getFilterChain().clear();
             dgChannel.disconnect();
             dgChannel.close();
-            Thread.sleep(2000);
+            Thread.sleep(10000);
             }
         catch (final Exception e)
             {
