@@ -105,10 +105,11 @@ public class UdtSocketFactory implements UdpSocketFactory
         m_log.info("Binding to port: {}", local.getPort());
         
         //final UDTClient client = new UDTClient(new UDPEndPoint(dgSock));
-        //final UDTClient client = new UDTClient(local.getAddress(), local.getPort());
+        final UDTClient client = new UDTClient(local.getAddress(), local.getPort());
         //final UDTClient client = new UDTClient(new UDPEndPoint(dgChannel.socket()));
-        final UDTClient client = new UDTClient(new UDPEndPoint(local.getPort()));
+        //final UDTClient client = new UDTClient(new UDPEndPoint(local.getPort()));
         
+        Thread.sleep(2000);
         m_log.info("About to connect...");
         client.connect(remote.getAddress(), remote.getPort());
         m_log.info("Connected!!!");
