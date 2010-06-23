@@ -1,10 +1,15 @@
 package org.lastbamboo.common.ice;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.stun.server.StunServer;
@@ -20,6 +25,7 @@ import udt.UDTClient;
 import udt.UDTReceiver;
 import udt.UDTServerSocket;
 import udt.UDTSocket;
+import udt.util.TestServerSocket.RequestRunner;
 
 public class UdtSocketFactory implements UdpSocketFactory
     {
@@ -116,9 +122,16 @@ public class UdtSocketFactory implements UdpSocketFactory
         
         final Socket sock = client.getSocket();
         m_log.info("Got socket...notifying listener");
+        
+        final InputStream in = sock.getInputStream();
+        byte[]sizeInfo=new byte[2];
+        while(in.read(sizeInfo)==0);
+        
         socketListener.onUdpSocket(sock);
         m_log.info("Exiting...");
         }
+    
+    private final ExecutorService threadPool=Executors.newFixedThreadPool(3);
 
     protected void openOffererSocket(final IoSession session,
         final OfferAnswerListener socketListener) 
@@ -135,8 +148,40 @@ public class UdtSocketFactory implements UdpSocketFactory
         //    new UDTServerSocket(new UDPEndPoint(dgChannel.socket()));
         
         final UDTSocket sock = server.accept();
-        socketListener.onUdpSocket(sock);
+        threadPool.execute(new RequestRunner(socketListener, sock));
         }
+    
+    public static class RequestRunner implements Runnable {
+
+        private final Logger m_log = LoggerFactory.getLogger(getClass());
+        private final UDTSocket sock;
+        private final OfferAnswerListener socketListener;
+
+        public RequestRunner(OfferAnswerListener socketListener, UDTSocket sock) {
+            this.socketListener = socketListener;
+            this.sock = sock;
+        }
+
+        public void run() {
+            try {
+                InputStream in=sock.getInputStream();
+                //OutputStream out=sock.getOutputStream();
+                byte[]readBuf=new byte[32768];
+                //ByteBuffer bb=ByteBuffer.wrap(readBuf);
+                
+                while(in.read(readBuf)==0)Thread.sleep(100);
+                
+                System.out.println("NOTIFYING SOCKET LISTENER!!");
+                socketListener.onUdpSocket(sock);
+            } catch (final IOException e) {
+                m_log.error("IOException!!", e);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        
+    }
     
     private void clear(final IoSession session, 
         final IceStunUdpPeer stunUdpPeer) 
