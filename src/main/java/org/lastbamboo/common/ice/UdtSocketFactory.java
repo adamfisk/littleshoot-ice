@@ -54,7 +54,8 @@ public class UdtSocketFactory implements UdpSocketFactory
                     {
                     try
                         {
-                        openAnswererSocket(session, socketListener);
+                        //openAnswererSocket(session, socketListener);
+                        openOffererSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
@@ -83,7 +84,8 @@ public class UdtSocketFactory implements UdpSocketFactory
                     {
                     try
                         {
-                        openOffererSocket(session, socketListener);
+                        //openOffererSocket(session, socketListener);
+                        openAnswererSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
@@ -169,6 +171,7 @@ public class UdtSocketFactory implements UdpSocketFactory
                 byte[]readBuf=new byte[4];
                 //ByteBuffer bb=ByteBuffer.wrap(readBuf);
                 
+                m_log.info("STARTING WHILE FOR SOCKET LISTENER!!");
                 while(in.read(readBuf)==0)Thread.sleep(100);
                 
                 m_log.info("NOTIFYING SOCKET LISTENER!!");
