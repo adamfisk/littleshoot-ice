@@ -212,7 +212,7 @@ public class UdtSocketFactory implements UdpSocketFactory
             session.getService().getFilterChain().clear();
             dgChannel.disconnect();
             dgChannel.close();
-            Thread.sleep(10000);
+            //Thread.sleep(10000);
             }
         catch (final Exception e)
             {
