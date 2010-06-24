@@ -125,9 +125,9 @@ public class UdtSocketFactory implements UdpSocketFactory
         final Socket sock = client.getSocket();
         m_log.info("Got socket...notifying listener");
         
-        final InputStream in = sock.getInputStream();
-        byte[]sizeInfo=new byte[2];
-        while(in.read(sizeInfo)==0);
+        //final InputStream in = sock.getInputStream();
+        //byte[]sizeInfo=new byte[2];
+        //while(in.read(sizeInfo)==0);
         
         socketListener.onUdpSocket(sock);
         m_log.info("Exiting...");
@@ -166,22 +166,22 @@ public class UdtSocketFactory implements UdpSocketFactory
 
         public void run() {
             try {
-                InputStream in=sock.getInputStream();
+                final InputStream in = sock.getInputStream();
                 //OutputStream out=sock.getOutputStream();
-                byte[]readBuf=new byte[4];
+                //final byte[] readBuf = new byte[4];
                 //ByteBuffer bb=ByteBuffer.wrap(readBuf);
                 
                 m_log.info("STARTING WHILE FOR SOCKET LISTENER!!");
-                while(in.read(readBuf)==0)Thread.sleep(100);
+                //while(in.read(readBuf)==0)Thread.sleep(100);
                 
                 m_log.info("NOTIFYING SOCKET LISTENER!!");
                 socketListener.onUdpSocket(sock);
             } catch (final IOException e) {
                 m_log.error("IOException!!", e);
-            } catch (InterruptedException e) {
+            } //catch (InterruptedException e) {
                 // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+                //e.printStackTrace();
+            //}
         }
         
     }
