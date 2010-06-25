@@ -113,7 +113,7 @@ public class UdtSocketFactory implements UdpSocketFactory
         //final UDTClient client = new UDTClient(new UDPEndPoint(dgChannel.socket()));
         //final UDTClient client = new UDTClient(new UDPEndPoint(local.getPort()));
         
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         m_log.info("About to connect...");
         client.connect(remote.getAddress(), remote.getPort());
         m_log.info("Connected!!!");
