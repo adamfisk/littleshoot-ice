@@ -51,7 +51,7 @@ public class UdtSocketFactory implements UdpSocketFactory
                     try
                         {
                         //openAnswererSocket(session, socketListener);
-                        openOffererSocket(session, socketListener);
+                        openServerSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
@@ -81,7 +81,7 @@ public class UdtSocketFactory implements UdpSocketFactory
                     try
                         {
                         //openOffererSocket(session, socketListener);
-                        openAnswererSocket(session, socketListener);
+                        openClientSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
@@ -96,7 +96,7 @@ public class UdtSocketFactory implements UdpSocketFactory
             }
         }
 
-    protected void openAnswererSocket(final IoSession session,
+    protected void openClientSocket(final IoSession session,
         final OfferAnswerListener socketListener) 
         throws InterruptedException, IOException 
         {
@@ -131,7 +131,7 @@ public class UdtSocketFactory implements UdpSocketFactory
     
     private final ExecutorService threadPool=Executors.newFixedThreadPool(3);
 
-    protected void openOffererSocket(final IoSession session,
+    protected void openServerSocket(final IoSession session,
         final OfferAnswerListener socketListener) 
         throws InterruptedException, IOException 
         {
