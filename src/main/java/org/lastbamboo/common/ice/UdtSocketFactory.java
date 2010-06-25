@@ -50,8 +50,8 @@ public class UdtSocketFactory implements UdpSocketFactory
                     {
                     try
                         {
-                        openAnswererSocket(session, socketListener);
-                        //openOffererSocket(session, socketListener);
+                        //openAnswererSocket(session, socketListener);
+                        openOffererSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
@@ -80,8 +80,8 @@ public class UdtSocketFactory implements UdpSocketFactory
                     {
                     try
                         {
-                        openOffererSocket(session, socketListener);
-                        //openAnswererSocket(session, socketListener);
+                        //openOffererSocket(session, socketListener);
+                        openAnswererSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
