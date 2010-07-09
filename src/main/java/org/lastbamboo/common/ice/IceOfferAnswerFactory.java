@@ -16,6 +16,7 @@ import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.util.CandidateProvider;
+import org.lastbamboo.common.util.mina.MinaUtils;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,17 +136,19 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
 
             public void processAnswer(final ByteBuffer answer)
                 {
+                m_log.info("Processing answer...");
+                m_log.info("Turn offer answer: {}", turnOfferAnswer);
+                if (m_streamDesc.isUseRelay() && turnOfferAnswer != null)
+                    {
+                    turnOfferAnswer.processAnswer(answer.duplicate());
+                    }
                 if (m_streamDesc.isTcp() && tcp != null)
                     {
-                    tcp.processAnswer(answer);
+                    tcp.processAnswer(answer.duplicate());
                     }
                 if (m_streamDesc.isUdp() && udp != null)
                     {
-                    udp.processAnswer(answer);
-                    }
-                if (m_streamDesc.isUseRelay() && turnOfferAnswer != null)
-                    {
-                    turnOfferAnswer.processAnswer(answer);
+                    udp.processAnswer(answer.duplicate());
                     }
                 }
 
