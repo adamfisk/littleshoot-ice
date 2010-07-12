@@ -11,8 +11,7 @@ import org.lastbamboo.common.portmapping.PortMapEvent;
 import org.lastbamboo.common.portmapping.PortMapListener;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.util.NetworkUtils;
-import org.lastbamboo.common.util.RelayingSocketHandler;
-import org.lastbamboo.common.util.ShootConstants;
+import org.lastbamboo.common.util.SocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +40,12 @@ public class MappedTcpAnswererServer implements PortMapListener
      * 
      * @param natPmpService The NAT PMP mapper.
      * @param upnpService The UPnP mapper.
-     * @throws IOException IF there's an error starting the server.
+     * @param socketListener Class for handling new incoming sockets.
+     * @throws IOException If there's an error starting the server.
      */
     public MappedTcpAnswererServer(final NatPmpService natPmpService, 
-        final UpnpService upnpService) throws IOException
+        final UpnpService upnpService, final SocketListener socketListener) 
+        throws IOException
         {
         this.m_natPmpService = natPmpService;
         this.m_upnpService = upnpService;
@@ -52,13 +53,13 @@ public class MappedTcpAnswererServer implements PortMapListener
             {
             public void run()
                 {
-                final RelayingSocketHandler relayingSocketHandler;
                 try 
                     {
-                    relayingSocketHandler = establishSocket();
+                    establishSocket();
                     }
                 catch (final IOException e) 
                     {
+                    m_log.warn("Could not create server socket or map port?",e);
                     return;
                     }
                 
@@ -70,7 +71,7 @@ public class MappedTcpAnswererServer implements PortMapListener
                         final Socket sock = m_serverSocket.accept();
                         sock.setSoTimeout(40 * 60 * 1000);
                         m_log.info("ACCEPTED INCOMING SOCKET!!");
-                        relayingSocketHandler.onSocket(sock);
+                        socketListener.onSocket(sock);
                         }
                     catch (final IOException e)
                         {
@@ -79,7 +80,7 @@ public class MappedTcpAnswererServer implements PortMapListener
                     }
                 }
 
-            private RelayingSocketHandler establishSocket() throws IOException
+            private void establishSocket() throws IOException
                 {
                 upnpService.addPortMapListener(MappedTcpAnswererServer.this);
                 natPmpService.addPortMapListener(MappedTcpAnswererServer.this);
@@ -93,11 +94,6 @@ public class MappedTcpAnswererServer implements PortMapListener
                 m_upnpMappingIndex = upnpService.addUpnpMapping(2, port, port);
                 m_natPmpMappingIndex =
                     natPmpService.addNatPmpMapping(2, port, port);
-                
-                final RelayingSocketHandler relayingSocketHandler =
-                    new RelayingSocketHandler(NetworkUtils.getLocalHost(), 
-                        ShootConstants.HTTP_PORT);
-                return relayingSocketHandler;
                 }
             };
         final Thread serverThread = new Thread(serverRunner, 
