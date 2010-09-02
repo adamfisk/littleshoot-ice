@@ -1,13 +1,13 @@
 package org.lastbamboo.common.ice;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.DatagramChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.stun.server.StunServer;
@@ -23,11 +23,23 @@ import udt.UDTReceiver;
 import udt.UDTServerSocket;
 import udt.UDTSocket;
 
+/**
+ * Factory for creating UDT sockets.
+ */
 public class UdtSocketFactory implements UdpSocketFactory
     {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
-
+    
+    private final ExecutorService m_threadPool = 
+        Executors.newCachedThreadPool(new ThreadFactory() {
+            public Thread newThread(final Runnable r) {
+                final Thread t = new Thread(r, "UDT-Socket-Accept-Thread");
+                t.setDaemon(true);
+                return t;
+            }
+        });
+    
     public void newSocket(final IoSession session, final boolean controlling,
         final OfferAnswerListener socketListener, 
         final IceStunUdpPeer stunUdpPeer) 
@@ -38,7 +50,7 @@ public class UdtSocketFactory implements UdpSocketFactory
             return;
             }
         
-        UDTReceiver.connectionExpiryDisabled=true;
+        UDTReceiver.connectionExpiryDisabled = true;
         clear(session, stunUdpPeer);
         if (!controlling)
             {
@@ -60,10 +72,10 @@ public class UdtSocketFactory implements UdpSocketFactory
                     }
                 };
     
-            final Thread rudpClientThread = 
-                new Thread(clientRunner, "RUDP Client Thread");
-            rudpClientThread.setDaemon(true);
-            rudpClientThread.start();
+            final Thread udtClientThread = 
+                new Thread(clientRunner, "UDT Client Thread");
+            udtClientThread.setDaemon(true);
+            udtClientThread.start();
             }
         else
             {
@@ -90,7 +102,7 @@ public class UdtSocketFactory implements UdpSocketFactory
                     }
                 };
             final Thread serverThread = 
-                new Thread (serverRunner, "RUDP Accepting Thread");
+                new Thread (serverRunner, "UDT Accepting Thread");
             serverThread.setDaemon(true);
             serverThread.start();
             }
@@ -108,12 +120,11 @@ public class UdtSocketFactory implements UdpSocketFactory
         m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
         
-        //final UDTClient client = new UDTClient(new UDPEndPoint(dgSock));
-        final UDTClient client = new UDTClient(local.getAddress(), local.getPort());
-        //final UDTClient client = new UDTClient(new UDPEndPoint(dgChannel.socket()));
-        //final UDTClient client = new UDTClient(new UDPEndPoint(local.getPort()));
-        
-        Thread.sleep(2000);
+        final UDTClient client = 
+            new UDTClient(local.getAddress(), local.getPort());
+
+        // Wait for a bit to make sure the server side has a chance to come up.
+        Thread.sleep(1000);
         m_log.info("About to connect...");
         client.connect(remote.getAddress(), remote.getPort());
         m_log.info("Connected!!!");
@@ -121,16 +132,11 @@ public class UdtSocketFactory implements UdpSocketFactory
         final Socket sock = client.getSocket();
         m_log.info("Got socket...notifying listener");
         
-        //final InputStream in = sock.getInputStream();
-        //byte[]sizeInfo=new byte[2];
-        //while(in.read(sizeInfo)==0);
         
         socketListener.onUdpSocket(sock);
         m_log.info("Exiting...");
         }
     
-    private final ExecutorService threadPool=Executors.newFixedThreadPool(3);
-
     protected void openServerSocket(final IoSession session,
         final OfferAnswerListener socketListener) 
         throws InterruptedException, IOException 
@@ -142,11 +148,9 @@ public class UdtSocketFactory implements UdpSocketFactory
         m_log.info("Binding to port: {}", local.getPort());
         final UDTServerSocket server = 
             new UDTServerSocket(local.getAddress(), local.getPort());
-        //final UDTServerSocket server = 
-        //    new UDTServerSocket(new UDPEndPoint(dgChannel.socket()));
         
         final UDTSocket sock = server.accept();
-        threadPool.execute(new RequestRunner(socketListener, sock));
+        m_threadPool.execute(new RequestRunner(socketListener, sock));
         }
     
     public static class RequestRunner implements Runnable {
@@ -155,31 +159,16 @@ public class UdtSocketFactory implements UdpSocketFactory
         private final UDTSocket sock;
         private final OfferAnswerListener socketListener;
 
-        public RequestRunner(OfferAnswerListener socketListener, UDTSocket sock) {
+        public RequestRunner(final OfferAnswerListener socketListener, 
+            final UDTSocket sock) {
             this.socketListener = socketListener;
             this.sock = sock;
         }
 
         public void run() {
-            try {
-                final InputStream in = sock.getInputStream();
-                //OutputStream out=sock.getOutputStream();
-                //final byte[] readBuf = new byte[4];
-                //ByteBuffer bb=ByteBuffer.wrap(readBuf);
-                
-                m_log.info("STARTING WHILE FOR SOCKET LISTENER!!");
-                //while(in.read(readBuf)==0)Thread.sleep(100);
-                
-                m_log.info("NOTIFYING SOCKET LISTENER!!");
-                socketListener.onUdpSocket(sock);
-            } catch (final IOException e) {
-                m_log.error("IOException!!", e);
-            } //catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                //e.printStackTrace();
-            //}
+            m_log.info("NOTIFYING SOCKET LISTENER!!");
+            socketListener.onUdpSocket(sock);
         }
-        
     }
     
     private void clear(final IoSession session, 
@@ -208,7 +197,6 @@ public class UdtSocketFactory implements UdpSocketFactory
             session.getService().getFilterChain().clear();
             dgChannel.disconnect();
             dgChannel.close();
-            //Thread.sleep(10000);
             }
         catch (final Exception e)
             {
