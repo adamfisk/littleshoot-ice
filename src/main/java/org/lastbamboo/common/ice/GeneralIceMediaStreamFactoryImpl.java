@@ -20,7 +20,6 @@ import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
-import org.lastbamboo.common.util.mina.DemuxingIoHandler;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.littleshoot.mina.common.IoHandler;
 import org.littleshoot.mina.common.IoServiceListener;
@@ -55,8 +54,6 @@ public class GeneralIceMediaStreamFactoryImpl
     public <T> IceMediaStream newIceMediaStream(
         final IceMediaStreamDesc streamDesc, final IceAgent iceAgent, 
         final DemuxableProtocolCodecFactory protocolCodecFactory, 
-        final Class<T> protocolMessageClass, 
-        final IoHandler udpProtocolIoHandler,
         final TurnClientListener delegateTurnClientListener,
         final IoServiceListener udpServiceListener) 
         throws IceUdpConnectException
@@ -75,12 +72,14 @@ public class GeneralIceMediaStreamFactoryImpl
         final StunMessageVisitorFactory messageVisitorFactory =
             new IceStunConnectivityCheckerFactoryImpl<StunMessage>(iceAgent, 
                 transactionTracker, checkerFactory);
-        final IoHandler stunIoHandler = 
+        final IoHandler udpIoHandler = 
             new StunIoHandler<StunMessage>(messageVisitorFactory);
+        /*
         final IoHandler udpIoHandler = 
             new DemuxingIoHandler<StunMessage, T>(
                 StunMessage.class, stunIoHandler, protocolMessageClass, 
                 udpProtocolIoHandler);
+                */
 
         final IceStunUdpPeer udpStunPeer;
         if (streamDesc.isUdp())

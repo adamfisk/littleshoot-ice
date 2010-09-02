@@ -54,14 +54,14 @@ public class IceStunUdpPeer implements StunClient, StunServer
      * @param demuxingCodecFactory The class for interpreting the multiple 
      * protocols on the wire -- STUN and whatever protocol it's negotiating
      * a connection for.
-     * @param demuxingIoHandler The class for handling read and written 
+     * @param ioHandler The class for handling read and written 
      * messages. 
      * @param controlling Whether or not this agent is controlling.
      * @param transactionTracker The class for tracking STUN transactions.
      * @throws IOException If there's an error connecting the client or server.
      */
     public IceStunUdpPeer(final ProtocolCodecFactory demuxingCodecFactory, 
-        final IoHandler demuxingIoHandler, final boolean controlling, 
+        final IoHandler ioHandler, final boolean controlling, 
         final StunTransactionTracker<StunMessage> transactionTracker,
         final CandidateProvider<InetSocketAddress> stunServerCandidateProvider) 
         throws IOException 
@@ -76,7 +76,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // making connectivity consistent, with "all of them" meaning the STUN 
         // client and server checks.
         this.m_stunClient = 
-            new UdpStunClient(transactionTracker, demuxingIoHandler, 
+            new UdpStunClient(transactionTracker, ioHandler, 
                 stunServerCandidateProvider);
         this.m_stunClient.connect();
         this.m_serverReflexiveAddress = 
@@ -107,7 +107,7 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // of missing any relevant events.
         this.m_stunServer = 
             new UdpStunServer(demuxingCodecFactory, 
-                demuxingIoHandler, controllingString);
+                ioHandler, controllingString);
         
         // Just bind to the same port as the client.
         // Note this only works because both the client and server are using 
