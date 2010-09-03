@@ -9,7 +9,6 @@ import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairFactoryImpl;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidateGatherer;
-import org.lastbamboo.common.ice.transport.IceTcpConnector;
 import org.lastbamboo.common.ice.transport.IceUdpConnector;
 import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
@@ -145,13 +144,9 @@ public class GeneralIceMediaStreamFactoryImpl
                 udpIoHandler, iceAgent.isControlling());
         udpConnector.addIoServiceListener(stream);
         udpConnector.addIoServiceListener(udpServiceListener);
-        final IceTcpConnector tcpConnector =
-            new IceTcpConnector(messageVisitorFactory, 
-                iceAgent.isControlling());
-        tcpConnector.addIoServiceListener(stream);
+
         final IceCandidatePairFactory candidatePairFactory = 
-            new IceCandidatePairFactoryImpl(
-                checkerFactory, udpConnector, tcpConnector);
+            new IceCandidatePairFactoryImpl(checkerFactory, udpConnector);
         
         final IceCheckList checkList = 
             new IceCheckListImpl(candidatePairFactory, 

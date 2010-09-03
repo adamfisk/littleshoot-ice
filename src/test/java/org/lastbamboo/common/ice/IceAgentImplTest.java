@@ -146,8 +146,7 @@ public class IceAgentImplTest
                 final IoServiceListener udpServiceListener = 
                     new IoServiceListenerStub();
                 return generalStreamFactory1.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener, udpServiceListener);
+                    otherCodecFactory, delegateListener, udpServiceListener);
                 }
             };
         
@@ -165,8 +164,7 @@ public class IceAgentImplTest
                 final IoServiceListener udpServiceListener = 
                     new IoServiceListenerStub();
                 return generalStreamFactory2.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, Void.class, clientIoHandler, 
-                    delegateListener, udpServiceListener);
+                    otherCodecFactory, delegateListener, udpServiceListener);
                 }
             };
         

@@ -9,14 +9,6 @@ public interface IceCandidatePairVisitor<T>
     {
 
     /**
-     * Visits a TCP candidate pair.
-     * 
-     * @param pair The candidate pair.
-     * @return A specific class for this visitor.
-     */
-    T visitTcpIceCandidatePair(IceTcpCandidatePair pair);
-
-    /**
      * Visits a UDP candidate pair.
      * 
      * @param pair The candidate pair.

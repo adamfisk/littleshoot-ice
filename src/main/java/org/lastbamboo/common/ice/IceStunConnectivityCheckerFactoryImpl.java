@@ -28,8 +28,8 @@ public class IceStunConnectivityCheckerFactoryImpl<T> implements
      * Creates a new factory for creating connectivity checkers.
      * 
      * @param iceAgent The agent performing the checks.
-     * @param transactionTracker The class that keeps track of STUN transactions during
-     * the checks.
+     * @param transactionTracker The class that keeps track of STUN transactions 
+     * during the checks.
      * @param checkerFactory The class that creates new checkers.
      */
     public IceStunConnectivityCheckerFactoryImpl(final IceAgent iceAgent, 

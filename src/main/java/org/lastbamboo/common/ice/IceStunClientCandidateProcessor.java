@@ -3,15 +3,12 @@ package org.lastbamboo.common.ice;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import org.littleshoot.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
-import org.lastbamboo.common.ice.candidate.IceCandidatePairVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateType;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
-import org.lastbamboo.common.ice.candidate.IceTcpActiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
@@ -20,8 +17,6 @@ import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
-import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
 import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.BindingSuccessResponse;
@@ -40,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class that performs connectivity checks for a single UDP or TCP pair.  This 
+ * Class that performs connectivity checks for a single pair. This 
  * implements ICE section 7.1 from:<p>
  * 
  * http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.1
@@ -119,11 +114,13 @@ public class IceStunClientCandidateProcessor
         
         // This could be for either regular or aggressive nomination.
         final boolean includedUseCandidate;
+        
         // We only include the USE-CANDIDATE attribute if it's set AND we're
-        // the controlling agent.  The controlled agent never sends 
+        // the controlling agent. The controlled agent never sends 
         // USE-CANDIDATE.
         if (this.m_pair.useCandidateSet() && isControlling)
             {
+            m_log.info("Creating Binding Request with USE CANDIDATE");
             request = new BindingRequest(priorityAttribute, controlling, 
                 new IceUseCandidateAttribute());
             includedUseCandidate = true;
@@ -141,33 +138,6 @@ public class IceStunClientCandidateProcessor
         
         final StunMessage response = this.m_pair.check(request, rto);
         
-        // We need to add the active TCP candidate as a local candidate because
-        // it has a port of zero at the gathering stage (since it's ephemeral).
-        // Here, though, we need to add the local candidate with the real
-        // port to properly process this incoming message, but only if it's
-        // an active TCP candidate.
-        final IoSession activeTcpSession = this.m_pair.getIoSession();
-        if (activeTcpSession != null)
-            {
-            final IceCandidateVisitor<Void> localCandidateVisitor =
-                new IceCandidateVisitorAdapter<Void>(false)
-                {
-                @Override
-                public Void visitTcpActiveCandidate(
-                    final IceTcpActiveCandidate candidate)
-                    {
-                    m_log.debug("Visiting TCP active candidate: {}", candidate);
-                    final InetSocketAddress localSocketAddress =
-                        (InetSocketAddress) activeTcpSession.getLocalAddress();
-                    final IceCandidate newActiveTcp =
-                        new IceTcpActiveCandidate(localSocketAddress, isControlling);
-                    m_mediaStream.addLocalCandidate(newActiveTcp);
-                    return null;
-                    }
-                };
-            localCandidate.accept(localCandidateVisitor);
-            }
-        
         final StunMessageVisitor<IceCandidate> visitor = 
             new StunMessageVisitorAdapter<IceCandidate>()
             {
@@ -177,8 +147,25 @@ public class IceStunClientCandidateProcessor
                 final BindingSuccessResponse bsr)
                 {
                 m_log.info("Visiting binding success response...");
+                
+                if (m_pair.isNominateOnSuccess()) 
+                    {
+                    /*
+                      As stated in section 7.2.1.5. Updating the Nominated Flag:
+                     
+                     
+                     "If the state of this pair is In-Progress, if its check produces a
+                      successful result, the resulting valid pair has its nominated flag
+                      set when the response arrives.  This may end ICE processing for
+                      this media stream when it arrives; see Section 8."
+                     */
+                    m_pair.nominate();
+                    m_iceAgent.onNominatedPair(m_pair, m_mediaStream);
+                    return null;
+                    }
+                
                 // Now check the mapped address and see if it matches
-                // any of the local candidates we know about.  If it 
+                // any of the local candidates we know about. If it 
                 // does not, it's a new peer reflexive candidate.
                 //
                 // We use the mapped address of the response as the local
@@ -208,21 +195,11 @@ public class IceStunClientCandidateProcessor
                     
                     // We use the PRIORITY from the Binding Request, as
                     // specified in section 7.1.2.2.1. and 7.1.2.2.2.  
-                    final IceCandidate peerReflexiveLocal;
-                    if (localCandidate.isUdp())
-                        {
-                        peerReflexiveLocal = 
-                            new IceUdpPeerReflexiveCandidate(mappedAddress, 
-                                localCandidate, m_iceAgent.isControlling(), 
-                                requestPriority);
-                        }
-                    else
-                        {
-                        peerReflexiveLocal = 
-                            new IceTcpPeerReflexiveCandidate(mappedAddress, 
-                                localCandidate, m_iceAgent.isControlling(), 
-                                requestPriority);
-                        }
+                    final IceCandidate peerReflexiveLocal = 
+                        new IceUdpPeerReflexiveCandidate(mappedAddress, 
+                            localCandidate, m_iceAgent.isControlling(), 
+                            requestPriority);
+                    
                     m_mediaStream.addLocalCandidate(peerReflexiveLocal);
                     return peerReflexiveLocal;
                     }
@@ -336,7 +313,7 @@ public class IceStunClientCandidateProcessor
         }
     
     /**
-     * Processes a successful response to a check.  This is specified in 
+     * Processes a successful response to a check. This is specified in 
      * ICE section 7.1.2.2 at:
      * 
      * <p>
@@ -348,7 +325,7 @@ public class IceStunClientCandidateProcessor
      * "connected", meaning it only accepts data from that single IP address
      * and port.
      * 
-     * @param localCandidate The calculated local candidate.  This can be 
+     * @param localCandidate The calculated local candidate. This can be 
      * peer reflexive, but it also could just be the candidate of the original
      * pair we just issued a check for.
      * @param remoteCandidate The remote candidate from the original pair.
@@ -439,25 +416,9 @@ public class IceStunClientCandidateProcessor
                 // connection is the same so we need to reuse it, so we 
                 // construct a new pair with the same existing transport.
                 m_log.debug("Creating new pair...");
-                final IceCandidatePairVisitor<IceCandidatePair> pairVisitor =
-                    new IceCandidatePairVisitor<IceCandidatePair>()
-                    {
-                    public IceCandidatePair visitTcpIceCandidatePair(
-                        final IceTcpCandidatePair pair)
-                        {
-                        return m_existingSessionPairFactory.newTcpPair(
-                            localCandidate, newRemoteCandidate, 
-                            pair.getIoSession());
-                        }
-                    public IceCandidatePair visitUdpIceCandidatePair(
-                        final IceUdpCandidatePair pair)
-                        {
-                        return m_existingSessionPairFactory.newUdpPair(
-                            localCandidate, newRemoteCandidate, 
-                            pair.getIoSession());
-                        }
-                    };
-                pairToAddToValidList = this.m_pair.accept(pairVisitor);
+                pairToAddToValidList = m_existingSessionPairFactory.newUdpPair(
+                    localCandidate, newRemoteCandidate, 
+                    this.m_pair.getIoSession());
                 m_log.debug("Created pair:\n{}", pairToAddToValidList);
                 }
             }
@@ -475,7 +436,7 @@ public class IceStunClientCandidateProcessor
         this.m_iceAgent.checkValidPairsForAllComponents(m_mediaStream);
         
         // Tell the ICE agent to consider this valid pair if it was not just
-        // nominated.  Nominated pairs have already been considered as valid
+        // nominated. Nominated pairs have already been considered as valid
         // pairs -- that's how they had their nominated flag set.
         if (!updateNominatedFlag(pairToAddToValidList, useCandidate))
             {

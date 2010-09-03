@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.commons.id.uuid.UUID;
-import org.littleshoot.mina.common.IoSession;
-import org.littleshoot.mina.common.TransportType;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
@@ -20,14 +18,16 @@ import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.turn.client.TurnStunMessageMapper;
+import org.littleshoot.mina.common.IoSession;
+import org.littleshoot.mina.common.TransportType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Processes STUN connectivity checks for ICE.  See:<p>
+ * Processes STUN connectivity checks for ICE. See the 
+ * "7.2.  STUN Server Procedures" section at:<p>
  * 
- * http://tools.ietf.org/html/draft-ietf-mmusic-ice-19#section-7.2
+ * http://tools.ietf.org/html/rfc5245#section-7.2
  * 
  * @param <T> The type STUN message visitor methods return.
  */
@@ -88,6 +88,20 @@ public final class IceStunConnectivityCheckerImpl<T>
             {
             m_log.debug("We've recently processed the request -- ignoring " +
                 "duplicate");
+            final StunMessage response = 
+                this.m_bindingRequestTracker.getResponse(request);
+            if (response != null) 
+                {
+                // We need to resend the response again for the same reason
+                // we send requests multiple times: UDP packets can get 
+                // dropped!!
+                m_log.info("Writing same response again");
+                this.m_ioSession.write(response);
+                }
+            else 
+                {
+                m_log.warn("Received dup request before mapping response?");
+                }
             return null;
             }
         this.m_bindingRequestTracker.add(request);
@@ -115,6 +129,7 @@ public final class IceStunConnectivityCheckerImpl<T>
             // This can happen in the rare case that there's a role conflict.
             this.m_log.debug("Sending error response...");
             this.m_ioSession.write(errorResponse);
+            this.m_bindingRequestTracker.addResponse(request, errorResponse);
             }
         else
             {
@@ -143,6 +158,7 @@ public final class IceStunConnectivityCheckerImpl<T>
         final InetSocketAddress localAddress = 
             (InetSocketAddress) this.m_ioSession.getLocalAddress();
         
+        /*
         // We need to implement ICE section 7.2.1.2 here for TURN 
         // candidates.  We need to translate the remote address as seen on 
         // the IoSession (which will be the address of the TURN server) 
@@ -167,6 +183,11 @@ public final class IceStunConnectivityCheckerImpl<T>
                 (InetSocketAddress) this.m_ioSession.getRemoteAddress();
             m_log.debug("Using normal remote address: {}", remoteAddress);
             }
+            */
+        
+        final InetSocketAddress remoteAddress = 
+            (InetSocketAddress) this.m_ioSession.getRemoteAddress();
+        m_log.debug("Using normal remote address: {}", remoteAddress);
         
         // TODO: This should include other attributes!!
         final UUID transactionId = binding.getTransactionId();
@@ -177,6 +198,8 @@ public final class IceStunConnectivityCheckerImpl<T>
         // We write the response as soon as possible.
         m_log.debug("Writing success response...");
         this.m_ioSession.write(response);
+        // We need to remember our response to use it for duplicate requests.
+        this.m_bindingRequestTracker.addResponse(binding, response);
         
         // Check to see if the remote address matches the address of
         // any remote candidates we know about.  If it does not, it's a
@@ -271,19 +294,16 @@ public final class IceStunConnectivityCheckerImpl<T>
         else
             {
             m_log.debug("Creating new candidate pair.");
-            if (localCandidate.isUdp())
-                {
-                computedPair = this.m_candidatePairFactory.newUdpPair(
-                    localCandidate, remoteCandidate, this.m_ioSession); 
-                }
-            else
-                {
-                computedPair = this.m_candidatePairFactory.newTcpPair(
-                    localCandidate, remoteCandidate, this.m_ioSession);
-                }
+            computedPair = this.m_candidatePairFactory.newUdpPair(
+                localCandidate, remoteCandidate, this.m_ioSession); 
                 
             // Continue with the rest of ICE section 7.2.1.4, 
             // "Triggered Checks"
+            
+            // *  The pair is inserted into the check list based on its priority.
+            // *  Its state is set to Waiting.
+            // *  The pair is enqueued into the triggered check queue.
+            //
             
             // TODO: The remote candidate needs a username fragment and
             // password.  We don't implement this yet.  This is the 
@@ -325,17 +345,29 @@ public final class IceStunConnectivityCheckerImpl<T>
                 {
                 // This is an optimization that allows us to nominate now
                 // when we've already previously done a successful check
-                // on this pair.  In that case, we didn't add a triggered
+                // on this pair. In that case, we didn't add a triggered
                 // check above, and we can just nominate now.
                 case SUCCEEDED:
                     m_log.debug("Nominating pair on controlled agent:\n{}",  
                         computedPair);
                     computedPair.nominate();
+
+                    // Note this typically means the controlled agent will be
+                    // the first to use a nominated pair for media, as the
+                    // controlling agent won't use the nominated pair until
+                    // it receives the successful binding response.
                     m_agent.onNominatedPair(computedPair, 
                         this.m_iceMediaStream);
                     break;
                 case IN_PROGRESS:
-                    // No action.
+                    // Section 7.2.1.5:
+                    /*
+                      If the state of this pair is In-Progress, if its check produces a
+                      successful result, the resulting valid pair has its nominated flag
+                      set when the response arrives. This may end ICE processing for
+                      this media stream when it arrives; see Section 8.
+                     */
+                    computedPair.nominateOnSuccess();
                     break;
                 case WAITING:
                     // No action.

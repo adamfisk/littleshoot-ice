@@ -167,17 +167,9 @@ public class IceMediaStreamImpl implements IceMediaStream
         final int componentId = localCandidate.getComponentId();
         
         m_log.debug("Creating new peer reflexive candidate");
-        final IceCandidate prc;
-        if (isUdp)
-            {
-            prc = new IceUdpPeerReflexiveCandidate(remoteAddress, foundation, 
+        final IceCandidate prc = 
+            new IceUdpPeerReflexiveCandidate(remoteAddress, foundation, 
                 componentId, this.m_iceAgent.isControlling(), priority);
-            }
-        else
-            {
-            prc = new IceTcpPeerReflexiveCandidate(remoteAddress, foundation, 
-                componentId, this.m_iceAgent.isControlling(), priority);
-            }
 
         addRemoteCandidate(prc);
 

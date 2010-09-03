@@ -1,10 +1,9 @@
 package org.lastbamboo.common.ice;
 
-import org.littleshoot.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.ice.candidate.IceTcpCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceUdpCandidatePair;
+import org.littleshoot.mina.common.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,18 +39,6 @@ public class ExistingSessionIceCandidatePairFactoryImpl
             throw new NullPointerException("Null IO Session");
             }
         return new IceUdpCandidatePair(localCandidate, 
-            remoteCandidate, ioSession, this.m_checkerFactory);
-        }
-
-    public IceCandidatePair newTcpPair(final IceCandidate localCandidate, 
-        final IceCandidate remoteCandidate, final IoSession ioSession)
-        {
-        if (ioSession == null)
-            {
-            m_log.error("No IO Session");
-            throw new NullPointerException("Null IO Session");
-            }
-        return new IceTcpCandidatePair(localCandidate, 
             remoteCandidate, ioSession, this.m_checkerFactory);
         }
     }

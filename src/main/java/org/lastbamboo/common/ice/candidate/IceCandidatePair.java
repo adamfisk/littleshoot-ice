@@ -153,4 +153,8 @@ public interface IceCandidatePair extends Comparable<IceCandidatePair>
      * <code>false</code>.
      */
     boolean isTcp();
+
+    void nominateOnSuccess();
+    
+    boolean isNominateOnSuccess();
     }

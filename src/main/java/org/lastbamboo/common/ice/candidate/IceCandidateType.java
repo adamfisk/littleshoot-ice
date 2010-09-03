@@ -29,7 +29,7 @@ public enum IceCandidateType
     SERVER_REFLEXIVE (100, "srflx"),
     
     /**
-     * Candidated discovered from exchanging STUN messages with peers.
+     * Candidate discovered from exchanging STUN messages with peers.
      */
     PEER_REFLEXIVE (110, "prflx"),
     ;

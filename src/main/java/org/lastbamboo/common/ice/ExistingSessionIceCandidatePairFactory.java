@@ -13,7 +13,4 @@ public interface ExistingSessionIceCandidatePairFactory
     IceCandidatePair newUdpPair(IceCandidate localCandidate, 
         IceCandidate remoteCandidate, IoSession ioSession);
 
-    IceCandidatePair newTcpPair(IceCandidate localCandidate, 
-        IceCandidate remoteCandidate, IoSession session);
-
     }
