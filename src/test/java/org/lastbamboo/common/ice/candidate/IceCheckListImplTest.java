@@ -15,7 +15,6 @@ import org.lastbamboo.common.ice.IcePriorityCalculator;
 import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.IceStunCheckerFactoryImpl;
 import org.lastbamboo.common.ice.IceTransportProtocol;
-import org.lastbamboo.common.ice.stubs.IceTcpConnectorStub;
 import org.lastbamboo.common.ice.stubs.IceUdpConnectorStub;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
@@ -45,7 +44,7 @@ public class IceCheckListImplTest extends TestCase
         
         final IceCandidatePairFactory pairFactory = 
             new IceCandidatePairFactoryImpl(checkerFactory, 
-                new IceUdpConnectorStub(), new IceTcpConnectorStub());
+                new IceUdpConnectorStub());
         final IceCheckList checkList = 
             new IceCheckListImpl(pairFactory, localCandidates);
         checkList.formCheckList(remoteCandidates);
