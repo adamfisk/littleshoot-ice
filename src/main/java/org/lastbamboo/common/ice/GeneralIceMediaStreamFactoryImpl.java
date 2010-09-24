@@ -21,7 +21,6 @@ import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.littleshoot.mina.common.IoHandler;
-import org.littleshoot.mina.common.IoServiceListener;
 import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +52,7 @@ public class GeneralIceMediaStreamFactoryImpl
     public <T> IceMediaStream newIceMediaStream(
         final IceMediaStreamDesc streamDesc, final IceAgent iceAgent, 
         final DemuxableProtocolCodecFactory protocolCodecFactory, 
-        final TurnClientListener delegateTurnClientListener,
-        final IoServiceListener udpServiceListener) 
+        final TurnClientListener delegateTurnClientListener) 
         throws IceUdpConnectException
         {
         final DemuxableProtocolCodecFactory stunCodecFactory =
@@ -97,7 +95,7 @@ public class GeneralIceMediaStreamFactoryImpl
                 m_log.warn("Error connecting UDP peer", e);
                 throw new IceUdpConnectException("Could not create UDP peer", e);
                 }
-            udpStunPeer.addIoServiceListener(udpServiceListener);
+            //udpStunPeer.addIoServiceListener(udpServiceListener);
             }
         else
             {
@@ -143,7 +141,7 @@ public class GeneralIceMediaStreamFactoryImpl
             new IceUdpConnector(demuxingCodecFactory,
                 udpIoHandler, iceAgent.isControlling());
         udpConnector.addIoServiceListener(stream);
-        udpConnector.addIoServiceListener(udpServiceListener);
+        //udpConnector.addIoServiceListener(udpServiceListener);
 
         final IceCandidatePairFactory candidatePairFactory = 
             new IceCandidatePairFactoryImpl(checkerFactory, udpConnector);

@@ -146,7 +146,7 @@ public class IceAgentImplTest
                 final IoServiceListener udpServiceListener = 
                     new IoServiceListenerStub();
                 return generalStreamFactory1.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, delegateListener, udpServiceListener);
+                    otherCodecFactory, delegateListener);
                 }
             };
         
@@ -161,10 +161,10 @@ public class IceAgentImplTest
                     new StunDemuxableProtocolCodecFactory();
                 final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final TurnClientListener delegateListener = null;
-                final IoServiceListener udpServiceListener = 
-                    new IoServiceListenerStub();
+                //final IoServiceListener udpServiceListener = 
+                //    new IoServiceListenerStub();
                 return generalStreamFactory2.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, delegateListener, udpServiceListener);
+                    otherCodecFactory, delegateListener);
                 }
             };
         
