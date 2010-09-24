@@ -115,7 +115,10 @@ public class UdpIceCandidateGatherer implements IceCandidateGatherer
         
         final IceUdpHostCandidate hostCandidate = 
             new IceUdpHostCandidate(hostAddress, this.m_controlling);
-        candidates.add(hostCandidate);
+        
+        // We don't want the local UDP candidate to be included, as we'll just
+        // use the TCP candidate in this case. See LS-460.
+        //candidates.add(hostCandidate);
 
         try
             {
