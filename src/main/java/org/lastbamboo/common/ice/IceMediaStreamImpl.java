@@ -14,15 +14,10 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 
 import org.apache.commons.lang.math.RandomUtils;
-import org.littleshoot.mina.common.IoHandler;
-import org.littleshoot.mina.common.IoService;
-import org.littleshoot.mina.common.IoServiceConfig;
-import org.littleshoot.mina.common.IoSession;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateGatherer;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
-import org.lastbamboo.common.ice.candidate.IceTcpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
@@ -32,6 +27,10 @@ import org.lastbamboo.common.stun.stack.message.attributes.ice.IcePriorityAttrib
 import org.lastbamboo.common.util.Closure;
 import org.lastbamboo.common.util.Predicate;
 import org.lastbamboo.common.util.mina.MinaUtils;
+import org.littleshoot.mina.common.IoHandler;
+import org.littleshoot.mina.common.IoService;
+import org.littleshoot.mina.common.IoServiceConfig;
+import org.littleshoot.mina.common.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -54,6 +54,10 @@ public class UdtSocketFactory implements UdpSocketFactory
         clear(session, stunUdpPeer);
         if (!controlling)
             {
+            // The CONTROLLED agent is notified to start the media stream first
+            // in the ICE process, so this is called before the other side
+            // starts sending media. We have to consider this in terms of
+            // making sure we wait until the other side is ready.
             m_log.debug(
                 "Creating UDT client socket on CONTROLLED agent.");
             final Runnable clientRunner = new Runnable()
@@ -62,8 +66,8 @@ public class UdtSocketFactory implements UdpSocketFactory
                     {
                     try
                         {
-                        openClientSocket(session, socketListener);
-                        //openServerSocket(session, socketListener);
+                        //openClientSocket(session, socketListener);
+                        openServerSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
@@ -79,6 +83,8 @@ public class UdtSocketFactory implements UdpSocketFactory
             }
         else
             {
+            // This actually happens second in the ICE process -- the
+            // controlled agent is notified to start sending media first!
             m_log.debug(
                 "Creating UDT server socket on CONTROLLING agent.");
             m_log.debug("Listening on: {}", session);
@@ -92,8 +98,8 @@ public class UdtSocketFactory implements UdpSocketFactory
                     {
                     try
                         {
-                        openServerSocket(session, socketListener);
-                        //openClientSocket(session, socketListener);
+                        //openServerSocket(session, socketListener);
+                        openClientSocket(session, socketListener);
                         }
                     catch (final Throwable t)
                         {
@@ -124,7 +130,9 @@ public class UdtSocketFactory implements UdpSocketFactory
             new UDTClient(local.getAddress(), local.getPort());
 
         // Wait for a bit to make sure the server side has a chance to come up.
-        Thread.sleep(1000);
+        final long sleepTime = 700;
+        m_log.info("Client side sleeping for {} milliseconds", sleepTime);
+        Thread.sleep(sleepTime);
         m_log.info("About to connect...");
         client.connect(remote.getAddress(), remote.getPort());
         m_log.info("Connected!!!");

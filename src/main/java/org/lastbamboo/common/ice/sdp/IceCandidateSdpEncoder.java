@@ -219,7 +219,8 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         }
 
 
-    public Null visitTcpPeerReflexiveCandidate(IceTcpPeerReflexiveCandidate candidate)
+    public Null visitTcpPeerReflexiveCandidate(
+        final IceTcpPeerReflexiveCandidate candidate)
         {
         addAttributeWithRelated(candidate);
         return ObjectUtils.NULL;
