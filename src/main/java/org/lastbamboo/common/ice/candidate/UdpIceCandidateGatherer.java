@@ -118,7 +118,7 @@ public class UdpIceCandidateGatherer implements IceCandidateGatherer
         
         // We don't want the local UDP candidate to be included, as we'll just
         // use the TCP candidate in this case. See LS-460.
-        //candidates.add(hostCandidate);
+        candidates.add(hostCandidate);
 
         try
             {

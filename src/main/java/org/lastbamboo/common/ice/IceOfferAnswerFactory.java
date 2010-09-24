@@ -118,13 +118,11 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
             public byte[] generateOffer() 
                 {
                 return encodeCandidates(controlling, tcp, udp, turnOfferAnswer);
-                //return udp.generateOffer();
                 }
             
             public byte[] generateAnswer() 
                 {
                 return encodeCandidates(controlling, tcp, udp, turnOfferAnswer);
-                //return udp.generateAnswer();
                 }
             
             public void close() 

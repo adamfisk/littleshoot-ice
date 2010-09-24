@@ -2,6 +2,7 @@ package org.lastbamboo.common.ice;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -216,6 +217,15 @@ public class IceCheckListImpl implements IceCheckList
             {
             for (final IceCandidate remoteCandidate : remoteCandidates)
                 {
+                final InetSocketAddress isa =remoteCandidate.getSocketAddress();
+                final InetAddress remote = isa.getAddress();
+                if (remote.isSiteLocalAddress())
+                    {
+                    // We ignore site local addresses for UDP because those
+                    // should be accessible with TCP instead.
+                    m_log.info("Ignoring site local address: {}", remote);
+                    continue;
+                    }
                 if (shouldPair(localCandidate, remoteCandidate))
                     {
                     final Pair<IceCandidate, IceCandidate> pair =
@@ -270,6 +280,7 @@ public class IceCheckListImpl implements IceCheckList
             m_log.debug("Created pairs:\n"+this.m_pairs);
             }
         
+        /*
         final Closure<IceCandidatePair> tcpTurnClosure =
             new Closure<IceCandidatePair>()
             {
@@ -293,6 +304,7 @@ public class IceCheckListImpl implements IceCheckList
                 }
             };
         executeOnPairs(tcpTurnClosure);
+        */
         }
     
 
