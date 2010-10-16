@@ -16,7 +16,6 @@ import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.mina.MinaUtils;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
     private final TurnClientListener m_turnClientListener;
 
     /**
-     * Creates a new ICE agent factory.  The factory maintains a reference to
+     * Creates a new ICE agent factory. The factory maintains a reference to
      * the TCP TURN client because the client holds a persistent connection
      * to the TURN server and is used across all ICE sessions.
      * 
