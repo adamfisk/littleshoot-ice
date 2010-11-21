@@ -1,11 +1,9 @@
 package org.lastbamboo.common.ice;
 
-import org.littleshoot.mina.common.IoSession;
-import org.littleshoot.mina.common.TransportType;
-import org.lastbamboo.common.ice.transport.IceTcpStunChecker;
 import org.lastbamboo.common.ice.transport.IceUdpStunChecker;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.littleshoot.mina.common.IoSession;
 
 /**
  * Class for creating STUN checker factories for both UDP and TCP.  Each
@@ -31,16 +29,7 @@ public class IceStunCheckerFactoryImpl implements IceStunCheckerFactory
 
     public IceStunChecker newChecker(final IoSession session)
         {
-        final TransportType type = session.getTransportType();
-        final boolean isUdp = type.isConnectionless();
-        if (isUdp)
-            {
-            return new IceUdpStunChecker(session, m_transactionTracker);
-            }
-        else
-            {
-            return new IceTcpStunChecker(session, m_transactionTracker);
-            }
+        return new IceUdpStunChecker(session, m_transactionTracker);
         }
 
     }
