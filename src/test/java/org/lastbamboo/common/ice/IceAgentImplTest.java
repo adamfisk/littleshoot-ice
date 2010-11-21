@@ -7,18 +7,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.lastbamboo.common.ice.stubs.IoServiceListenerStub;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
-import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.DnsSrvCandidateProvider;
-import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.littleshoot.mina.common.IoHandler;
 import org.littleshoot.mina.common.IoHandlerAdapter;
-import org.littleshoot.mina.common.IoServiceListener;
 import org.littleshoot.mina.common.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,14 +135,14 @@ public class IceAgentImplTest
             public IceMediaStream newStream(final IceAgent iceAgent) 
                 throws IceUdpConnectException
                 {
-                final DemuxableProtocolCodecFactory otherCodecFactory =
-                    new StunDemuxableProtocolCodecFactory();
-                final IoHandler clientIoHandler = new IoHandlerAdapter();
+                //final DemuxableProtocolCodecFactory otherCodecFactory =
+                //    new StunDemuxableProtocolCodecFactory();
+                //final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final TurnClientListener delegateListener = null;
-                final IoServiceListener udpServiceListener = 
-                    new IoServiceListenerStub();
+                //final IoServiceListener udpServiceListener = 
+                //    new IoServiceListenerStub();
                 return generalStreamFactory1.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, delegateListener);
+                    delegateListener);
                 }
             };
         
@@ -157,14 +153,14 @@ public class IceAgentImplTest
             public IceMediaStream newStream(final IceAgent iceAgent) 
                 throws  IceUdpConnectException
                 {
-                final DemuxableProtocolCodecFactory otherCodecFactory =
-                    new StunDemuxableProtocolCodecFactory();
-                final IoHandler clientIoHandler = new IoHandlerAdapter();
+                //final DemuxableProtocolCodecFactory otherCodecFactory =
+                //    new StunDemuxableProtocolCodecFactory();
+                //final IoHandler clientIoHandler = new IoHandlerAdapter();
                 final TurnClientListener delegateListener = null;
                 //final IoServiceListener udpServiceListener = 
                 //    new IoServiceListenerStub();
                 return generalStreamFactory2.newIceMediaStream(desc, iceAgent, 
-                    otherCodecFactory, delegateListener);
+                    delegateListener);
                 }
             };
         

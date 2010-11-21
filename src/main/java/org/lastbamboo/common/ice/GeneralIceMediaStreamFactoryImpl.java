@@ -10,16 +10,14 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePairFactory;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairFactoryImpl;
 import org.lastbamboo.common.ice.candidate.UdpIceCandidateGatherer;
 import org.lastbamboo.common.ice.transport.IceUdpConnector;
-import org.lastbamboo.common.stun.stack.StunDemuxableProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.StunIoHandler;
+import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
-import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
 import org.littleshoot.mina.common.IoHandler;
 import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.slf4j.Logger;
@@ -51,15 +49,17 @@ public class GeneralIceMediaStreamFactoryImpl
     
     public <T> IceMediaStream newIceMediaStream(
         final IceMediaStreamDesc streamDesc, final IceAgent iceAgent, 
-        final DemuxableProtocolCodecFactory protocolCodecFactory, 
         final TurnClientListener delegateTurnClientListener) 
         throws IceUdpConnectException
         {
-        final DemuxableProtocolCodecFactory stunCodecFactory =
-            new StunDemuxableProtocolCodecFactory();
-        final ProtocolCodecFactory demuxingCodecFactory = 
-            new DemuxingProtocolCodecFactory(
-                stunCodecFactory, protocolCodecFactory);
+        final ProtocolCodecFactory codecFactory =
+            new StunProtocolCodecFactory();
+        
+        //final DemuxableProtocolCodecFactory stunCodecFactory =
+        //    new StunDemuxableProtocolCodecFactory();
+        //final ProtocolCodecFactory demuxingCodecFactory = 
+        //    new DemuxingProtocolCodecFactory(
+        //        stunCodecFactory, protocolCodecFactory);
         final StunTransactionTracker<StunMessage> transactionTracker =
             new StunTransactionTrackerImpl();
 
@@ -84,7 +84,7 @@ public class GeneralIceMediaStreamFactoryImpl
             try
                 {
                 udpStunPeer = 
-                    new IceStunUdpPeer(demuxingCodecFactory, udpIoHandler,
+                    new IceStunUdpPeer(codecFactory, udpIoHandler,
                         iceAgent.isControlling(), transactionTracker, 
                         this.m_stunServerCandidateProvider);
                 }
@@ -138,7 +138,7 @@ public class GeneralIceMediaStreamFactoryImpl
             gatherer.gatherCandidates();
         
         final IceUdpConnector udpConnector = 
-            new IceUdpConnector(demuxingCodecFactory,
+            new IceUdpConnector(codecFactory,
                 udpIoHandler, iceAgent.isControlling());
         udpConnector.addIoServiceListener(stream);
         //udpConnector.addIoServiceListener(udpServiceListener);
