@@ -82,24 +82,10 @@
             <artifactId>lastbamboo-common-udt</artifactId>
             </dependency>
        
-<!-- 
-        <dependency>
-            <groupId>org.lastbamboo</groupId>
-            <artifactId>lastbamboo-common-upnp</artifactId>
-            </dependency>
--->
-
         <dependency>
             <groupId>org.lastbamboo</groupId>
             <artifactId>lastbamboo-common-util-common</artifactId>
             </dependency>
            
-<!-- 
-        <dependency>
-            <groupId>org.lastbamboo</groupId>
-            <artifactId>lastbamboo-common-tcp-framing</artifactId>
-            </dependency>
--->
-               
         </dependencies>
     </project>
