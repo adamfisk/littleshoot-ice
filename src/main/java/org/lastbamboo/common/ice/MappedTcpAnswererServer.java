@@ -9,6 +9,7 @@ import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMapErrorEvent;
 import org.lastbamboo.common.portmapping.PortMapEvent;
 import org.lastbamboo.common.portmapping.PortMapListener;
+import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.SocketListener;
@@ -91,9 +92,10 @@ public class MappedTcpAnswererServer implements PortMapListener
                 final InetSocketAddress socketAddress =
                     (InetSocketAddress) m_serverSocket.getLocalSocketAddress();
                 final int port = socketAddress.getPort();
-                m_upnpMappingIndex = upnpService.addUpnpMapping(2, port, port);
+                m_upnpMappingIndex = 
+                    upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, port);
                 m_natPmpMappingIndex =
-                    natPmpService.addNatPmpMapping(2, port, port);
+                    natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port, port);
                 }
             };
         final Thread serverThread = new Thread(serverRunner, 

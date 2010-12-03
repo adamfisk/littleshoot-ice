@@ -21,6 +21,7 @@ import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMapErrorEvent;
 import org.lastbamboo.common.portmapping.PortMapEvent;
 import org.lastbamboo.common.portmapping.PortMapListener;
+import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.stun.stack.StunAddressProvider;
 import org.lastbamboo.common.util.NetworkUtils;
@@ -165,9 +166,11 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // those connection attempts should just fail quickly.
         final int localPort = socketAddress.getPort();
         this.m_natPmpMappingIndex =
-            this.m_natPmpService.addNatPmpMapping(2, localPort, localPort);
+            this.m_natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, 
+                localPort, localPort);
         this.m_upnpMappingIndex =
-            this.m_upnpService.addUpnpMapping(2, localPort, localPort);
+            this.m_upnpService.addUpnpMapping(PortMappingProtocol.TCP, 
+                localPort, localPort);
         final Runnable serverRunner = new Runnable() 
             {
             public void run()

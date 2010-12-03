@@ -2,6 +2,7 @@ package org.lastbamboo.common.ice;
 
 import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMapListener;
+import org.lastbamboo.common.portmapping.PortMappingProtocol;
 
 public class NatPmpServiceStub implements NatPmpService {
 
@@ -9,7 +10,7 @@ public class NatPmpServiceStub implements NatPmpService {
         
     }
     
-    public int addNatPmpMapping(int protocolType, int localPort,
+    public int addNatPmpMapping(PortMappingProtocol protocolType, int localPort,
             int externalPortRequested) {
         // TODO Auto-generated method stub
         return 0;

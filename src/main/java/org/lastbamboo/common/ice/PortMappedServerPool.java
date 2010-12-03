@@ -11,6 +11,7 @@ import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMapErrorEvent;
 import org.lastbamboo.common.portmapping.PortMapEvent;
 import org.lastbamboo.common.portmapping.PortMapListener;
+import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
@@ -118,8 +119,10 @@ public class PortMappedServerPool
         final InetSocketAddress socketAddress =
             (InetSocketAddress) serverSocket.getLocalSocketAddress();
         final int port = socketAddress.getPort();
-        final int upnp = this.upnpService.addUpnpMapping(2, port, port);
-        final int natPmp = this.natPmpService.addNatPmpMapping(2, port, port);
+        final int upnp = 
+            this.upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, port);
+        final int natPmp = 
+            this.natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port, port);
         final PortMappedServerSocket server = 
             new PortMappedServerSocket(serverSocket);
         this.m_mappedServers.add(server);
