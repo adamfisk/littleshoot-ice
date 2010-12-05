@@ -47,35 +47,6 @@ public class PortMappedServerPool
         {
         this.natPmpService = natPmpService;
         this.upnpService = upnpService;
-        final PortMapListener upnpListener = new PortMapListener() 
-            {
-            
-            public void onPortMapError() 
-                {
-                m_log.info("Got UPnP port map error");
-                }
-            
-            public void onPortMap(int externalPort) 
-                {
-                m_log.info("Got UPnP port map event");
-                }
-            };
-            
-        final PortMapListener natPmpListener = new PortMapListener() 
-            {
-            
-            public void onPortMapError() 
-                {
-                m_log.info("Got NAT PMP port map error");
-                }
-            
-            public void onPortMap(int externalPort) 
-                {
-                m_log.info("Got NAT PMP port map event");
-                }
-            };
-        this.upnpService.addPortMapListener(upnpListener);
-        this.natPmpService.addPortMapListener(natPmpListener);
         for (int i=0; i<NUM_SERVERS;i++)
             {
             try 
@@ -114,10 +85,29 @@ public class PortMappedServerPool
         final InetSocketAddress socketAddress =
             (InetSocketAddress) serverSocket.getLocalSocketAddress();
         final int port = socketAddress.getPort();
+        final PortMapListener upnpPortMapListener = new PortMapListener() {
+            
+            public void onPortMapError() {
+            }
+            
+            public void onPortMap(int externalPort) {
+            }
+        }; 
+        
+        final PortMapListener natPmpPortMapListener = new PortMapListener() {
+            
+            public void onPortMapError() {
+            }
+            
+            public void onPortMap(int externalPort) {
+            }
+        };
         final int upnp = 
-            this.upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, port);
+            this.upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
+                port, upnpPortMapListener);
         final int natPmp = 
-            this.natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port, port);
+            this.natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port, 
+                port, natPmpPortMapListener);
         final PortMappedServerSocket server = 
             new PortMappedServerSocket(serverSocket);
         this.m_mappedServers.add(server);

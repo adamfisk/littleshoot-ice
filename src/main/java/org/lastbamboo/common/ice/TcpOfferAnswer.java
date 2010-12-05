@@ -49,6 +49,8 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     private ServerSocket m_serverSocket;
     private int m_natPmpMappingIndex;
     private int m_upnpMappingIndex;
+    private boolean m_portMapError = false;
+    private int m_mappedPort;
 
     /**
      * Creates a new TCP {@link OfferAnswer} class for processing offers and
@@ -72,8 +74,6 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         this.m_natPmpService = natPmpService;
         this.m_upnpService = upnpService;
         this.m_answererServer = answererServer;
-        this.m_upnpService.addPortMapListener(this);
-        this.m_natPmpService.addPortMapListener(this);
 
         // We only start another server socket on the controlling candidate
         // because the non-controlled, answering agent simply uses the same
@@ -142,10 +142,17 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // work, we'll connect to them during ICE. If the mapping doesn't work,
         // those connection attempts should just fail quickly.
         final int localPort = socketAddress.getPort();
+        
+        // Due to the asynchronous nature of the port mapping calls, we assume
+        // that the router will map to the same port as the local port, as 
+        // we request. If we get a notification the router has assigned a 
+        // different port by the time we send out the candidates, we of course
+        // record that.
+        this.m_mappedPort = localPort;
         this.m_natPmpMappingIndex = this.m_natPmpService.addNatPmpMapping(
-                PortMappingProtocol.TCP, localPort, localPort);
+            PortMappingProtocol.TCP, localPort, localPort, this);
         this.m_upnpMappingIndex = this.m_upnpService.addUpnpMapping(
-                PortMappingProtocol.TCP, localPort, localPort);
+            PortMappingProtocol.TCP, localPort, localPort, this);
         final Runnable serverRunner = new Runnable() {
             public void run() {
                 // We just accept the single socket on this port instead of
@@ -286,13 +293,11 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         else {
             m_log.info("Socket already exists! Ignoring second");
             // If a socket already existed, we close the socket *only if we're
-            // the
-            // controlling peer*. Otherwise, it's possible for there to be a
-            // race
-            // condition where each side both possible successful sockets in
-            // rapid succession, causing both sides to close the second socket
-            // they
-            // receive, ultimately closing all successful sockets!!
+            // the controlling peer*. Otherwise, it's possible for there to be 
+            // a race condition where each side both possible successful 
+            // sockets in rapid succession, causing both sides to close 
+            // the second socket they receive, ultimately closing all 
+            // successful sockets!!
             if (this.m_controlling) {
                 m_log.info("Closing on controlling candidate");
                 try {
@@ -340,10 +345,17 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // although there may be cases where this actually succeeds when UPnP
         // mapping failed due to simultaneous open behavior on the NAT.
         if (this.m_publicAddress != null && hostPortMapped()) {
-            // The port mapping maps the local port to the same port on the
-            // public gateway.
+            // We're not completely sure if the port has been mapped yet at
+            // this point. We know there hasn't been an error, but that's 
+            // about it. The mapped port will actually be the port mapped
+            // on the router in two cases:
+            // 1) We've received an alert about the mapped port
+            // 2) We've haven't received an alert, but the router has in fact
+            // mapped the local port to the same port on the router as we 
+            // requested. That mapping should theoretically work by the time
+            // the external side tries to use it.
             final InetSocketAddress publicHostAddress = new InetSocketAddress(
-                    this.m_publicAddress, hostAddress.getPort());
+                this.m_publicAddress, this.m_mappedPort);
 
             final IceCandidate publicHostCandidate = 
                 new IceTcpHostPassiveCandidate(publicHostAddress, 
@@ -377,7 +389,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     }
 
     public boolean hostPortMapped() {
-        return true;
+        return !m_portMapError;
     }
 
     public InetAddress getPublicAdress() {
@@ -385,14 +397,16 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     }
 
     public void useRelay() {
-        // The controlling code has decided to use the relay. Nothing to here.
+        // The controlling code decided to use the relay. Nothing to do here.
     }
 
     public void onPortMap(final int externalPort) {
         m_log.info("Received port maped: {}", externalPort);
+        this.m_mappedPort = externalPort;
     }
 
     public void onPortMapError() {
         m_log.info("Got port map error.");
+        this.m_portMapError = true;
     }
 }

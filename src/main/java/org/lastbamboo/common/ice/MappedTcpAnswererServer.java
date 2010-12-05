@@ -59,18 +59,16 @@ public class MappedTcpAnswererServer implements PortMapListener {
             }
 
             private void establishSocket() throws IOException {
-                upnpService.addPortMapListener(MappedTcpAnswererServer.this);
-                natPmpService.addPortMapListener(MappedTcpAnswererServer.this);
-
                 m_serverSocket = new ServerSocket();
                 m_serverSocket.bind(
                     new InetSocketAddress(NetworkUtils.getLocalHost(), 0));
                 final InetSocketAddress socketAddress = 
                     (InetSocketAddress) m_serverSocket.getLocalSocketAddress();
                 final int port = socketAddress.getPort();
-                upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, port);
+                upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
+                    port, MappedTcpAnswererServer.this);
                 natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
-                    port);
+                    port, MappedTcpAnswererServer.this);
             }
         };
         final Thread serverThread = new Thread(serverRunner,
