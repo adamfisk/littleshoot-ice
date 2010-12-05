@@ -18,8 +18,6 @@ import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.portmapping.NatPmpService;
-import org.lastbamboo.common.portmapping.PortMapErrorEvent;
-import org.lastbamboo.common.portmapping.PortMapEvent;
 import org.lastbamboo.common.portmapping.PortMapListener;
 import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
@@ -35,8 +33,7 @@ import org.slf4j.LoggerFactory;
  * {@link OfferAnswer} handler for TCP connections.
  */
 public class TcpOfferAnswer implements IceOfferAnswer, 
-    StunAddressProvider, PortMapListener
-    {
+    StunAddressProvider, PortMapListener {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final AtomicReference<Socket> m_socketRef = 
@@ -64,12 +61,11 @@ public class TcpOfferAnswer implements IceOfferAnswer,
      * @param answererServer The class that has a router-mapped port for 
      * the answering server socket. 
      */
-    public TcpOfferAnswer(final InetAddress publicAddress, 
+    public TcpOfferAnswer(final InetAddress publicAddress,
         final OfferAnswerListener offerAnswerListener,
         final boolean controlling, final NatPmpService natPmpService,
-        final UpnpService upnpService, 
-        final MappedTcpAnswererServer answererServer)
-        {
+        final UpnpService upnpService,
+        final MappedTcpAnswererServer answererServer) {
         this.m_publicAddress = publicAddress;
         this.m_offerAnswerListener = offerAnswerListener;
         this.m_controlling = controlling;
@@ -78,85 +74,66 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         this.m_answererServer = answererServer;
         this.m_upnpService.addPortMapListener(this);
         this.m_natPmpService.addPortMapListener(this);
-        
+
         // We only start another server socket on the controlling candidate
         // because the non-controlled, answering agent simply uses the same
         // server socket across all ICE sessions, forwarding their data to
         // the HTTP server.
-        if (controlling || answererServer == null)
-            {
-            try
-                {
+        if (controlling || answererServer == null) {
+            try {
                 this.m_serverSocket = new ServerSocket();
                 this.m_serverSocket.bind(
                     new InetSocketAddress(NetworkUtils.getLocalHost(), 0));
-                
+
                 // Accept incoming sockets on a listening thread.
                 listen();
                 m_log.info("Starting offer answer");
-                }
-            catch (final IOException e)
-                {
+            } catch (final IOException e) {
                 m_log.error("Could not bind server socket", e);
                 throw new RuntimeIoException("Could not bind server socket", e);
-                }
             }
         }
+    }
 
-    public void close() 
-        {
+    public void close() {
         m_log.info("Closing!!");
         final Socket sock = m_socketRef.get();
-        if (sock != null)
-            {
-            try
-                {
+        if (sock != null) {
+            try {
                 sock.close();
-                }
-            catch (final IOException e)
-                {
+            } catch (final IOException e) {
                 m_log.info("Exception closing socket", e);
-                }
             }
-        
-        if (this.m_serverSocket != null)
-            {
-            try
-                {
+        }
+
+        if (this.m_serverSocket != null) {
+            try {
                 this.m_serverSocket.close();
-                }
-            catch (final IOException e)
-                {
+            } catch (final IOException e) {
                 m_log.info("Exception closing server socket", e);
-                }
-            
+            }
+
             // We need to unmap any ports we've mapped, and we've only mapped
             // ports if the server socket is not null.
-            if (this.m_upnpMappingIndex != -1)
-                {
+            if (this.m_upnpMappingIndex != -1) {
                 this.m_upnpService.removeUpnpMapping(this.m_upnpMappingIndex);
-                }
-            if (this.m_natPmpMappingIndex != -1)
-                {
+            }
+            if (this.m_natPmpMappingIndex != -1) {
                 this.m_natPmpService.removeNatPmpMapping(
                     this.m_natPmpMappingIndex);
-                }
             }
         }
-    
+    }
 
-    public void closeTcp()
-        {
+    public void closeTcp() {
         close();
-        }
+    }
 
-    public void closeUdp()
-        {
+    public void closeUdp() {
         // Ignored.
-        }
+    }
 
-    private void listen()
-        {
+    private void listen() {
         final InetSocketAddress socketAddress = 
             (InetSocketAddress) m_serverSocket.getLocalSocketAddress();
 
@@ -165,164 +142,133 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // work, we'll connect to them during ICE. If the mapping doesn't work,
         // those connection attempts should just fail quickly.
         final int localPort = socketAddress.getPort();
-        this.m_natPmpMappingIndex =
-            this.m_natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, 
-                localPort, localPort);
-        this.m_upnpMappingIndex =
-            this.m_upnpService.addUpnpMapping(PortMappingProtocol.TCP, 
-                localPort, localPort);
-        final Runnable serverRunner = new Runnable() 
-            {
-            public void run()
-                {
+        this.m_natPmpMappingIndex = this.m_natPmpService.addNatPmpMapping(
+                PortMappingProtocol.TCP, localPort, localPort);
+        this.m_upnpMappingIndex = this.m_upnpService.addUpnpMapping(
+                PortMappingProtocol.TCP, localPort, localPort);
+        final Runnable serverRunner = new Runnable() {
+            public void run() {
                 // We just accept the single socket on this port instead of
                 // the typical "while (true)".
-                try
-                    {
-                    m_log.info("Waiting for incoming socket on: {}", 
-                        socketAddress);
+                try {
+                    m_log.info("Waiting for incoming socket on: {}",
+                            socketAddress);
                     final Socket sock = m_serverSocket.accept();
                     m_log.info("Got incoming socket!! Controlling: {}",
-                        m_controlling);
+                            m_controlling);
                     onSocket(sock);
-                    }
-                catch (final IOException e)
-                    {
+                } catch (final IOException e) {
                     m_log.info("Exception accepting socket!!", e);
-                    }
                 }
-            };
-        final Thread serverThread = new Thread(serverRunner, 
-            "TCP-Ice-Server-Thread: "+socketAddress);
+            }
+        };
+        final Thread serverThread = new Thread(serverRunner,
+                "TCP-Ice-Server-Thread: " + socketAddress);
         serverThread.setDaemon(true);
         serverThread.start();
-        }
+    }
 
-    public byte[] generateAnswer() 
-        {
-        // TODO: This is a little bit odd since the TCP side should 
+    public byte[] generateAnswer() {
+        // TODO: This is a little bit odd since the TCP side should
         // theoretically generate the SDP for the TCP candidates.
         final String msg = 
             "We fallback to the old code for gathering this for now.";
         m_log.error("TCP implemenation can't generate offers or answers");
         throw new UnsupportedOperationException(msg);
-        }
+    }
 
-    public byte[] generateOffer() 
-        {
-        // TODO: This is a little bit odd since the TCP side should 
+    public byte[] generateOffer() {
+        // TODO: This is a little bit odd since the TCP side should
         // theoretically generate the SDP for the TCP candidates.
         final String msg = 
             "We fallback to the old code for gathering this for now.";
         m_log.error("TCP implemenation can't generate offers or answers");
         throw new UnsupportedOperationException(msg);
-        }
+    }
 
-    public void processOffer(final ByteBuffer offer)
-        {
+    public void processOffer(final ByteBuffer offer) {
         processRemoteCandidates(offer);
-        }
+    }
 
-    public void processAnswer(final ByteBuffer answer)
-        {
+    public void processAnswer(final ByteBuffer answer) {
         // We don't need to do any processing if we've already got the socket.
-        if (this.m_socketRef.get() != null)
-            {
-            m_log.info("Controlling side already has a socket -- " +
-                "ignoring answer.");
+        if (this.m_socketRef.get() != null) {
+            m_log.info("Controlling side already has a socket -- "
+                    + "ignoring answer.");
             return;
-            }
-        processRemoteCandidates(answer);
         }
+        processRemoteCandidates(answer);
+    }
 
-    private void processRemoteCandidates(final ByteBuffer encodedCandidates) 
-        {
+    private void processRemoteCandidates(final ByteBuffer encodedCandidates) {
         final IceCandidateSdpDecoder decoder = new IceCandidateSdpDecoderImpl();
         final Collection<IceCandidate> remoteCandidates;
-        try
-            {
+        try {
             // Note the second argument doesn't matter at all.
             remoteCandidates = decoder.decode(encodedCandidates, m_controlling);
-            }
-        catch (final IOException e)
-            {
+        } catch (final IOException e) {
             m_log.warn("Could not process remote candidates", e);
             return;
-            }
+        }
 
-        // OK, we've got the candidates. We'll now parallelize connection 
-        // attempts to all of them, taking the first to succeed. Note there's 
+        // OK, we've got the candidates. We'll now parallelize connection
+        // attempts to all of them, taking the first to succeed. Note there's
         // typically a single local network candidate that will only succeed
-        // if we're on same subnet and then a public candidate that's 
+        // if we're on same subnet and then a public candidate that's
         // either there because the remote host is on the public Internet or
         // because the public address was mapped using UPnP.
         final IceCandidateVisitor<Object> visitor = 
-            new IceCandidateVisitorAdapter<Object>()
-                {
-                @Override
-                public Object visitTcpHostPassiveCandidate(
-                    final IceTcpHostPassiveCandidate candidate)
-                    {
-                    m_log.info("Visiting TCP passive host candidate: {}", 
-                        candidate);
-                    return connectToCandidate(candidate);
-                    }
-                };
-        for (final IceCandidate candidate : remoteCandidates)
-            {
+            new IceCandidateVisitorAdapter<Object>() {
+            @Override
+            public Object visitTcpHostPassiveCandidate(
+                    final IceTcpHostPassiveCandidate candidate) {
+                m_log.info("Visiting TCP passive host candidate: {}", candidate);
+                return connectToCandidate(candidate);
+            }
+        };
+        for (final IceCandidate candidate : remoteCandidates) {
             candidate.accept(visitor);
-            }
         }
-    
-    private Object connectToCandidate(final IceCandidate candidate) 
-        {
-        if (candidate == null) 
-            {
-            m_log.warn("Null candidate?? "+ThreadUtils.dumpStack());
+    }
+
+    private Object connectToCandidate(final IceCandidate candidate) {
+        if (candidate == null) {
+            m_log.warn("Null candidate?? " + ThreadUtils.dumpStack());
             return null;
-            }
-        final Runnable threadRunner = new Runnable()
-            {
-            public void run()
-                {
+        }
+        final Runnable threadRunner = new Runnable() {
+            public void run() {
                 Socket sock = null;
-                try
-                    {
+                try {
                     m_log.info("Connecting to: {}", candidate);
                     sock = new Socket();
-                    sock.connect(candidate.getSocketAddress(), 16*1000);
+                    sock.connect(candidate.getSocketAddress(), 16 * 1000);
                     m_log.info("Client socket connected to: {}", candidate);
                     onSocket(sock);
                     // Close this at the end in case it throws an exception.
-                    }
-                catch (final IOException e)
-                    {
+                } catch (final IOException e) {
                     m_log.info("IO Exception connecting", e);
-                    }
-                
+                }
+
                 // If we've successfully created an outgoing socket, we need
                 // to close the listening socket *if we're the controlling
                 // agent*. If we're not the controlling agent, we wait for the
                 // other side to close all sockets.
-                if (m_controlling && sock != null && m_serverSocket != null)
-                    {
-                    try 
-                        {
+                if (m_controlling && sock != null && m_serverSocket != null) {
+                    try {
                         m_serverSocket.close();
-                        } 
-                    catch (final IOException e) 
-                        {
+                    } catch (final IOException e) {
                         // We don't really care if this fails.
-                        }
                     }
                 }
-            };
-        final Thread connectorThread = 
-            new Thread(threadRunner, "ICE-TCP-Connect-For-Candidate-"+candidate);
+            }
+        };
+        final Thread connectorThread = new Thread(threadRunner,
+                "ICE-TCP-Connect-For-Candidate-" + candidate);
         connectorThread.setDaemon(true);
         connectorThread.start();
         return null;
-        }
+    }
 
     /**
      * Provides unified socket handler for both incoming and outgoing sockets.
@@ -331,142 +277,122 @@ public class TcpOfferAnswer implements IceOfferAnswer,
      * 
      * @param sock The socket to process;
      */
-    private void onSocket(final Socket sock)
-        {
-        //this.m_offerAnswerListener.onTcpSocket(sock);
-        if (m_socketRef.compareAndSet(null, sock))
-            {
+    private void onSocket(final Socket sock) {
+        // this.m_offerAnswerListener.onTcpSocket(sock);
+        if (m_socketRef.compareAndSet(null, sock)) {
             this.m_offerAnswerListener.onTcpSocket(sock);
-            }
-        
-        else 
-            {
+        }
+
+        else {
             m_log.info("Socket already exists! Ignoring second");
-            // If a socket already existed, we close the socket *only if we're the
-            // controlling peer*. Otherwise, it's possible for there to be a race
+            // If a socket already existed, we close the socket *only if we're
+            // the
+            // controlling peer*. Otherwise, it's possible for there to be a
+            // race
             // condition where each side both possible successful sockets in
-            // rapid succession, causing both sides to close the second socket they
+            // rapid succession, causing both sides to close the second socket
+            // they
             // receive, ultimately closing all successful sockets!!
-            if (this.m_controlling)
-                {
+            if (this.m_controlling) {
                 m_log.info("Closing on controlling candidate");
-                try
-                    {
+                try {
                     sock.close();
-                    }
-                catch (final IOException e)
-                    {
+                } catch (final IOException e) {
                     m_log.error("Could not close socket", e);
-                    }
                 }
-            else
-                {
+            } else {
                 m_log.info("Not closing on controlled candidate");
-                
+
                 // We also need to notify the listener a new socket has come in.
                 // The controlling side will take care of closing it.
                 this.m_offerAnswerListener.onTcpSocket(sock);
-                }
             }
         }
+    }
 
-    public Collection<? extends IceCandidate> gatherCandidates()
-        {
-        if (m_candidates != null)
-            {
+    public Collection<? extends IceCandidate> gatherCandidates() {
+        if (m_candidates != null) {
             return m_candidates;
-            }
+        }
         final Collection<IceCandidate> candidates = 
             new ArrayList<IceCandidate>();
-    
+
         // Only add the TURN candidate on the non-controlling side to save
-        // resources.  This is non-standard as well, but we should only need
+        // resources. This is non-standard as well, but we should only need
         // one TURN server per session.
-        //if (!this.m_controlling && !NetworkUtils.isPublicAddress())
-          //  {
-            //addTcpTurnCandidate(client, candidates);
-            //}
-            
-        // Add the host candidate.  Note the host candidate is also used as
+        // if (!this.m_controlling && !NetworkUtils.isPublicAddress())
+        // {
+        // addTcpTurnCandidate(client, candidates);
+        // }
+
+        // Add the host candidate. Note the host candidate is also used as
         // the BASE candidate for the server reflexive candidate below.
         final InetSocketAddress hostAddress = getHostAddress();
-        
-        final IceCandidate hostCandidate = 
-            new IceTcpHostPassiveCandidate(hostAddress, this.m_controlling);
+
+        final IceCandidate hostCandidate = new IceTcpHostPassiveCandidate(
+            hostAddress, this.m_controlling);
         candidates.add(hostCandidate);
-        
-        // OK, the following is non-standard.  If we have a public address
+
+        // OK, the following is non-standard. If we have a public address
         // for the host from our UDP STUN check, we use the address part for
         // a new candidate because we always make an effort to map our TCP
-        // host port with UPnP.  This is not a simultaneous open candidate,
+        // host port with UPnP. This is not a simultaneous open candidate,
         // although there may be cases where this actually succeeds when UPnP
         // mapping failed due to simultaneous open behavior on the NAT.
-        if (this.m_publicAddress != null && hostPortMapped())
-            {
-            // The port mapping maps the local port to the same port on the 
+        if (this.m_publicAddress != null && hostPortMapped()) {
+            // The port mapping maps the local port to the same port on the
             // public gateway.
-            final InetSocketAddress publicHostAddress = 
-                new InetSocketAddress(this.m_publicAddress, hostAddress.getPort());
-            
+            final InetSocketAddress publicHostAddress = new InetSocketAddress(
+                    this.m_publicAddress, hostAddress.getPort());
+
             final IceCandidate publicHostCandidate = 
                 new IceTcpHostPassiveCandidate(publicHostAddress, 
                     this.m_controlling);
             candidates.add(publicHostCandidate);
-            }
+        }
         m_candidates = candidates;
         return m_candidates;
-        }
-
-    public InetSocketAddress getHostAddress()
-        {
-        if (m_serverSocket != null)
-            {
-            return (InetSocketAddress) this.m_serverSocket.getLocalSocketAddress();
-            }
-        else if (this.m_answererServer != null)
-            {
-            return this.m_answererServer.getHostAddress();
-            }
-        return null;
-        }
-
-    public InetSocketAddress getRelayAddress()
-        {
-        return null;
-        }
-
-    public InetSocketAddress getServerReflexiveAddress() throws IOException
-        {
-        return null;
-        }
-
-    public InetAddress getStunServerAddress()
-        {
-        return null;
-        }
-
-    public boolean hostPortMapped()
-        {
-        return true;
-        }
-
-    public InetAddress getPublicAdress() 
-        {
-        return this.m_publicAddress;
-        }
-
-    public void useRelay() 
-        {
-        // The controlling code has decided to use the relay. Nothing to here.
-        }
-
-    public void onPortMap(final PortMapEvent portMapEvent) 
-        {
-        m_log.info("Received port map event: {}", portMapEvent);
-        }
-    
-    public void onPortMapError(final PortMapErrorEvent portMapErrorEvent) 
-        {
-        m_log.info("Got port map error: {}", portMapErrorEvent);
-        }
     }
+
+    public InetSocketAddress getHostAddress() {
+        if (m_serverSocket != null) {
+            return 
+                (InetSocketAddress) this.m_serverSocket.getLocalSocketAddress();
+        } else if (this.m_answererServer != null) {
+            return this.m_answererServer.getHostAddress();
+        }
+        return null;
+    }
+
+    public InetSocketAddress getRelayAddress() {
+        return null;
+    }
+
+    public InetSocketAddress getServerReflexiveAddress() throws IOException {
+        return null;
+    }
+
+    public InetAddress getStunServerAddress() {
+        return null;
+    }
+
+    public boolean hostPortMapped() {
+        return true;
+    }
+
+    public InetAddress getPublicAdress() {
+        return this.m_publicAddress;
+    }
+
+    public void useRelay() {
+        // The controlling code has decided to use the relay. Nothing to here.
+    }
+
+    public void onPortMap(final int externalPort) {
+        m_log.info("Received port maped: {}", externalPort);
+    }
+
+    public void onPortMapError() {
+        m_log.info("Got port map error.");
+    }
+}
