@@ -8,8 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import org.lastbamboo.common.portmapping.NatPmpService;
-import org.lastbamboo.common.portmapping.PortMapErrorEvent;
-import org.lastbamboo.common.portmapping.PortMapEvent;
 import org.lastbamboo.common.portmapping.PortMapListener;
 import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
@@ -52,13 +50,12 @@ public class PortMappedServerPool
         final PortMapListener upnpListener = new PortMapListener() 
             {
             
-            public void onPortMapError(
-                final PortMapErrorEvent portMapErrorEvent) 
+            public void onPortMapError() 
                 {
                 m_log.info("Got UPnP port map error");
                 }
             
-            public void onPortMap(final PortMapEvent portMapEvent) 
+            public void onPortMap(int externalPort) 
                 {
                 m_log.info("Got UPnP port map event");
                 }
@@ -67,14 +64,12 @@ public class PortMappedServerPool
         final PortMapListener natPmpListener = new PortMapListener() 
             {
             
-            public void onPortMapError(
-                final PortMapErrorEvent portMapErrorEvent) 
+            public void onPortMapError() 
                 {
                 m_log.info("Got NAT PMP port map error");
                 }
             
-            public void onPortMap(
-                final PortMapEvent portMapEvent) 
+            public void onPortMap(int externalPort) 
                 {
                 m_log.info("Got NAT PMP port map event");
                 }
