@@ -23,8 +23,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Class for creating ICE agents that process ICE offers and answers.
  */
-public class IceOfferAnswerFactory implements OfferAnswerFactory
-    {
+public class IceOfferAnswerFactory implements OfferAnswerFactory {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
@@ -51,15 +50,13 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
      * when we're the answerer.
      */
     public IceOfferAnswerFactory(
-        final IceMediaStreamFactory mediaStreamFactory,
-        final UdpSocketFactory udpSocketFactory, 
-        final IceMediaStreamDesc streamDesc,
-        final CandidateProvider<InetSocketAddress> turnCandidateProvider,
-        final NatPmpService natPmpService,
-        final UpnpService upnpService, 
-        final MappedTcpAnswererServer answererServer,
-        final TurnClientListener turnClientListener)
-        {
+            final IceMediaStreamFactory mediaStreamFactory,
+            final UdpSocketFactory udpSocketFactory,
+            final IceMediaStreamDesc streamDesc,
+            final CandidateProvider<InetSocketAddress> turnCandidateProvider,
+            final NatPmpService natPmpService, final UpnpService upnpService,
+            final MappedTcpAnswererServer answererServer,
+            final TurnClientListener turnClientListener) {
         this.m_mediaStreamFactory = mediaStreamFactory;
         this.m_udpSocketFactory = udpSocketFactory;
         this.m_streamDesc = streamDesc;
@@ -68,185 +65,156 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
         this.m_upnpService = upnpService;
         this.m_answererServer = answererServer;
         this.m_turnClientListener = turnClientListener;
-        }
-    
+    }
+
     public OfferAnswer createAnswerer(
-        final OfferAnswerListener offerAnswerListener) 
-        throws OfferAnswerConnectException 
-        {
+            final OfferAnswerListener offerAnswerListener)
+            throws OfferAnswerConnectException {
         return createOfferAnswer(false, offerAnswerListener);
-        }
+    }
 
     public OfferAnswer createOfferer(
-        final OfferAnswerListener offerAnswerListener) 
-        throws OfferAnswerConnectException 
-        {
+            final OfferAnswerListener offerAnswerListener)
+            throws OfferAnswerConnectException {
         return createOfferAnswer(true, offerAnswerListener);
-        }
+    }
 
-    private OfferAnswer createOfferAnswer(final boolean controlling, 
-        final OfferAnswerListener offerAnswerListener) 
-        throws OfferAnswerConnectException
-        {
-        final IceOfferAnswer turnOfferAnswer = 
-            newTurnOfferAnswer(controlling, offerAnswerListener);
-        final IceOfferAnswer udp = 
-            newUdpOfferAnswer(controlling, offerAnswerListener);
+    private OfferAnswer createOfferAnswer(final boolean controlling,
+            final OfferAnswerListener offerAnswerListener)
+            throws OfferAnswerConnectException {
+        final IceOfferAnswer turnOfferAnswer = newTurnOfferAnswer(controlling,
+                offerAnswerListener);
+        final IceOfferAnswer udp = newUdpOfferAnswer(controlling,
+                offerAnswerListener);
 
-        
         final InetAddress publicAddress;
-        if (udp != null)
-            {
+        if (udp != null) {
             publicAddress = udp.getPublicAdress();
-            }
-        else
-            {
+        } else {
             publicAddress = null;
-            }
-        final IceOfferAnswer tcp = 
-            newTcpOfferAnswer(publicAddress, offerAnswerListener, controlling);
+        }
+        final IceOfferAnswer tcp = newTcpOfferAnswer(publicAddress,
+                offerAnswerListener, controlling);
 
-        
         // We create a high-level class that starts a race between the TCP
         // and UDP connections. The TCP approach does not use ICE, instead
-        // simplifying things significantly through using straight sockets, 
+        // simplifying things significantly through using straight sockets,
         // either via UPnP, directly over an internal network, or when one of
         // the peers is on the public Internet.
-        return new OfferAnswer() 
-            {
-            public byte[] generateOffer() 
-                {
+        return new OfferAnswer() {
+            public byte[] generateOffer() {
                 return encodeCandidates(controlling, tcp, udp, turnOfferAnswer);
-                }
-            
-            public byte[] generateAnswer() 
-                {
-                return encodeCandidates(controlling, tcp, udp, turnOfferAnswer);
-                }
-            
-            public void close() 
-                {
-                if (tcp != null) tcp.close();
-                if (turnOfferAnswer != null) turnOfferAnswer.close();
-                if (udp != null) udp.close();
-                }
+            }
 
-            public void processAnswer(final ByteBuffer answer)
-                {
+            public byte[] generateAnswer() {
+                return encodeCandidates(controlling, tcp, udp, turnOfferAnswer);
+            }
+
+            public void close() {
+                if (tcp != null)
+                    tcp.close();
+                if (turnOfferAnswer != null)
+                    turnOfferAnswer.close();
+                if (udp != null)
+                    udp.close();
+            }
+
+            public void processAnswer(final ByteBuffer answer) {
                 m_log.info("Processing answer...");
                 m_log.info("Turn offer answer: {}", turnOfferAnswer);
-                if (m_streamDesc.isUseRelay() && turnOfferAnswer != null)
-                    {
+                if (m_streamDesc.isUseRelay() && turnOfferAnswer != null) {
                     turnOfferAnswer.processAnswer(answer.duplicate());
-                    }
-                if (m_streamDesc.isTcp() && tcp != null)
-                    {
+                }
+                if (m_streamDesc.isTcp() && tcp != null) {
                     tcp.processAnswer(answer.duplicate());
-                    }
-                if (m_streamDesc.isUdp() && udp != null)
-                    {
+                }
+                if (m_streamDesc.isUdp() && udp != null) {
                     udp.processAnswer(answer.duplicate());
-                    }
                 }
+            }
 
-            public void processOffer(final ByteBuffer offer)
-                {
-                if (m_streamDesc.isTcp() && tcp != null)
-                    {
+            public void processOffer(final ByteBuffer offer) {
+                if (m_streamDesc.isTcp() && tcp != null) {
                     tcp.processOffer(offer);
-                    }
-                if (m_streamDesc.isUdp() && udp != null)
-                    {
+                }
+                if (m_streamDesc.isUdp() && udp != null) {
                     udp.processOffer(offer);
-                    }
-                if (m_streamDesc.isUseRelay() && turnOfferAnswer != null)
-                    {
+                }
+                if (m_streamDesc.isUseRelay() && turnOfferAnswer != null) {
                     turnOfferAnswer.processOffer(offer);
-                    }
                 }
+            }
 
-            public void closeTcp()
-                {
-                if (tcp != null) tcp.close();
-                if (turnOfferAnswer != null) turnOfferAnswer.close();
-                }
+            public void closeTcp() {
+                if (tcp != null)
+                    tcp.close();
+                if (turnOfferAnswer != null)
+                    turnOfferAnswer.close();
+            }
 
-            public void closeUdp()
-                {
-                if (udp != null) udp.close();
-                }
+            public void closeUdp() {
+                if (udp != null)
+                    udp.close();
+            }
 
-            public void useRelay() 
-                {
+            public void useRelay() {
                 m_log.info("Sending use relay notification.");
-                if (tcp != null) tcp.useRelay();
-                if (turnOfferAnswer != null) turnOfferAnswer.useRelay();
-                }
-            };
-        }
+                if (tcp != null)
+                    tcp.useRelay();
+                if (turnOfferAnswer != null)
+                    turnOfferAnswer.useRelay();
+            }
+        };
+    }
     
     private IceOfferAnswer newTcpOfferAnswer(final InetAddress publicAddress,
-        final OfferAnswerListener offerAnswerListener, 
-        final boolean controlling)
-        {
-        if (this.m_streamDesc.isTcp())
-            {
-            return new TcpOfferAnswer(publicAddress, offerAnswerListener, 
-                controlling, m_natPmpService, m_upnpService,
-                m_answererServer);
-            }
-        else 
-            {
+            final OfferAnswerListener offerAnswerListener,
+            final boolean controlling) {
+        if (this.m_streamDesc.isTcp()) {
+            return new TcpOfferAnswer(publicAddress, offerAnswerListener,
+                    controlling, m_natPmpService, m_upnpService,
+                    m_answererServer);
+        } else {
             return null;
-            }
         }
+    }
 
     private IceOfferAnswer newUdpOfferAnswer(final boolean controlling,
-        final OfferAnswerListener offerAnswerListener) 
-        throws OfferAnswerConnectException
-        {
-        if (this.m_streamDesc.isUdp())
-            {
-            try
-                {
+            final OfferAnswerListener offerAnswerListener)
+            throws OfferAnswerConnectException {
+        if (this.m_streamDesc.isUdp()) {
+            try {
                 return new IceAgentImpl(this.m_mediaStreamFactory, controlling,
-                    offerAnswerListener, this.m_udpSocketFactory);
-                }
-            catch (final IceUdpConnectException e)
-                {
+                        offerAnswerListener, this.m_udpSocketFactory);
+            } catch (final IceUdpConnectException e) {
                 throw new OfferAnswerConnectException(
-                    "Could not create UDP connection", e);
-                }
+                        "Could not create UDP connection", e);
             }
-        return null;
         }
+        return null;
+    }
 
-    private byte[] encodeCandidates(final boolean controlling, 
-        final IceOfferAnswer tcp, final IceOfferAnswer udp, 
-        final IceOfferAnswer tcpTurn) 
-        {
-        final IceCandidateSdpEncoder encoder = 
-            new IceCandidateSdpEncoder(
-                m_streamDesc.getMimeContentType(), 
+    private byte[] encodeCandidates(final boolean controlling,
+            final IceOfferAnswer tcp, final IceOfferAnswer udp,
+            final IceOfferAnswer tcpTurn) {
+        final IceCandidateSdpEncoder encoder = new IceCandidateSdpEncoder(
+                m_streamDesc.getMimeContentType(),
                 m_streamDesc.getMimeContentSubtype());
-        
-        final Collection<IceCandidate> localCandidates =
+
+        final Collection<IceCandidate> localCandidates = 
             new HashSet<IceCandidate>();
-        if (tcp != null)
-            {
+        if (tcp != null) {
             localCandidates.addAll(tcp.gatherCandidates());
-            }
-        if (udp != null)
-            {
+        }
+        if (udp != null) {
             localCandidates.addAll(udp.gatherCandidates());
-            }
-        if (!controlling && m_streamDesc.isUseRelay() && tcpTurn != null)
-            {
+        }
+        if (!controlling && m_streamDesc.isUseRelay() && tcpTurn != null) {
             localCandidates.addAll(tcpTurn.gatherCandidates());
-            }
+        }
         encoder.visitCandidates(localCandidates);
         return encoder.getSdp();
-        }
+    }
 
     /**
      * Creates a new TURN offer/answer.
@@ -255,33 +223,26 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory
      * @param offerAnswerListener The listener for socket resolution.
      * @return The offer/answer for TURN.
      */
-    private IceOfferAnswer newTurnOfferAnswer(final boolean controlling, 
-        final OfferAnswerListener offerAnswerListener) 
-        {
-        if (!this.m_streamDesc.isUseRelay()) 
-            {
+    private IceOfferAnswer newTurnOfferAnswer(final boolean controlling,
+            final OfferAnswerListener offerAnswerListener) {
+        if (!this.m_streamDesc.isUseRelay()) {
             return null;
-            }
+        }
 
-        try 
-            {
-            final TcpTurnOfferAnswer turn = 
-                new TcpTurnOfferAnswer(m_turnCandidateProvider, 
-                    controlling, offerAnswerListener, 
+        try {
+            final TcpTurnOfferAnswer turn = new TcpTurnOfferAnswer(
+                    m_turnCandidateProvider, controlling, offerAnswerListener,
                     m_turnClientListener);
-            
+
             // We only actually connect to the TURN server on the answerer/
             // non-controlling client.
-            if (!controlling)
-                {
+            if (!controlling) {
                 turn.connect();
-                }
+            }
             return turn;
-            } 
-        catch (final IOException e) 
-            {
+        } catch (final IOException e) {
             m_log.error("Could not connect to TURN server!!", e);
             return null;
-            }
         }
     }
+}
