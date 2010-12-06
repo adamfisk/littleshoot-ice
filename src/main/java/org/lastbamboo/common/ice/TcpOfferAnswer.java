@@ -345,6 +345,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // although there may be cases where this actually succeeds when UPnP
         // mapping failed due to simultaneous open behavior on the NAT.
         if (this.m_publicAddress != null && hostPortMapped()) {
+            m_log.info("Adding public TCP address");
             // We're not completely sure if the port has been mapped yet at
             // this point. We know there hasn't been an error, but that's 
             // about it. The mapped port will actually be the port mapped
@@ -361,6 +362,9 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 new IceTcpHostPassiveCandidate(publicHostAddress, 
                     this.m_controlling);
             candidates.add(publicHostCandidate);
+        } else{
+            m_log.info("Not adding public. PA: "+m_publicAddress+" mapped: "+
+                hostPortMapped());
         }
         m_candidates = candidates;
         return m_candidates;
