@@ -171,6 +171,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             final OfferAnswerListener offerAnswerListener,
             final boolean controlling) {
         if (this.m_streamDesc.isTcp()) {
+            m_log.info("Creating new TCP offer answer");
             return new TcpOfferAnswer(publicAddress, offerAnswerListener,
                     controlling, m_natPmpService, m_upnpService,
                     m_answererServer);
