@@ -2,15 +2,11 @@ package org.lastbamboo.common.ice;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMapListener;
 import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
-import org.lastbamboo.common.util.NetworkUtils;
-import org.lastbamboo.common.util.SocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,64 +21,43 @@ public class MappedTcpAnswererServer implements PortMapListener {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
-    private ServerSocket m_serverSocket;
+    private int m_externalPort;
+
+    private final InetSocketAddress serverAddress;
 
     /**
      * Creates a new mapped server for the answerer.
      * 
      * @param natPmpService The NAT PMP mapper.
      * @param upnpService The UPnP mapper.
-     * @param socketListener Class for handling new incoming sockets.
+     * @param serverAddress The address of the server.
      * @throws IOException If there's an error starting the server.
      */
     public MappedTcpAnswererServer(final NatPmpService natPmpService,
-        final UpnpService upnpService, final SocketListener socketListener)
+        final UpnpService upnpService, final InetSocketAddress serverAddress)
         throws IOException {
-        final Runnable serverRunner = new Runnable() {
-            public void run() {
-                try {
-                    establishSocket();
-                } catch (final IOException e) {
-                    m_log.warn("Could not create server socket or map port?",e);
-                    return;
-                }
-                while (true) {
-                    try {
-                        final Socket sock = m_serverSocket.accept();
-                        sock.setSoTimeout(100 * 60 * 1000);
-                        m_log.info("ACCEPTED INCOMING SOCKET!!");
-                        socketListener.onSocket(sock);
-                    } catch (final IOException e) {
-                        m_log.info("Exception accepting socket!!", e);
-                    }
-                }
-            }
-
-            private void establishSocket() throws IOException {
-                m_serverSocket = new ServerSocket();
-                m_serverSocket.bind(
-                    new InetSocketAddress(NetworkUtils.getLocalHost(), 0));
-                final InetSocketAddress socketAddress = 
-                    (InetSocketAddress) m_serverSocket.getLocalSocketAddress();
-                final int port = socketAddress.getPort();
-                upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
-                    port, MappedTcpAnswererServer.this);
-                natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
-                    port, MappedTcpAnswererServer.this);
-            }
-        };
-        final Thread serverThread = new Thread(serverRunner,
-                "TCP-Ice-Server-Answerer-Thread-" + hashCode());
-        serverThread.setDaemon(true);
-        serverThread.start();
+        
+        this.serverAddress = serverAddress;
+        final int port = serverAddress.getPort();
+        
+        // We just set the port to the local port for now, as that's the one
+        // we're requesting on the router. If the router does set it to a 
+        // different port, we'll get notified and will reset it.
+        this.m_externalPort = port;
+        upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
+            port, MappedTcpAnswererServer.this);
+        natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
+            port, MappedTcpAnswererServer.this);
     }
     
     public InetSocketAddress getHostAddress() {
-        return (InetSocketAddress) this.m_serverSocket.getLocalSocketAddress();
+        return new InetSocketAddress(this.serverAddress.getAddress(), 
+            this.m_externalPort);
     }
 
     public void onPortMap(final int externalPort) {
         m_log.info("Received port maped: {}", externalPort);
+        this.m_externalPort = externalPort;
     }
 
     public void onPortMapError() {

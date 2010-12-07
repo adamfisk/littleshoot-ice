@@ -377,7 +377,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             return 
                 (InetSocketAddress) this.m_serverSocket.getLocalSocketAddress();
         } else if (this.m_answererServer != null) {
-            m_log.info("Accessing host address from mapped TCP server. "+ThreadUtils.dumpStack());
+            m_log.info("Accessing host address from mapped TCP server.");
             return this.m_answererServer.getHostAddress();
         }
         return null;
