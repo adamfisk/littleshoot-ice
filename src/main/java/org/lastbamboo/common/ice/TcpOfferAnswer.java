@@ -85,8 +85,8 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         if (controlling || answererServer == null) {
             try {
                 this.m_serverSocket = new ServerSocket();
-                this.m_serverSocket.bind(
-                    new InetSocketAddress(NetworkUtils.getLocalHost(), 0));
+                this.m_serverSocket.bind(null);
+                    //new InetSocketAddress(NetworkUtils.getLocalHost(), 0));
 
                 // Accept incoming sockets on a listening thread.
                 listen();
