@@ -14,6 +14,8 @@ import org.lastbamboo.common.offer.answer.OfferAnswerFactory;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.UpnpService;
+import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.util.CandidateProvider;
 import org.littleshoot.mina.common.ByteBuffer;
@@ -38,6 +40,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     private final TurnClientListener m_turnClientListener;
 
     private final CandidateProvider<InetSocketAddress> m_stunCandidateProvider;
+
+    private InetAddress m_publicAddress;
 
     /**
      * Creates a new ICE agent factory. The factory maintains a reference to
@@ -70,6 +74,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         this.m_answererServer = answererServer;
         this.m_turnClientListener = turnClientListener;
         this.m_stunCandidateProvider = stunCandidateProvider;
+        this.m_publicAddress = determinePublicAddress(stunCandidateProvider);
     }
 
     public OfferAnswer createAnswerer(
@@ -92,13 +97,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         final IceOfferAnswer udp = newUdpOfferAnswer(controlling,
                 offerAnswerListener);
 
-        final InetAddress publicAddress;
-        if (udp != null) {
-            publicAddress = udp.getPublicAdress();
-        } else {
-            publicAddress = null;
-        }
-        final IceOfferAnswer tcp = newTcpOfferAnswer(publicAddress,
+        final IceOfferAnswer tcp = newTcpOfferAnswer(this.m_publicAddress,
                 offerAnswerListener, controlling);
 
         // We create a high-level class that starts a race between the TCP
@@ -170,6 +169,18 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
                     turnOfferAnswer.useRelay();
             }
         };
+    }
+    
+    private InetAddress determinePublicAddress(
+        final CandidateProvider<InetSocketAddress> provider) {
+        try {
+            final StunClient stun = new UdpStunClient(provider);
+            stun.connect();
+            return stun.getServerReflexiveAddress().getAddress();
+        } catch (final IOException e) {
+            m_log.warn("Could not get server reflexive address", e);
+            return null;
+        }
     }
     
     private IceOfferAnswer newTcpOfferAnswer(final InetAddress publicAddress,
