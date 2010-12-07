@@ -23,7 +23,6 @@ import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.stun.stack.StunAddressProvider;
 import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.RuntimeIoException;
 import org.lastbamboo.common.util.ThreadUtils;
 import org.littleshoot.mina.common.ByteBuffer;
@@ -378,6 +377,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             return 
                 (InetSocketAddress) this.m_serverSocket.getLocalSocketAddress();
         } else if (this.m_answererServer != null) {
+            m_log.info("Accessing host address from mapped TCP server. "+ThreadUtils.dumpStack());
             return this.m_answererServer.getHostAddress();
         }
         return null;
