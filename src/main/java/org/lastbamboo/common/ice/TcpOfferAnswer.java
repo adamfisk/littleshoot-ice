@@ -21,8 +21,6 @@ import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMapListener;
 import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
-import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.stack.StunAddressProvider;
 import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.NetworkUtils;
@@ -73,13 +71,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         final UpnpService upnpService,
         final MappedTcpAnswererServer answererServer, 
         final CandidateProvider<InetSocketAddress> stunCandidateProvider) {
-        if (publicAddress != null) {
-            this.m_publicAddress = publicAddress;
-        } else {
-            // This is typically only the case during testing -- when we're
-            // running TCP-only tests.
-            this.m_publicAddress = determinePublicAddress(stunCandidateProvider);
-        }
+        this.m_publicAddress = publicAddress;
         this.m_offerAnswerListener = offerAnswerListener;
         this.m_controlling = controlling;
         this.m_natPmpService = natPmpService;
@@ -103,18 +95,6 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 m_log.error("Could not bind server socket", e);
                 throw new RuntimeIoException("Could not bind server socket", e);
             }
-        }
-    }
-
-    private InetAddress determinePublicAddress(
-        final CandidateProvider<InetSocketAddress> provider) {
-        try {
-            final StunClient stun = new UdpStunClient(provider);
-            stun.connect();
-            return stun.getServerReflexiveAddress().getAddress();
-        } catch (final IOException e) {
-            m_log.warn("Could not get server reflexive address", e);
-            return null;
         }
     }
 
