@@ -21,7 +21,10 @@ import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMapListener;
 import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
+import org.lastbamboo.common.stun.client.StunClient;
+import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.stun.stack.StunAddressProvider;
+import org.lastbamboo.common.util.CandidateProvider;
 import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.RuntimeIoException;
 import org.lastbamboo.common.util.ThreadUtils;
@@ -62,19 +65,27 @@ public class TcpOfferAnswer implements IceOfferAnswer,
      * connection.
      * @param answererServer The class that has a router-mapped port for 
      * the answering server socket. 
+     * @param stunCandidateProvider Provider for STUN addresses.
      */
     public TcpOfferAnswer(final InetAddress publicAddress,
         final OfferAnswerListener offerAnswerListener,
         final boolean controlling, final NatPmpService natPmpService,
         final UpnpService upnpService,
-        final MappedTcpAnswererServer answererServer) {
-        this.m_publicAddress = publicAddress;
+        final MappedTcpAnswererServer answererServer, 
+        final CandidateProvider<InetSocketAddress> stunCandidateProvider) {
+        if (publicAddress != null) {
+            this.m_publicAddress = publicAddress;
+        } else {
+            // This is typically only the case during testing -- when we're
+            // running TCP-only tests.
+            this.m_publicAddress = determinePublicAddress(stunCandidateProvider);
+        }
         this.m_offerAnswerListener = offerAnswerListener;
         this.m_controlling = controlling;
         this.m_natPmpService = natPmpService;
         this.m_upnpService = upnpService;
         this.m_answererServer = answererServer;
-
+        
         // We only start another server socket on the controlling candidate
         // because the non-controlled, answering agent simply uses the same
         // server socket across all ICE sessions, forwarding their data to
@@ -92,6 +103,18 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 m_log.error("Could not bind server socket", e);
                 throw new RuntimeIoException("Could not bind server socket", e);
             }
+        }
+    }
+
+    private InetAddress determinePublicAddress(
+        final CandidateProvider<InetSocketAddress> provider) {
+        try {
+            final StunClient stun = new UdpStunClient(provider);
+            stun.connect();
+            return stun.getServerReflexiveAddress().getAddress();
+        } catch (final IOException e) {
+            m_log.warn("Could not get server reflexive address", e);
+            return null;
         }
     }
 
@@ -170,7 +193,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             }
         };
         final Thread serverThread = new Thread(serverRunner,
-                "TCP-Ice-Server-Thread: " + socketAddress);
+            "TCP-Ice-Server-Thread-" + hashCode() +": " + socketAddress);
         serverThread.setDaemon(true);
         serverThread.start();
     }

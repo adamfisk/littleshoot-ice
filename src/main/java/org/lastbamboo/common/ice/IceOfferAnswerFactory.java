@@ -37,6 +37,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
 
     private final TurnClientListener m_turnClientListener;
 
+    private final CandidateProvider<InetSocketAddress> m_stunCandidateProvider;
+
     /**
      * Creates a new ICE agent factory. The factory maintains a reference to
      * the TCP TURN client because the client holds a persistent connection
@@ -48,6 +50,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
      * UPD, or either.
      * @param answererServer The single router port-mapped server socket for
      * when we're the answerer.
+     * @param stunCandidateProvider Provider for STUN servers.
      */
     public IceOfferAnswerFactory(
             final IceMediaStreamFactory mediaStreamFactory,
@@ -56,7 +59,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             final CandidateProvider<InetSocketAddress> turnCandidateProvider,
             final NatPmpService natPmpService, final UpnpService upnpService,
             final MappedTcpAnswererServer answererServer,
-            final TurnClientListener turnClientListener) {
+            final TurnClientListener turnClientListener, 
+            final CandidateProvider<InetSocketAddress> stunCandidateProvider) {
         this.m_mediaStreamFactory = mediaStreamFactory;
         this.m_udpSocketFactory = udpSocketFactory;
         this.m_streamDesc = streamDesc;
@@ -65,6 +69,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         this.m_upnpService = upnpService;
         this.m_answererServer = answererServer;
         this.m_turnClientListener = turnClientListener;
+        this.m_stunCandidateProvider = stunCandidateProvider;
     }
 
     public OfferAnswer createAnswerer(
@@ -173,8 +178,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         if (this.m_streamDesc.isTcp()) {
             m_log.info("Creating new TCP offer answer");
             return new TcpOfferAnswer(publicAddress, offerAnswerListener,
-                    controlling, m_natPmpService, m_upnpService,
-                    m_answererServer);
+                controlling, m_natPmpService, m_upnpService,
+                m_answererServer, this.m_stunCandidateProvider);
         } else {
             return null;
         }
@@ -232,8 +237,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
 
         try {
             final TcpTurnOfferAnswer turn = new TcpTurnOfferAnswer(
-                    m_turnCandidateProvider, controlling, offerAnswerListener,
-                    m_turnClientListener);
+                m_turnCandidateProvider, controlling, offerAnswerListener,
+                m_turnClientListener);
 
             // We only actually connect to the TURN server on the answerer/
             // non-controlling client.
