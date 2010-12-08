@@ -23,6 +23,7 @@ import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.stun.stack.StunAddressProvider;
 import org.lastbamboo.common.util.CandidateProvider;
+import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.RuntimeIoException;
 import org.lastbamboo.common.util.ThreadUtils;
 import org.littleshoot.mina.common.ByteBuffer;
@@ -84,8 +85,8 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         if (controlling || answererServer == null) {
             try {
                 this.m_serverSocket = new ServerSocket();
-                this.m_serverSocket.bind(null);
-                    //new InetSocketAddress(NetworkUtils.getLocalHost(), 0));
+                this.m_serverSocket.bind(
+                    new InetSocketAddress(NetworkUtils.getLocalHost(), 0));
 
                 // Accept incoming sockets on a listening thread.
                 listen();
