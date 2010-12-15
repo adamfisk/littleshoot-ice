@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 
 import org.lastbamboo.common.ice.IceMediaStreamDesc;
@@ -112,8 +111,10 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer {
         }
     }
 
-    private Collection<IceCandidate> createUdpCandidates(final StunClient client) {
-        final Collection<IceCandidate> candidates = new LinkedList<IceCandidate>();
+    private Collection<IceCandidate> createUdpCandidates(
+        final StunClient client) {
+        final Collection<IceCandidate> candidates = 
+            new ArrayList<IceCandidate>();
 
         final InetAddress stunServerAddress = client.getStunServerAddress();
 
@@ -128,6 +129,8 @@ public class IceCandidateGathererImpl implements IceCandidateGatherer {
         try {
             this.m_udpServerReflexiveAddress = 
                 client.getServerReflexiveAddress();
+            m_log.info("Got server reflexive address: {}", 
+                this.m_udpServerReflexiveAddress);
         } catch (final IOException e) {
             m_log.error("Could not get UDP server reflexive candidate", e);
             return candidates;
