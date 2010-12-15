@@ -24,8 +24,7 @@ import org.slf4j.LoggerFactory;
  * media exchanged can happen over RUDP or TCP.  This is packaged this way
  * because the ICE code does not know about RUDP.
  */
-public class IceMediaStreamFactoryImpl implements IceMediaStreamFactory
-    {
+public class IceMediaStreamFactoryImpl implements IceMediaStreamFactory {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final IceMediaStreamDesc m_streamDesc;
@@ -37,40 +36,32 @@ public class IceMediaStreamFactoryImpl implements IceMediaStreamFactory
      * @param streamDesc The description of the media stream to create.
      * @param rudpService The service for RUDP connections.
      */
-    public IceMediaStreamFactoryImpl(final IceMediaStreamDesc streamDesc,
-        final CandidateProvider<InetSocketAddress> stunServerCandidateProvider)
-        {
+    public IceMediaStreamFactoryImpl(
+            final IceMediaStreamDesc streamDesc,
+            final CandidateProvider<InetSocketAddress> stunServerCandidateProvider) {
         m_streamDesc = streamDesc;
         this.m_stunServerCandidateProvider = stunServerCandidateProvider;
-        }
-    
-    public IceMediaStream newStream(final IceAgent iceAgent) 
-        throws IceUdpConnectException
-        {
-        //final DemuxableProtocolCodecFactory rudpCodecFactory =
-        //    new RudpDemuxableProtocolCodecFactory();
-        
+    }
+
+    public IceMediaStream newStream(final IceAgent iceAgent)
+            throws IceUdpConnectException {
         final InetAddress serverAddress;
-        try
-            {
+        try {
             serverAddress = NetworkUtils.getLocalHost();
-            }
-        catch (final UnknownHostException e)
-            {
+        } catch (final UnknownHostException e) {
             m_log.warn("Could not get local host!!", e);
             return null;
-            }
-        final InetSocketAddress httpServerAddress =
-            new InetSocketAddress(serverAddress, ShootConstants.FILES_PORT);
-        final TurnClientListener delegateListener =
-            new ServerDataFeeder(httpServerAddress);
-        
-        final GeneralIceMediaStreamFactory streamFactory =
+        }
+        final InetSocketAddress httpServerAddress = new InetSocketAddress(
+                serverAddress, ShootConstants.FILES_PORT);
+        final TurnClientListener delegateListener = new ServerDataFeeder(
+                httpServerAddress);
+
+        final GeneralIceMediaStreamFactory streamFactory = 
             new GeneralIceMediaStreamFactoryImpl(
                 this.m_stunServerCandidateProvider);
-        final IceMediaStream stream = 
-            streamFactory.newIceMediaStream(this.m_streamDesc, iceAgent, 
-                delegateListener);
+        final IceMediaStream stream = streamFactory.newIceMediaStream(
+                this.m_streamDesc, iceAgent, delegateListener);
         return stream;
-        }
     }
+}
