@@ -68,11 +68,9 @@ import org.slf4j.LoggerFactory;
  * extension-att-value   = byte-string
  * ice-char              = ALPHA / DIGIT / "+" / "/"
  */
-public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
-    {
+public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null> {
     
-    private final Logger LOG = 
-        LoggerFactory.getLogger(IceCandidateSdpEncoder.class);
+    private final Logger m_log = LoggerFactory.getLogger(getClass());
     
     private final SdpFactory m_sdpFactory;
     private final SessionDescription m_sessionDescription;
@@ -126,7 +124,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
             }
         catch (final SdpException e)
             {
-            LOG.error("Could not create SDP", e);
+            m_log.error("Could not create SDP", e);
             throw new IllegalArgumentException("Could not create SDP", e);
             }
         }
@@ -136,152 +134,121 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
      * 
      * @return The SDP as an array of bytes.
      */
-    public byte[] getSdp()
-        {
+    public byte[] getSdp() {
         return this.m_sessionDescription.toBytes();
-        }
+    }
 
-    private InetAddress getAddress()
-        {
-        try
-            {
+    private InetAddress getAddress() {
+        try {
             return NetworkUtils.getLocalHost();
-            }
-        catch (final UnknownHostException e)
-            {
+        } catch (final UnknownHostException e) {
             // Should never happen.
-            LOG.error("Could not resolve host", e);
+            m_log.error("Could not resolve host", e);
             throw new RuntimeException("Could not resolve host", e);
-            }
         }
+    }
 
-    private SessionDescription createSessionDescription()
-        {
-        try
-            {
+    private SessionDescription createSessionDescription() {
+        try {
             return this.m_sdpFactory.createSessionDescription();
-            }
-        catch (final SdpException e)
-            {
-            LOG.error("Could not create SDP", e);
+        } catch (final SdpException e) {
+            m_log.error("Could not create SDP", e);
             throw new IllegalArgumentException("Could not create SDP", e);
-            }
+        }
+    }
+
+    public void visitCandidates(final Collection<IceCandidate> candidates) {
+        for (final IceCandidate candidate : candidates) {
+            m_log.info("Visiting candidates: {}", candidates);
+            candidate.accept(this);
         }
 
-    public void visitCandidates(final Collection<IceCandidate> candidates)
-        {
-        for (final IceCandidate candidate : candidates)
-            {
-            candidate.accept(this);
-            }
-        
-        try
-            {
+        try {
             // Use the UDP server reflexive address as the top level address.
             // This is slightly hacky because it relies on the UDP server
             // reflexive candidate being there.
             IceCandidate defaultCandidate = null;
-            for (final IceCandidate candidate : this.m_defaultCandidates)
-                {
-                if (candidate != null)
-                    {
+            for (final IceCandidate candidate : this.m_defaultCandidates) {
+                if (candidate != null) {
                     defaultCandidate = candidate;
-                    }
                 }
-            if (defaultCandidate == null)
-                {
-                LOG.error("No default candidate from: {}", candidates);
+            }
+            if (defaultCandidate == null) {
+                m_log.error("No default candidate from: {}", candidates);
                 return;
-                }
+            }
             final MediaDescription md = 
                 createMessageMediaDesc(defaultCandidate);
             md.setAttributes(m_candidates);
-            
-            LOG.debug("Adding media description");
+
+            m_log.debug("Adding media description");
             final Vector<MediaDescription> mediaDescriptions = 
                 new Vector<MediaDescription>();
             mediaDescriptions.add(md);
-            this.m_sessionDescription.setMediaDescriptions(
-                mediaDescriptions);
-            }
-        catch (final SdpException e)
-            {
-            LOG.error("Could not add the media descriptions", e);
-            }
+            this.m_sessionDescription.setMediaDescriptions(mediaDescriptions);
+        } catch (final SdpException e) {
+            m_log.error("Could not add the media descriptions", e);
         }
-    
+    }
+
     public Null visitTcpHostPassiveCandidate(
-        final IceTcpHostPassiveCandidate candidate)
-        {
+            final IceTcpHostPassiveCandidate candidate) {
         addAttribute(candidate);
         m_defaultCandidates[1] = candidate;
         return ObjectUtils.NULL;
-        }
-
+    }
 
     public Null visitTcpPeerReflexiveCandidate(
-        final IceTcpPeerReflexiveCandidate candidate)
-        {
+            final IceTcpPeerReflexiveCandidate candidate) {
         addAttributeWithRelated(candidate);
         return ObjectUtils.NULL;
-        }
+    }
 
     public Null visitTcpRelayPassiveCandidate(
-        final IceTcpRelayPassiveCandidate candidate)
-        {
+            final IceTcpRelayPassiveCandidate candidate) {
         addAttributeWithRelated(candidate);
         m_defaultCandidates[3] = candidate;
         return ObjectUtils.NULL;
-        }
-
+    }
 
     public Null visitTcpServerReflexiveSoCandidate(
-        final IceTcpServerReflexiveSoCandidate candidate)
-        {
+            final IceTcpServerReflexiveSoCandidate candidate) {
         addAttributeWithRelated(candidate);
         return ObjectUtils.NULL;
-        }
+    }
 
-
-    public Null visitTcpActiveCandidate(final IceTcpActiveCandidate candidate)
-        {
+    public Null visitTcpActiveCandidate(final IceTcpActiveCandidate candidate) {
         addAttribute(candidate, 9);
-        
+
         // This will only ever be relevant for testing.
         m_defaultCandidates[4] = candidate;
         return ObjectUtils.NULL;
-        }
+    }
 
-    public Null visitUdpHostCandidate(final IceUdpHostCandidate candidate)
-        {
+    public Null visitUdpHostCandidate(final IceUdpHostCandidate candidate) {
         addAttribute(candidate);
         m_defaultCandidates[2] = candidate;
         return ObjectUtils.NULL;
-        }
-
+    }
 
     public Null visitUdpPeerReflexiveCandidate(
-        final IceUdpPeerReflexiveCandidate candidate)
-        {
+            final IceUdpPeerReflexiveCandidate candidate) {
         addAttributeWithRelated(candidate);
         return ObjectUtils.NULL;
-        }
+    }
 
-
-    public Null visitUdpRelayCandidate(final IceUdpRelayCandidate candidate)
-        {
+    public Null visitUdpRelayCandidate(final IceUdpRelayCandidate candidate) {
         addAttributeWithRelated(candidate);
         return ObjectUtils.NULL;
-        }
-
+    }
 
     public Null visitUdpServerReflexiveCandidate(
-        final IceUdpServerReflexiveCandidate candidate)
-        {
+            final IceUdpServerReflexiveCandidate candidate) {
+        m_log.info("Visiting UDP server reflexive");
         addAttributeWithRelated(candidate);
         m_defaultCandidates[0] = candidate;
         return ObjectUtils.NULL;
-        }
+    }
 
     /**
      * Creates a new media description with ICE candidates for the specified
@@ -294,20 +261,18 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
      * reason.
      */
     private MediaDescription createMessageMediaDesc(
-        final IceCandidate candidate) throws SdpException
-        {        
+            final IceCandidate candidate) throws SdpException {
         final InetSocketAddress socketAddress = candidate.getSocketAddress();
         final String protocol = candidate.getTransport().getName();
-        final MediaDescription md = 
-            this.m_sdpFactory.createMediaDescription(this.m_mimeContentType, 
-                socketAddress.getPort(), 1, protocol, 
-                new String[]{this.m_mimeContentSubtype});
-    
-        final Connection conn = this.m_sdpFactory.createConnection("IN", 
-            Connection.IP4, socketAddress.getAddress().getHostAddress());
+        final MediaDescription md = this.m_sdpFactory.createMediaDescription(
+                this.m_mimeContentType, socketAddress.getPort(), 1, protocol,
+                new String[] { this.m_mimeContentSubtype });
+
+        final Connection conn = this.m_sdpFactory.createConnection("IN",
+                Connection.IP4, socketAddress.getAddress().getHostAddress());
         md.setConnection(conn);
         return md;
-        }
+    }
     
     /**
      * Creates the base level attribute {@link StringBuilder} applicable for
@@ -320,8 +285,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
      * encoding.
      */
     private StringBuilder createBaseCandidateAttribute(
-        final IceCandidate candidate, final int port)
-        {
+            final IceCandidate candidate, final int port) {
         final String space = " ";
         final StringBuilder sb = new StringBuilder();
         sb.append(candidate.getFoundation());
@@ -342,20 +306,18 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         sb.append(space);
         sb.append(candidate.getType().toSdp());
         return sb;
-        }
+    }
 
-    private void addAttribute(final IceCandidate candidate)
-        {
+    private void addAttribute(final IceCandidate candidate) {
         addAttribute(candidate, candidate.getSocketAddress().getPort());
-        }
-    
-    private void addAttribute(final IceCandidate candidate, final int port)
-        {
+    }
+
+    private void addAttribute(final IceCandidate candidate, final int port) {
         final StringBuilder sb = createBaseCandidateAttribute(candidate, port);
-        final Attribute attribute = 
-            this.m_sdpFactory.createAttribute("candidate", sb.toString());
+        final Attribute attribute = this.m_sdpFactory.createAttribute(
+                "candidate", sb.toString());
         m_candidates.add(attribute);
-        }
+    }
     
     /**
      * Encodes a candidate attribute with the related address and related
@@ -363,8 +325,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
      * 
      * @param candidate The candidate.
      */
-    private void addAttributeWithRelated(final IceCandidate candidate)
-        {
+    private void addAttributeWithRelated(final IceCandidate candidate) {
         final int port = candidate.getSocketAddress().getPort();
         final StringBuilder sb = createBaseCandidateAttribute(candidate, port);
         final String space = " ";
@@ -376,8 +337,8 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null>
         sb.append("rport");
         sb.append(space);
         sb.append(candidate.getRelatedPort());
-        final Attribute attribute = 
-            this.m_sdpFactory.createAttribute("candidate", sb.toString());
+        final Attribute attribute = this.m_sdpFactory.createAttribute(
+                "candidate", sb.toString());
         m_candidates.add(attribute);
-        }
     }
+}
