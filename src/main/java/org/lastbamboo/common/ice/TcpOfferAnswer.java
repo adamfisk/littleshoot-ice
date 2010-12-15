@@ -167,6 +167,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     m_log.info("Got incoming socket from "+
                         sock.getRemoteSocketAddress() +"!! Controlling: {}",
                         m_controlling);
+                    sock.setKeepAlive(true);
                     onSocket(sock);
                 } catch (final IOException e) {
                     m_log.info("Exception accepting socket!!", e);
@@ -253,12 +254,13 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 try {
                     m_log.info("Connecting to: {}", candidate);
                     sock = new Socket();
+                    sock.setKeepAlive(true);
                     sock.connect(candidate.getSocketAddress(), 16 * 1000);
                     m_log.info("Client socket connected to: {}", candidate);
                     onSocket(sock);
                     // Close this at the end in case it throws an exception.
                 } catch (final IOException e) {
-                    m_log.info("IO Exception connecting", e);
+                    m_log.info("IO Exception connecting to: "+candidate, e);
                 }
 
                 // If we've successfully created an outgoing socket, we need
