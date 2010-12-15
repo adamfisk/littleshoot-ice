@@ -158,8 +158,8 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null> {
     }
 
     public void visitCandidates(final Collection<IceCandidate> candidates) {
+        m_log.info("Visiting candidates: {}", candidates);
         for (final IceCandidate candidate : candidates) {
-            m_log.info("Visiting candidates: {}", candidates);
             candidate.accept(this);
         }
 
@@ -244,7 +244,7 @@ public class IceCandidateSdpEncoder implements IceCandidateVisitor<Null> {
 
     public Null visitUdpServerReflexiveCandidate(
             final IceUdpServerReflexiveCandidate candidate) {
-        m_log.info("Visiting UDP server reflexive");
+        m_log.info("Visiting UDP server reflexive: {}", candidate);
         addAttributeWithRelated(candidate);
         m_defaultCandidates[0] = candidate;
         return ObjectUtils.NULL;
