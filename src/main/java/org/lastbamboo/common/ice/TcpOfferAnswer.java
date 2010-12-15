@@ -164,8 +164,9 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     m_log.info("Waiting for incoming socket on: {}",
                             socketAddress);
                     final Socket sock = m_serverSocket.accept();
-                    m_log.info("Got incoming socket!! Controlling: {}",
-                            m_controlling);
+                    m_log.info("Got incoming socket from "+
+                        sock.getRemoteSocketAddress() +"!! Controlling: {}",
+                        m_controlling);
                     onSocket(sock);
                 } catch (final IOException e) {
                     m_log.info("Exception accepting socket!!", e);
