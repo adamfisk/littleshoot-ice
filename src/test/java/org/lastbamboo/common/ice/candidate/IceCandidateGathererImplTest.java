@@ -32,7 +32,7 @@ public class IceCandidateGathererImplTest extends TestCase
             new IceMediaStreamDesc(true, true, "message", "http", 1, true);
         
         final IceCandidateGatherer gatherer = 
-            new IceCandidateGathererImpl(turnClient, udpStunClient, true, desc);
+            new UdpIceCandidateGatherer(udpStunClient, true, desc);
         
         final Collection<IceCandidate> candidates = gatherer.gatherCandidates();
         
