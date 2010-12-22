@@ -144,6 +144,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             }
 
             public void processOffer(final ByteBuffer offer) {
+                m_log.info("Processing offer...");
                 if (m_streamDesc.isTcp() && tcp != null) {
                     tcp.processOffer(offer);
                 }
@@ -153,6 +154,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
                 if (m_streamDesc.isUseRelay() && turnOfferAnswer != null) {
                     turnOfferAnswer.processOffer(offer);
                 }
+                m_log.info("Done processing offer...");
             }
 
             public void closeTcp() {

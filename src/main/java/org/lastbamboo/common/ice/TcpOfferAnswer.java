@@ -18,7 +18,6 @@ import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.portmapping.NatPmpService;
-import org.lastbamboo.common.portmapping.PortMapListener;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.stun.stack.StunAddressProvider;
 import org.lastbamboo.common.util.CandidateProvider;
@@ -42,14 +41,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     private final boolean m_controlling;
     private final OfferAnswerListener m_offerAnswerListener;
     private final InetAddress m_publicAddress;
-    //private final NatPmpService m_natPmpService;
-    //private final UpnpService m_upnpService;
-    private final MappedTcpAnswererServer m_answererServer;
     
-    //private int m_natPmpMappingIndex;
-    //private int m_upnpMappingIndex;
-    //private boolean m_portMapError = false;
-    //private int m_mappedPort;
     private final MappedTcpOffererServerPool m_offererServer;
     private PortMappedServerSocket m_portMappedServerSocket;
     private final MappedServerSocket m_mappedServerSocket;
@@ -76,9 +68,6 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         this.m_publicAddress = publicAddress;
         this.m_offerAnswerListener = offerAnswerListener;
         this.m_controlling = controlling;
-        //this.m_natPmpService = natPmpService;
-        //this.m_upnpService = upnpService;
-        this.m_answererServer = answererServer;
         this.m_offererServer = offererServer;
         
         // We only start another server socket on the controlling candidate
