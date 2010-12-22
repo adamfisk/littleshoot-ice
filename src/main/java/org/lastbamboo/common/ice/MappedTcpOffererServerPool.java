@@ -113,7 +113,7 @@ public class MappedTcpOffererServerPool {
                     new InetSocketAddress(lh, randomPort());
                 ss.bind(endpoint);
                 
-                // With this set, calls to accept wll timeout after the 
+                // With this set, calls to accept will timeout after the 
                 // specified interval.
                 ss.setSoTimeout(30*1000);
                 final PortMappedServerSocket pmss = 
