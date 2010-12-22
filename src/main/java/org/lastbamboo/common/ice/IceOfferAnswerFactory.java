@@ -43,6 +43,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
 
     private InetAddress m_publicAddress;
 
+    private final MappedTcpOffererServerPool m_offererServer;
+
     /**
      * Creates a new ICE agent factory. The factory maintains a reference to
      * the TCP TURN client because the client holds a persistent connection
@@ -55,6 +57,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
      * @param answererServer The single router port-mapped server socket for
      * when we're the answerer.
      * @param stunCandidateProvider Provider for STUN servers.
+     * @param offererServer The pool of mapped servers to send from the
+     * offering side.
      */
     public IceOfferAnswerFactory(
             final IceMediaStreamFactory mediaStreamFactory,
@@ -64,7 +68,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             final NatPmpService natPmpService, final UpnpService upnpService,
             final MappedTcpAnswererServer answererServer,
             final TurnClientListener turnClientListener, 
-            final CandidateProvider<InetSocketAddress> stunCandidateProvider) {
+            final CandidateProvider<InetSocketAddress> stunCandidateProvider, 
+            final MappedTcpOffererServerPool offererServer) {
         this.m_mediaStreamFactory = mediaStreamFactory;
         this.m_udpSocketFactory = udpSocketFactory;
         this.m_streamDesc = streamDesc;
@@ -74,6 +79,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         this.m_answererServer = answererServer;
         this.m_turnClientListener = turnClientListener;
         this.m_stunCandidateProvider = stunCandidateProvider;
+        this.m_offererServer = offererServer;
         this.m_publicAddress = determinePublicAddress(stunCandidateProvider);
     }
 
@@ -190,7 +196,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             m_log.info("Creating new TCP offer answer");
             return new TcpOfferAnswer(publicAddress, offerAnswerListener,
                 controlling, m_natPmpService, m_upnpService,
-                m_answererServer, this.m_stunCandidateProvider);
+                m_answererServer, this.m_stunCandidateProvider, 
+                this.m_offererServer);
         } else {
             return null;
         }

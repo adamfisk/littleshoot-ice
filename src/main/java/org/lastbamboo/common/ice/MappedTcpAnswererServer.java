@@ -7,6 +7,7 @@ import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMapListener;
 import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
+import org.lastbamboo.common.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,13 +18,16 @@ import org.slf4j.LoggerFactory;
  * data to the HTTP server. We can't do the same on the offerer/client side
  * because we have to map incoming sockets to the particular ICE session.
  */
-public class MappedTcpAnswererServer implements PortMapListener {
+public class MappedTcpAnswererServer implements PortMapListener,
+    MappedServerSocket {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
     private int m_externalPort;
 
     private final InetSocketAddress serverAddress;
+    
+    private boolean isPortMapped = false;
 
     /**
      * Creates a new mapped server for the answerer.
@@ -36,9 +40,14 @@ public class MappedTcpAnswererServer implements PortMapListener {
     public MappedTcpAnswererServer(final NatPmpService natPmpService,
         final UpnpService upnpService, final InetSocketAddress serverAddress)
         throws IOException {
-        
-        this.serverAddress = serverAddress;
+        if (serverAddress.getPort() == 0) {
+            throw new IllegalArgumentException("Cannot map ephemeral port");
+        }
+
         final int port = serverAddress.getPort();
+        this.serverAddress = 
+            new InetSocketAddress(NetworkUtils.getLocalHost(), port);
+        
         
         // We just set the port to the local port for now, as that's the one
         // we're requesting on the router. If the router does set it to a 
@@ -51,16 +60,27 @@ public class MappedTcpAnswererServer implements PortMapListener {
     }
     
     public InetSocketAddress getHostAddress() {
-        return new InetSocketAddress(this.serverAddress.getAddress(), 
-            this.m_externalPort);
+        return this.serverAddress;
     }
 
     public void onPortMap(final int externalPort) {
         m_log.info("Received port maped: {}", externalPort);
         this.m_externalPort = externalPort;
+        if (this.m_externalPort > 0) {
+            this.isPortMapped = true;
+        }
     }
 
     public void onPortMapError() {
         m_log.info("Got port map error.");
+        isPortMapped = false;
+    }
+
+    public boolean isPortMapped() {
+        return isPortMapped;
+    }
+
+    public int getMappedPort() {
+        return m_externalPort;
     }
 }
