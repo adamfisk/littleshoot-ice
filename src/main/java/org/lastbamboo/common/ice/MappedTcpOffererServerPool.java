@@ -138,7 +138,6 @@ public class MappedTcpOffererServerPool {
     }
 
     private int randomPort() {
-        final int port = 1024 + (RandomUtils.nextInt() % 60000);
-        return port;
+        return 1024 + (RandomUtils.nextInt() % 60000);
     }
 }

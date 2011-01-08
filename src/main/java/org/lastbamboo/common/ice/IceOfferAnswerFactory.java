@@ -6,6 +6,8 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashSet;
 
+import javax.net.SocketFactory;
+
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
@@ -45,6 +47,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
 
     private final MappedTcpOffererServerPool m_offererServer;
 
+    private final SocketFactory m_socketFactory;
+
     /**
      * Creates a new ICE agent factory. The factory maintains a reference to
      * the TCP TURN client because the client holds a persistent connection
@@ -69,7 +73,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             final MappedTcpAnswererServer answererServer,
             final TurnClientListener turnClientListener, 
             final CandidateProvider<InetSocketAddress> stunCandidateProvider, 
-            final MappedTcpOffererServerPool offererServer) {
+            final MappedTcpOffererServerPool offererServer,
+            final SocketFactory socketFactory) {
         this.m_mediaStreamFactory = mediaStreamFactory;
         this.m_udpSocketFactory = udpSocketFactory;
         this.m_streamDesc = streamDesc;
@@ -80,6 +85,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         this.m_turnClientListener = turnClientListener;
         this.m_stunCandidateProvider = stunCandidateProvider;
         this.m_offererServer = offererServer;
+        this.m_socketFactory = socketFactory;
         this.m_publicAddress = determinePublicAddress(stunCandidateProvider);
     }
 
@@ -199,7 +205,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             return new TcpOfferAnswer(publicAddress, offerAnswerListener,
                 controlling, m_natPmpService, m_upnpService,
                 m_answererServer, this.m_stunCandidateProvider, 
-                this.m_offererServer);
+                this.m_offererServer, m_socketFactory);
         } else {
             return null;
         }

@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.net.SocketFactory;
+
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
@@ -21,7 +23,6 @@ import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.stun.stack.StunAddressProvider;
 import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.NetworkUtils;
 import org.lastbamboo.common.util.RuntimeIoException;
 import org.lastbamboo.common.util.ThreadUtils;
 import org.littleshoot.mina.common.ByteBuffer;
@@ -45,6 +46,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     private final MappedTcpOffererServerPool m_offererServer;
     private PortMappedServerSocket m_portMappedServerSocket;
     private final MappedServerSocket m_mappedServerSocket;
+    private final SocketFactory socketFactory;
 
     /**
      * Creates a new TCP {@link OfferAnswer} class for processing offers and
@@ -64,11 +66,13 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         final UpnpService upnpService,
         final MappedTcpAnswererServer answererServer, 
         final CandidateProvider<InetSocketAddress> stunCandidateProvider,
-        final MappedTcpOffererServerPool offererServer) {
+        final MappedTcpOffererServerPool offererServer,
+        final SocketFactory socketFactory) {
         this.m_publicAddress = publicAddress;
         this.m_offerAnswerListener = offerAnswerListener;
         this.m_controlling = controlling;
         this.m_offererServer = offererServer;
+        this.socketFactory = socketFactory;
         
         // We only start another server socket on the controlling candidate
         // because the non-controlled, answering agent simply uses the same
@@ -259,19 +263,11 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 Socket sock = null;
                 try {
                     m_log.info("Connecting to: {}", candidate);
-                    sock = new Socket();
+                    //sock = new Socket();
+                    sock = socketFactory.createSocket();
                     sock.setKeepAlive(true);
-                    //sock.connect(candidate.getSocketAddress(), 16 * 1000);
-                    final InetSocketAddress sa = candidate.getSocketAddress();
-                    final String ia = sa.getAddress().getHostAddress();
+                    sock.connect(candidate.getSocketAddress(), 20 * 1000);
                     
-                    // DO NOT COMMIT THIS!! JUST FOR TESTING.
-                    if (ia.equals("0.0.0.0")) {
-                        sock.connect(new InetSocketAddress(NetworkUtils.getLocalHost(), sa.getPort()), 16 * 1000);
-                    }
-                    else {
-                        sock.connect(sa, 20 * 1000);
-                    }
                     m_log.info("Client socket connected to: {}", 
                         sock.getRemoteSocketAddress());
                     onSocket(sock);
