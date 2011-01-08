@@ -116,7 +116,8 @@ public class MappedTcpOffererServerPool {
         final InetAddress lh = NetworkUtils.getLocalHost();
         for (int i = 0; i < 20; i++) {
             try {
-                final ServerSocket ss = new ServerSocket();
+                final ServerSocket ss = 
+                    this.serverSocketFactory.createServerSocket();
                 final InetSocketAddress endpoint = 
                     new InetSocketAddress(lh, randomPort());
                 ss.bind(endpoint);
