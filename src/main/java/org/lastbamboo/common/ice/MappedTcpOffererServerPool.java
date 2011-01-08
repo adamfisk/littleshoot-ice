@@ -7,6 +7,8 @@ import java.net.ServerSocket;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javax.net.ServerSocketFactory;
+
 import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.commons.lang.math.RandomUtils;
 import org.lastbamboo.common.portmapping.NatPmpService;
@@ -38,18 +40,24 @@ public class MappedTcpOffererServerPool {
 
     private final UpnpService upnpService;
 
+    private final ServerSocketFactory serverSocketFactory;
+
     /**
      * Creates a new mapped server for the answerer.
      * 
      * @param natPmpService The NAT PMP mapper.
      * @param upnpService The UPnP mapper.
      * @param serverAddress The address of the server.
+     * @param serverSocketFactory The factory for creating server sockets --
+     * could be SSL sockets, for example.
      * @throws IOException If there's an error starting the server.
      */
     public MappedTcpOffererServerPool(final NatPmpService natPmpService,
-        final UpnpService upnpService) {
+        final UpnpService upnpService, 
+        final ServerSocketFactory serverSocketFactory) {
         this.natPmpService = natPmpService;
         this.upnpService = upnpService;
+        this.serverSocketFactory = serverSocketFactory;
         
         // We add a couple of cached server sockets right at the beginning 
         // for later use.
