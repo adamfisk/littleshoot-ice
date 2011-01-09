@@ -79,11 +79,10 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // server socket across all ICE sessions, forwarding their data to
         // the HTTP server.
         if (controlling || answererServer == null) {
+            m_log.info("Using pooled offerer server");
             try {
                 this.m_portMappedServerSocket = m_offererServer.serverSocket();
                 this.m_mappedServerSocket = m_portMappedServerSocket;
-                //this.m_serverSocket.bind(
-                //    new InetSocketAddress(NetworkUtils.getLocalHost(), 0));
 
                 // Accept incoming sockets on a listening thread.
                 listen();
@@ -93,6 +92,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 throw new RuntimeIoException("Could not bind server socket", e);
             }
         } else {
+            m_log.info("Using mapped server socket");
             this.m_mappedServerSocket = answererServer;
         }
     }
@@ -107,26 +107,6 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 m_log.info("Exception closing socket", e);
             }
         }
-
-        /*
-        if (this.m_serverSocket != null) {
-            try {
-                this.m_serverSocket.close();
-            } catch (final IOException e) {
-                m_log.info("Exception closing server socket", e);
-            }
-
-            // We need to unmap any ports we've mapped, and we've only mapped
-            // ports if the server socket is not null.
-            if (this.m_upnpMappingIndex != -1) {
-                this.m_upnpService.removeUpnpMapping(this.m_upnpMappingIndex);
-            }
-            if (this.m_natPmpMappingIndex != -1) {
-                this.m_natPmpService.removeNatPmpMapping(
-                    this.m_natPmpMappingIndex);
-            }
-        }
-        */
     }
 
     public void closeTcp() {
@@ -138,29 +118,10 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     }
 
     private void listen() {
-        //this.m_offererServer.addSocketListener(this);
         final ServerSocket ss = this.m_portMappedServerSocket.getServerSocket();
         final InetSocketAddress socketAddress = 
             (InetSocketAddress) ss.getLocalSocketAddress();
 
-        // Our basic strategy here is to just go ahead and try to map the ports
-        // without paying much attention to their success or failure. If they
-        // work, we'll connect to them during ICE. If the mapping doesn't work,
-        // those connection attempts should just fail quickly.
-        //final int localPort = socketAddress.getPort();
-        
-        // Due to the asynchronous nature of the port mapping calls, we assume
-        // that the router will map to the same port as the local port, as 
-        // we request. If we get a notification the router has assigned a 
-        // different port by the time we send out the candidates, we of course
-        // record that.
-        /*
-        this.m_mappedPort = localPort;
-        this.m_natPmpMappingIndex = this.m_natPmpService.addNatPmpMapping(
-            PortMappingProtocol.TCP, localPort, localPort, this);
-        this.m_upnpMappingIndex = this.m_upnpService.addUpnpMapping(
-            PortMappingProtocol.TCP, localPort, localPort, this);
-            */
         final Runnable serverRunner = new Runnable() {
             public void run() {
                 // We just accept the single socket on this port instead of
@@ -172,7 +133,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     m_log.info("Got incoming socket from "+
                         sock.getRemoteSocketAddress() +"!! Controlling: {}",
                         m_controlling);
-                    sock.setKeepAlive(true);
+                    //sock.setKeepAlive(true);
                     onSocket(sock);
                 } catch (final IOException e) {
                     // This could also be a socket timeout because we limit

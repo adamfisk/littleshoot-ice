@@ -118,8 +118,9 @@ public class MappedTcpOffererServerPool {
             try {
                 final ServerSocket ss = 
                     this.serverSocketFactory.createServerSocket();
+                final int port = randomPort();
                 final InetSocketAddress endpoint = 
-                    new InetSocketAddress(lh, randomPort());
+                    new InetSocketAddress(lh, port);
                 ss.bind(endpoint);
                 
                 // With this set, calls to accept will timeout after the 
@@ -127,7 +128,6 @@ public class MappedTcpOffererServerPool {
                 ss.setSoTimeout(30*1000);
                 final PortMappedServerSocket pmss = 
                     new PortMappedServerSocket(ss);
-                final int port = endpoint.getPort();
                 upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
                     port, pmss);
                 natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
