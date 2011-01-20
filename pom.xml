@@ -16,6 +16,11 @@
         </parent>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.barchart.udt</groupId>
+            <artifactId>barchart-udt4-bundle</artifactId>
+        </dependency>
             
         <dependency>
             <groupId>commons-id</groupId>
