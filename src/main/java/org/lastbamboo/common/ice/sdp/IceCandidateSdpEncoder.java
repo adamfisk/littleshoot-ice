@@ -29,7 +29,7 @@ import org.lastbamboo.common.sdp.api.SdpFactory;
 import org.lastbamboo.common.sdp.api.SessionDescription;
 import org.lastbamboo.common.sdp.api.SessionName;
 import org.lastbamboo.common.sdp.api.TimeDescription;
-import org.lastbamboo.common.util.NetworkUtils;
+import org.littleshoot.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

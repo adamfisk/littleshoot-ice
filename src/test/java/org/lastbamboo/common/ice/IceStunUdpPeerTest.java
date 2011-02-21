@@ -36,12 +36,12 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitorAdapter;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
-import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.NetworkUtils;
-import org.lastbamboo.common.util.SrvCandidateProvider;
-import org.lastbamboo.common.util.SrvUtil;
-import org.lastbamboo.common.util.SrvUtilImpl;
-import org.lastbamboo.common.util.mina.DemuxingIoHandler;
+import org.littleshoot.util.CandidateProvider;
+import org.littleshoot.util.NetworkUtils;
+import org.littleshoot.util.SrvCandidateProvider;
+import org.littleshoot.util.SrvUtil;
+import org.littleshoot.util.SrvUtilImpl;
+import org.littleshoot.util.mina.DemuxingIoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

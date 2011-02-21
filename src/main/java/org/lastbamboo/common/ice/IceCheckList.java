@@ -4,8 +4,8 @@ import java.util.Collection;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.util.Closure;
-import org.lastbamboo.common.util.Predicate;
+import org.littleshoot.util.Closure;
+import org.littleshoot.util.Predicate;
 
 /**
  * Interface for ICE check lists. 

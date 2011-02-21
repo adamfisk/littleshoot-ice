@@ -19,7 +19,7 @@ import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
-import org.lastbamboo.common.util.CandidateProvider;
+import org.littleshoot.util.CandidateProvider;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

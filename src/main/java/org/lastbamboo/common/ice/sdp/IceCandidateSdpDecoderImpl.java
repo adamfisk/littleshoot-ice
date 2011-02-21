@@ -27,8 +27,8 @@ import org.lastbamboo.common.sdp.api.SdpException;
 import org.lastbamboo.common.sdp.api.SdpFactory;
 import org.lastbamboo.common.sdp.api.SdpParseException;
 import org.lastbamboo.common.sdp.api.SessionDescription;
-import org.lastbamboo.common.util.IoExceptionWithCause;
-import org.lastbamboo.common.util.mina.MinaUtils;
+import org.littleshoot.util.IoExceptionWithCause;
+import org.littleshoot.util.mina.MinaUtils;
 
 /**
  * Factory class for creating ICE candidates from offer/answer data.

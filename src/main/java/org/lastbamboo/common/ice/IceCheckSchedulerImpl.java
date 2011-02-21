@@ -6,7 +6,7 @@ import java.util.TimerTask;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
-import org.lastbamboo.common.util.Predicate;
+import org.littleshoot.util.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

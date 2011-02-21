@@ -15,7 +15,7 @@ import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.util.NetworkUtils;
+import org.littleshoot.util.NetworkUtils;
 
 /**
  * Test for the class for generating SDP data.

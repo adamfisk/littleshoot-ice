@@ -13,7 +13,7 @@ import org.lastbamboo.common.stun.stack.message.NullStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionListener;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.util.RuntimeIoException;
+import org.littleshoot.util.RuntimeIoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

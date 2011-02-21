@@ -17,7 +17,7 @@ import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.lastbamboo.common.turn.client.TurnClientListener;
-import org.lastbamboo.common.util.CandidateProvider;
+import org.littleshoot.util.CandidateProvider;
 import org.littleshoot.mina.common.IoHandler;
 import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.slf4j.Logger;

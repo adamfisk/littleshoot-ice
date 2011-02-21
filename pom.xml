@@ -17,12 +17,10 @@
 
     <dependencies>
 
-<!--
         <dependency>
             <groupId>com.barchart.udt</groupId>
             <artifactId>barchart-udt4-bundle</artifactId>
         </dependency>
--->    
         
         <dependency>
             <groupId>commons-id</groupId>
@@ -88,11 +86,11 @@
             <groupId>org.lastbamboo</groupId>
             <artifactId>lastbamboo-common-udt</artifactId>
             </dependency>
-       
+      
         <dependency>
-            <groupId>org.lastbamboo</groupId>
-            <artifactId>lastbamboo-common-util-common</artifactId>
-            </dependency>
-           
-        </dependencies>
-    </project>
+            <groupId>org.littleshoot</groupId>
+            <artifactId>util</artifactId>
+        </dependency>
+ 
+    </dependencies>
+</project>

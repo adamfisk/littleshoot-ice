@@ -22,7 +22,7 @@ import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.util.mina.MinaUtils;
+import org.littleshoot.util.mina.MinaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

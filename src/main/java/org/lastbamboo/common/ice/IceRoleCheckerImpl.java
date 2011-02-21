@@ -11,7 +11,7 @@ import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
 import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
-import org.lastbamboo.common.util.NumberUtils;
+import org.littleshoot.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

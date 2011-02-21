@@ -11,7 +11,7 @@ import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
 import org.lastbamboo.common.stun.stack.message.ConnectErrorStunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.turn.client.TurnStunMessageMapper;
-import org.lastbamboo.common.util.NetworkUtils;
+import org.littleshoot.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

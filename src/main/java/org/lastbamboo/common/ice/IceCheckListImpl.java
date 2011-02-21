@@ -29,12 +29,12 @@ import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
-import org.lastbamboo.common.util.Closure;
-import org.lastbamboo.common.util.CollectionUtils;
-import org.lastbamboo.common.util.CollectionUtilsImpl;
-import org.lastbamboo.common.util.Pair;
-import org.lastbamboo.common.util.PairImpl;
-import org.lastbamboo.common.util.Predicate;
+import org.littleshoot.util.Closure;
+import org.littleshoot.util.CollectionUtils;
+import org.littleshoot.util.CollectionUtilsImpl;
+import org.littleshoot.util.Pair;
+import org.littleshoot.util.PairImpl;
+import org.littleshoot.util.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

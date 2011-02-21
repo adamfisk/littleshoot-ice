@@ -13,9 +13,9 @@ import org.lastbamboo.common.ice.IceMediaStreamFactory;
 import org.lastbamboo.common.ice.IceUdpConnectException;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.turn.http.server.ServerDataFeeder;
-import org.lastbamboo.common.util.CandidateProvider;
-import org.lastbamboo.common.util.NetworkUtils;
-import org.lastbamboo.common.util.ShootConstants;
+import org.littleshoot.util.CandidateProvider;
+import org.littleshoot.util.NetworkUtils;
+import org.littleshoot.util.ShootConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

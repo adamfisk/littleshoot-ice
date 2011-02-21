@@ -14,7 +14,7 @@ import org.lastbamboo.common.stun.server.UdpStunServer;
 import org.lastbamboo.common.stun.stack.message.BindingRequest;
 import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.util.CandidateProvider;
+import org.littleshoot.util.CandidateProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

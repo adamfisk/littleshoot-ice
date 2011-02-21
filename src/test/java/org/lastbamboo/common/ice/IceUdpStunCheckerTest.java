@@ -20,9 +20,9 @@ import org.lastbamboo.common.stun.stack.message.StunMessage;
 import org.lastbamboo.common.stun.stack.message.StunMessageVisitorFactory;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
 import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
-import org.lastbamboo.common.util.mina.DemuxableProtocolCodecFactory;
-import org.lastbamboo.common.util.mina.DemuxingIoHandler;
-import org.lastbamboo.common.util.mina.DemuxingProtocolCodecFactory;
+import org.littleshoot.util.mina.DemuxableProtocolCodecFactory;
+import org.littleshoot.util.mina.DemuxingIoHandler;
+import org.littleshoot.util.mina.DemuxingProtocolCodecFactory;
 
 /**
  * Test for the ICE connectivity checker. 

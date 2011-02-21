@@ -24,7 +24,7 @@ import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
 import org.lastbamboo.common.sdp.api.Attribute;
 import org.lastbamboo.common.sdp.api.MediaDescription;
 import org.lastbamboo.common.sdp.api.SessionDescription;
-import org.lastbamboo.common.util.NetworkUtils;
+import org.littleshoot.util.NetworkUtils;
 
 /**
  * Test for the class for generating SDP data.
