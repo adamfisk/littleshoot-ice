@@ -1,8 +1,8 @@
 package org.lastbamboo.common.ice;
 
 import org.littleshoot.mina.common.IoSession;
-import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.littleshoot.stun.stack.message.BindingErrorResponse;
+import org.littleshoot.stun.stack.message.BindingRequest;
 
 /**
  * Class that checks ICE roles.

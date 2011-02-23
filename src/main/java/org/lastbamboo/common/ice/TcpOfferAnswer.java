@@ -21,7 +21,7 @@ import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.UpnpService;
-import org.lastbamboo.common.stun.stack.StunAddressProvider;
+import org.littleshoot.stun.stack.StunAddressProvider;
 import org.littleshoot.util.CandidateProvider;
 import org.littleshoot.util.RuntimeIoException;
 import org.littleshoot.util.ThreadUtils;

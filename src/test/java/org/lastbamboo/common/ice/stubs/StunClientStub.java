@@ -7,8 +7,8 @@ import java.net.UnknownHostException;
 import org.apache.commons.lang.math.RandomUtils;
 import org.littleshoot.mina.common.IoServiceListener;
 import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.littleshoot.stun.stack.message.BindingRequest;
+import org.littleshoot.stun.stack.message.StunMessage;
 import org.littleshoot.util.NetworkUtils;
 
 public class StunClientStub implements StunClient

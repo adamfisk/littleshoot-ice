@@ -18,7 +18,7 @@ import org.lastbamboo.common.ice.IceMediaStream;
 import org.lastbamboo.common.ice.IceStunUdpPeer;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.littleshoot.stun.stack.message.BindingRequest;
 
 public class IceMediaStreamImplStub implements IceMediaStream
     {

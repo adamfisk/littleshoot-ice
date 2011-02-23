@@ -3,6 +3,7 @@ package org.lastbamboo.common.ice;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -57,7 +58,7 @@ public class IceCheckListImpl implements IceCheckList
         new ConcurrentLinkedQueue<IceCandidatePair>();
     
     private final List<IceCandidatePair> m_pairs =
-        new LinkedList<IceCandidatePair>();
+        new ArrayList<IceCandidatePair>();
 
     private volatile IceCheckListState m_state = IceCheckListState.RUNNING;
 

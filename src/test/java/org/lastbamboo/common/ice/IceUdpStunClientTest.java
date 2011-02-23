@@ -3,7 +3,7 @@ package org.lastbamboo.common.ice;
 import java.net.InetSocketAddress;
 
 import org.lastbamboo.common.stun.client.UdpStunClient;
-import org.lastbamboo.common.stun.stack.StunConstants;
+import org.littleshoot.stun.stack.StunConstants;
 import org.littleshoot.util.CandidateProvider;
 import org.littleshoot.util.SrvCandidateProvider;
 import org.littleshoot.util.SrvUtil;

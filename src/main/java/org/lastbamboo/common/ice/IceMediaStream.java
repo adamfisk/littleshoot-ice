@@ -8,7 +8,7 @@ import java.util.Queue;
 import org.littleshoot.mina.common.IoServiceListener;
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
+import org.littleshoot.stun.stack.message.BindingRequest;
 
 /**
  * A media stream for an ICE agent.

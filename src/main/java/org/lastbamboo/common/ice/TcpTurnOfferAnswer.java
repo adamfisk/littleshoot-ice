@@ -14,7 +14,7 @@ import org.lastbamboo.common.ice.candidate.IceTcpRelayPassiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
-import org.lastbamboo.common.stun.stack.StunProtocolCodecFactory;
+import org.littleshoot.stun.stack.StunProtocolCodecFactory;
 import org.lastbamboo.common.turn.client.TcpTurnClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.littleshoot.util.CandidateProvider;

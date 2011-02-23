@@ -4,11 +4,11 @@ import java.net.InetSocketAddress;
 
 import org.apache.commons.id.uuid.UUID;
 import org.littleshoot.mina.common.IoSession;
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.CanceledStunMessage;
-import org.lastbamboo.common.stun.stack.message.NullStunMessage;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.littleshoot.stun.stack.message.BindingRequest;
+import org.littleshoot.stun.stack.message.CanceledStunMessage;
+import org.littleshoot.stun.stack.message.NullStunMessage;
+import org.littleshoot.stun.stack.message.StunMessage;
+import org.littleshoot.stun.stack.transaction.StunTransactionTracker;
 import org.littleshoot.util.RuntimeIoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,8 +1,8 @@
 package org.lastbamboo.common.ice.candidate;
 
 import org.littleshoot.mina.common.IoSession;
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.littleshoot.stun.stack.message.BindingRequest;
+import org.littleshoot.stun.stack.message.StunMessage;
 
 /**
  * Interface for a pair of ICE candidates.

@@ -5,12 +5,12 @@ import java.util.Map;
 
 import org.apache.commons.id.uuid.UUID;
 import org.littleshoot.mina.common.IoSession;
-import org.lastbamboo.common.stun.stack.message.BindingErrorResponse;
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.attributes.StunAttribute;
-import org.lastbamboo.common.stun.stack.message.attributes.StunAttributeType;
-import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControlledAttribute;
-import org.lastbamboo.common.stun.stack.message.attributes.ice.IceControllingAttribute;
+import org.littleshoot.stun.stack.message.BindingErrorResponse;
+import org.littleshoot.stun.stack.message.BindingRequest;
+import org.littleshoot.stun.stack.message.attributes.StunAttribute;
+import org.littleshoot.stun.stack.message.attributes.StunAttributeType;
+import org.littleshoot.stun.stack.message.attributes.ice.IceControlledAttribute;
+import org.littleshoot.stun.stack.message.attributes.ice.IceControllingAttribute;
 import org.littleshoot.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

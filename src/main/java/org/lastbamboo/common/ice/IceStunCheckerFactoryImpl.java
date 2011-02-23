@@ -1,8 +1,8 @@
 package org.lastbamboo.common.ice;
 
 import org.lastbamboo.common.ice.transport.IceUdpStunChecker;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
+import org.littleshoot.stun.stack.message.StunMessage;
+import org.littleshoot.stun.stack.transaction.StunTransactionTracker;
 import org.littleshoot.mina.common.IoSession;
 
 /**

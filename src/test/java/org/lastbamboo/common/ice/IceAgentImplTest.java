@@ -6,22 +6,25 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.turn.client.TurnClientListener;
+import org.littleshoot.mina.common.ByteBuffer;
+import org.littleshoot.mina.common.IoSession;
 import org.littleshoot.util.CandidateProvider;
 import org.littleshoot.util.DnsSrvCandidateProvider;
-import org.littleshoot.mina.common.ByteBuffer;
-import org.littleshoot.mina.common.IoHandler;
-import org.littleshoot.mina.common.IoHandlerAdapter;
-import org.littleshoot.mina.common.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Test connections between ICE agents.
  */
+
+// NOTE: This is not used right now because it only tests for local UDP 
+// connections, and we no longer use those!
+@Ignore
 public class IceAgentImplTest
     {
 

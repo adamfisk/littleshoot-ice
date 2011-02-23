@@ -1,7 +1,7 @@
 package org.lastbamboo.common.ice;
 
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.littleshoot.stun.stack.message.BindingRequest;
+import org.littleshoot.stun.stack.message.StunMessage;
 
 public interface IceBindingRequestTracker
     {

@@ -7,8 +7,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.apache.commons.id.uuid.UUID;
-import org.lastbamboo.common.stun.stack.message.BindingRequest;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
+import org.littleshoot.stun.stack.message.BindingRequest;
+import org.littleshoot.stun.stack.message.StunMessage;
 
 /**
  * Keeps track of Binding Requests we've seen to avoid processing a request

@@ -16,9 +16,9 @@ import org.lastbamboo.common.ice.IceStunCheckerFactory;
 import org.lastbamboo.common.ice.IceStunCheckerFactoryImpl;
 import org.lastbamboo.common.ice.IceTransportProtocol;
 import org.lastbamboo.common.ice.stubs.IceUdpConnectorStub;
-import org.lastbamboo.common.stun.stack.message.StunMessage;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTracker;
-import org.lastbamboo.common.stun.stack.transaction.StunTransactionTrackerImpl;
+import org.littleshoot.stun.stack.message.StunMessage;
+import org.littleshoot.stun.stack.transaction.StunTransactionTracker;
+import org.littleshoot.stun.stack.transaction.StunTransactionTrackerImpl;
 import org.littleshoot.util.NetworkUtils;
 
 /**
@@ -57,38 +57,40 @@ public class IceCheckListImplTest extends TestCase
         // The pruning process should prune down to 2 pairs since the local
         // host candidate and the local server reflexive candidate become the
         // same.
-        assertEquals(4, pairs.size());
-        
+        assertEquals("Unexpected number of pairs", 3, pairs.size());
+
+        // Note: The pairs are now just three instead of 4 because we 
+        // removed the local network UDP pairs -- we just use TCP in thase case.
         final Iterator<IceCandidatePair> iter = pairs.iterator();
         final IceCandidatePair pair1 = iter.next();
         final IceCandidatePair pair2 = iter.next();
         final IceCandidatePair pair3 = iter.next();
-        final IceCandidatePair pair4 = iter.next();
+        //final IceCandidatePair pair4 = iter.next();
         
         final IceCandidate local1 = pair1.getLocalCandidate();
         final IceCandidate local2 = pair2.getLocalCandidate();
         final IceCandidate local3 = pair3.getLocalCandidate();
-        final IceCandidate local4 = pair4.getLocalCandidate();
+        //final IceCandidate local4 = pair4.getLocalCandidate();
         
         final IceCandidate remote1 = pair1.getRemoteCandidate();
         final IceCandidate remote2 = pair2.getRemoteCandidate();
         final IceCandidate remote3 = pair3.getRemoteCandidate();
-        final IceCandidate remote4 = pair4.getRemoteCandidate();
+        //final IceCandidate remote4 = pair4.getRemoteCandidate();
         
         assertEquals(IceTransportProtocol.TCP_ACT, local1.getTransport());
         assertEquals(IceTransportProtocol.UDP, local2.getTransport());
-        assertEquals(IceTransportProtocol.UDP, local3.getTransport());
-        assertEquals(IceTransportProtocol.TCP_ACT, local4.getTransport());
+        assertEquals(IceTransportProtocol.TCP_ACT, local3.getTransport());
+        //assertEquals(IceTransportProtocol.TCP_ACT, local4.getTransport());
         
         assertEquals(IceTransportProtocol.TCP_PASS, remote1.getTransport());
         assertEquals(IceTransportProtocol.UDP, remote2.getTransport());
-        assertEquals(IceTransportProtocol.UDP, remote3.getTransport());
-        assertEquals(IceTransportProtocol.TCP_PASS, remote4.getTransport());
+        assertEquals(IceTransportProtocol.TCP_PASS, remote3.getTransport());
+        //assertEquals(IceTransportProtocol.TCP_PASS, remote4.getTransport());
         
         assertEquals(IceCandidateType.HOST, remote1.getType());
-        assertEquals(IceCandidateType.HOST, remote2.getType());
-        assertEquals(IceCandidateType.SERVER_REFLEXIVE, remote3.getType());
-        assertEquals(IceCandidateType.RELAYED, remote4.getType());
+        assertEquals(IceCandidateType.SERVER_REFLEXIVE, remote2.getType());
+        assertEquals(IceCandidateType.RELAYED, remote3.getType());
+        //assertEquals(IceCandidateType.RELAYED, remote4.getType());
         }
 
     private Collection<IceCandidate> createCandidates(
