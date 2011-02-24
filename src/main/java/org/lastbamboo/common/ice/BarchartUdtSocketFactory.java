@@ -1,7 +1,6 @@
 package org.lastbamboo.common.ice;
 
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -168,9 +167,9 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         m_log.info("Clearing session!!");
         final DatagramSessionImpl dgSession = (DatagramSessionImpl) session;
         final DatagramChannel dgChannel = dgSession.getChannel();
-        final DatagramSocket dgSock = dgChannel.socket();
-        m_log.info("Closing socket on local address: {}",
-                dgSock.getLocalSocketAddress());
+        //final DatagramSocket dgSock = dgChannel.socket();
+        //m_log.info("Closing socket on local address: {}",
+        //        dgSock.getLocalSocketAddress());
         session.close().join(10 * 1000);
 
         final StunServer stunServer = stunUdpPeer.getStunServer();
