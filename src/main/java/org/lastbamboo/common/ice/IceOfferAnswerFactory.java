@@ -188,9 +188,11 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     private InetAddress determinePublicAddress(
         final CandidateProvider<InetSocketAddress> provider) {
         try {
-            final StunClient stun = new UdpStunClient(provider);
-            stun.connect();
-            return stun.getServerReflexiveAddress().getAddress();
+            final StunClient sc = new UdpStunClient(provider);
+            sc.connect();
+            final InetAddress ia = sc.getServerReflexiveAddress().getAddress();
+            sc.close();
+            return ia;
         } catch (final IOException e) {
             m_log.warn("Could not get server reflexive address", e);
             return null;

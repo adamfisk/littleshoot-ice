@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.barchart.udt.net.NetServerSocketUDT;
-import com.barchart.udt.net.NetSocketUDT;
 
 /**
  * Factory for creating UDT sockets.
@@ -46,7 +45,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             return;
         }
 
-        clear(session, stunUdpPeer);
+        stunUdpPeer.close();
         if (!controlling) {
             // The CONTROLLED agent is notified to start the media stream first
             // in the ICE process, so this is called before the other side
@@ -97,19 +96,19 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
     protected void openClientSocket(final IoSession session,
             final OfferAnswerListener socketListener)
             throws InterruptedException, IOException {
-        final InetSocketAddress local = (InetSocketAddress) session
-                .getLocalAddress();
-        final InetSocketAddress remote = (InetSocketAddress) session
-                .getRemoteAddress();
+        final InetSocketAddress local = 
+            (InetSocketAddress) session.getLocalAddress();
+        final InetSocketAddress remote = 
+            (InetSocketAddress) session.getRemoteAddress();
 
         m_log.info("Session local was: {}", local);
         m_log.info("Binding to port: {}", local.getPort());
 
-        final Socket clientSocket = new NetSocketUDT();
+        final Socket clientSocket = new NetSocketUDTWrapper();
+        
+        m_log.info("Binding to address and port");
         clientSocket.bind(new InetSocketAddress(local.getAddress(),
             local.getPort()));
-        //final UDTClient client = new UDTClient(local.getAddress(),
-        //        local.getPort());
 
         // Wait for a bit to make sure the server side has a chance to come up.
         final long sleepTime = 700;
@@ -163,10 +162,18 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         }
     }
 
-    private void clear(final IoSession session, final IceStunUdpPeer stunUdpPeer) {
-        m_log.info("Clearing session!!");
+    private void clear(final IoSession session, 
+        final IceStunUdpPeer stunUdpPeer) {
+        m_log.info("Clearing session: {}", session);
         final DatagramSessionImpl dgSession = (DatagramSessionImpl) session;
         final DatagramChannel dgChannel = dgSession.getChannel();
+        /*
+        try {
+            dgChannel.close();
+        } catch (final IOException e) {
+            m_log.info("Exception closing channgel!", e);
+        }
+        */
         //final DatagramSocket dgSock = dgChannel.socket();
         //m_log.info("Closing socket on local address: {}",
         //        dgSock.getLocalSocketAddress());
@@ -185,8 +192,15 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             session.getService().getFilterChain().clear();
             dgChannel.disconnect();
             dgChannel.close();
+            m_log.info("Open: "+dgChannel.isOpen());
+            m_log.info("Connected: "+dgChannel.isConnected());
+            m_log.info("Sleeping on channel");
+            Thread.sleep(4000);
+            m_log.info("Closed channel");
         } catch (final Exception e) {
             m_log.error("Error clearing session!!", e);
+        } finally {
+            stunUdpPeer.close();
         }
     }
 }
