@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -212,7 +211,7 @@ public class IceCheckListImpl implements IceCheckList
         {
 
         final Collection<Pair<IceCandidate, IceCandidate>> pairs = 
-            new LinkedList<Pair<IceCandidate,IceCandidate>>();
+            new ArrayList<Pair<IceCandidate,IceCandidate>>(10);
         
         for (final IceCandidate localCandidate : m_localCandidates)
             {
@@ -332,7 +331,7 @@ public class IceCheckListImpl implements IceCheckList
         final Collection<Pair<IceCandidate, IceCandidate>> pairs)
         {
         final List<Pair<IceCandidate, IceCandidate>> convertedPairs = 
-            new LinkedList<Pair<IceCandidate,IceCandidate>>();
+            new ArrayList<Pair<IceCandidate,IceCandidate>>(pairs.size());
         
         for (final Pair<IceCandidate, IceCandidate> pair : pairs)
             {
@@ -367,6 +366,16 @@ public class IceCheckListImpl implements IceCheckList
                 {
                 // Convert server reflexive candidates to their base.
                 final IceCandidate base = candidate.getBaseCandidate();
+                final InetAddress localAddress = 
+                    base.getSocketAddress().getAddress();
+                final InetAddress remoteAddress = 
+                    remoteCandidate.getSocketAddress().getAddress();
+                
+                // If we're trying to connect an address to itself, ignore it.
+                // This can happen when we're on a public IP for some reason.
+                if (localAddress.equals(remoteAddress)) {
+                    return null;
+                }
                 return new PairImpl<IceCandidate, IceCandidate>(base, 
                     remoteCandidate);
                 }
@@ -451,7 +460,7 @@ public class IceCheckListImpl implements IceCheckList
         // If we find a duplicate pair, we always take the one with the 
         // higher priority.
         final List<IceCandidatePair> prunedPairs = 
-            new LinkedList<IceCandidatePair>();
+            new ArrayList<IceCandidatePair>(6);
         final Set<Pair<IceCandidate, IceCandidate>> seenPairs =
             new HashSet<Pair<IceCandidate, IceCandidate>>();
         
@@ -467,7 +476,7 @@ public class IceCheckListImpl implements IceCheckList
         // Limit attacks based on the number of pairs.
         if (prunedPairs.size() > 100)
             {
-            return prunedPairs.subList(0, 100);
+            return prunedPairs.subList(0, 40);
             }
         return prunedPairs;
         }
@@ -485,6 +494,10 @@ public class IceCheckListImpl implements IceCheckList
     private static boolean shouldPair(final IceCandidate localCandidate, 
         final IceCandidate remoteCandidate)
         {
+        if (localCandidate.getSocketAddress().getAddress().equals(
+            remoteCandidate.getSocketAddress().getAddress())) {
+            return false;
+        }
         // This is specified in ICE section 5.7.1
         return (
             (localCandidate.getComponentId() == 

@@ -57,10 +57,10 @@ public class IceCheckListImplTest extends TestCase
         // The pruning process should prune down to 2 pairs since the local
         // host candidate and the local server reflexive candidate become the
         // same.
-        assertEquals("Unexpected number of pairs", 3, pairs.size());
+        assertEquals("Unexpected number of pairs: "+pairs, 3, pairs.size());
 
         // Note: The pairs are now just three instead of 4 because we 
-        // removed the local network UDP pairs -- we just use TCP in thase case.
+        // removed the local network UDP pairs -- we just use TCP in that case.
         final Iterator<IceCandidatePair> iter = pairs.iterator();
         final IceCandidatePair pair1 = iter.next();
         final IceCandidatePair pair2 = iter.next();
