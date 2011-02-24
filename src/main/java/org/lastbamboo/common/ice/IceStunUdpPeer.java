@@ -114,9 +114,9 @@ public class IceStunUdpPeer implements StunClient, StunServer
         // the SO_REUSEADDRESS option.
         this.m_stunServer.start(this.m_stunClient.getHostAddress());
         
-        m_log.debug("Started STUN client on local address: {}",
+        m_log.debug("Started STUN CLIENT on local address: {}",
             this.m_stunClient.getHostAddress());
-        m_log.debug("Started STUN server on local address: {}",
+        m_log.debug("Started STUN SERVER on local address: {}",
             this.m_stunServer.getBoundAddress());
         
         }

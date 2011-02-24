@@ -41,6 +41,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
     public void newSocket(final IoSession session, final boolean controlling,
             final OfferAnswerListener socketListener,
             final IceStunUdpPeer stunUdpPeer) {
+        m_log.info("Creating new Barchart UDT Socket");
         if (session == null) {
             m_log.error("Null session: {}", session);
             return;
