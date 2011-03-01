@@ -219,7 +219,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         if (this.m_streamDesc.isUdp()) {
             try {
                 return new IceAgentImpl(this.m_mediaStreamFactory, controlling,
-                        offerAnswerListener, this.m_udpSocketFactory);
+                        offerAnswerListener, this.m_udpSocketFactory,
+                        this.m_udpSocketFactory, this.m_streamDesc);
             } catch (final IceUdpConnectException e) {
                 throw new OfferAnswerConnectException(
                         "Could not create UDP connection", e);

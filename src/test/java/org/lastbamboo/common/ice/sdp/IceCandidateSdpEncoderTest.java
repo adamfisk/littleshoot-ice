@@ -90,6 +90,7 @@ public final class IceCandidateSdpEncoderTest extends TestCase
         encoder.visitCandidates(candidates);
         final byte[] sdpBytes = encoder.getSdp();
         
+        System.out.println(new String(sdpBytes));
         final SessionDescription sdp = 
             sdpFactory.createSessionDescription(new String(sdpBytes));
         

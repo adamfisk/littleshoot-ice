@@ -2,9 +2,9 @@ package org.lastbamboo.common.ice;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -25,37 +25,41 @@ import org.slf4j.LoggerFactory;
  */
 public class IceAgentImpl implements IceAgent {
 
-    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
-    private volatile boolean m_controlling;
+    private volatile boolean controlling;
     
     /**
      * The state of overall ICE processing across all media streams.
      */
-    private AtomicReference<IceState> m_iceState =
+    private AtomicReference<IceState> iceState =
         new AtomicReference<IceState>(IceState.RUNNING);
 
     /**
      * TODO: This is just a place holder for now for the most part, as we only
      * currently support a single media stream.
      */
-    private final Collection<IceMediaStream> m_mediaStreams =
-        new LinkedList<IceMediaStream>();
+    private final Collection<IceMediaStream> mediaStreams =
+        new ArrayList<IceMediaStream>(1);
 
     /**
      * The tie breaker to use when both agents think they're controlling.
      */
-    private final IceTieBreaker m_tieBreaker;
+    private final IceTieBreaker tieBreaker;
 
-    private final IceMediaStream m_mediaStream;
+    private final IceMediaStream mediaStream;
 
-    private final OfferAnswerListener m_offerAnswerListener;
+    private final OfferAnswerListener offerAnswerListener;
 
-    private final AtomicBoolean m_closed = new AtomicBoolean(false);
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    private final UdpSocketFactory m_udpSocketFactory;
+    private final UdpSocketFactory reliableUdpSocketFactory;
 
-    private final IceStunUdpPeer m_stunUdpPeer;
+    private final IceStunUdpPeer stunUdpPeer;
+
+    private final UdpSocketFactory unreliableUdpSocketFactory;
+
+    private final IceMediaStreamDesc iceMediaStreamDesc;
 
     /**
      * Creates a new ICE agent for an answerer. Passes the offer in the
@@ -70,34 +74,44 @@ public class IceAgentImpl implements IceAgent {
     public IceAgentImpl(final IceMediaStreamFactory mediaStreamFactory,
             final boolean controlling,
             final OfferAnswerListener offerAnswerListener,
-            final UdpSocketFactory udpSocketFactory)
+            final UdpSocketFactory udpSocketFactory,
+            final UdpSocketFactory unreliableUdpSocketFactory,
+            final IceMediaStreamDesc iceMediaStreamDesc)
             throws IceUdpConnectException {
-        this.m_controlling = controlling;
-        this.m_offerAnswerListener = offerAnswerListener;
-        this.m_udpSocketFactory = udpSocketFactory;
-        this.m_tieBreaker = new IceTieBreaker();
+        this.controlling = controlling;
+        this.offerAnswerListener = offerAnswerListener;
+        this.reliableUdpSocketFactory = udpSocketFactory;
+        this.unreliableUdpSocketFactory = unreliableUdpSocketFactory;
+        this.iceMediaStreamDesc = iceMediaStreamDesc;
+        this.tieBreaker = new IceTieBreaker();
 
         // TODO: We only currently support a single media stream!!
 
         // Much of the action takes place as a result of the following call.
         // When this call completes, the TCP and UDP clients and servers
         // are both started, the candidates are gathered, etc.
-        this.m_mediaStream = mediaStreamFactory.newStream(this);
-        this.m_stunUdpPeer = this.m_mediaStream.getStunUdpPeer();
-        this.m_mediaStreams.add(this.m_mediaStream);
+        this.mediaStream = mediaStreamFactory.newStream(this);
+        this.stunUdpPeer = this.mediaStream.getStunUdpPeer();
+        this.mediaStreams.add(this.mediaStream);
     }
 
     private void setIceState(final IceState state) {
-        this.m_iceState.set(state);
+        this.iceState.set(state);
         if (state == IceState.COMPLETED) {
             final IceCandidatePair pair = getNominatedPair();
             final IoSession session = pair.getIoSession();
-            m_udpSocketFactory.newSocket(session, isControlling(),
-                    this.m_offerAnswerListener, this.m_stunUdpPeer);
+            if (this.iceMediaStreamDesc.isReliable()) {
+                reliableUdpSocketFactory.newSocket(session, isControlling(),
+                    this.offerAnswerListener, this.stunUdpPeer);
+            } else {
+                this.unreliableUdpSocketFactory.newSocket(session, 
+                    isControlling(), this.offerAnswerListener, 
+                    this.stunUdpPeer);
+            }
         } else if (state == IceState.FAILED) {
-            m_log.debug("Got ICE failed.  Closing.");
+            log.debug("Got ICE failed.  Closing.");
             close();
-            this.m_offerAnswerListener.onOfferAnswerFailed(this);
+            this.offerAnswerListener.onOfferAnswerFailed(this);
         }
     }
 
@@ -123,33 +137,33 @@ public class IceAgentImpl implements IceAgent {
 
     public long calculateDelay(final int Ta_i) {
         return IceTransactionDelayCalculator.calculateDelay(Ta_i,
-                this.m_mediaStreams.size());
+                this.mediaStreams.size());
     }
 
     public boolean isControlling() {
-        return this.m_controlling;
+        return this.controlling;
     }
 
     public void setControlling(final boolean controlling) {
         Thread.dumpStack();
-        m_log.warn("Setting controlling to: " + controlling);
+        log.warn("Setting controlling to: " + controlling);
         // this.m_controlling = controlling;
     }
 
     public void recomputePairPriorities() {
-        this.m_mediaStream.recomputePairPriorities(this.m_controlling);
+        this.mediaStream.recomputePairPriorities(this.controlling);
     }
 
     public IceTieBreaker getTieBreaker() {
-        return m_tieBreaker;
+        return tieBreaker;
     }
 
     public byte[] generateAnswer() {
-        return m_mediaStream.encodeCandidates();
+        return mediaStream.encodeCandidates();
     }
 
     public byte[] generateOffer() {
-        return m_mediaStream.encodeCandidates();
+        return mediaStream.encodeCandidates();
     }
 
     public void processOffer(final ByteBuffer offer) {
@@ -157,8 +171,8 @@ public class IceAgentImpl implements IceAgent {
     }
 
     public void processAnswer(final ByteBuffer answer) {
-        if (this.m_closed.get()) {
-            m_log.info("UDP ICE agent is already closed! Ignoring answer.");
+        if (this.closed.get()) {
+            log.info("UDP ICE agent is already closed! Ignoring answer.");
             return;
         }
         processRemoteCandidates(answer);
@@ -166,8 +180,8 @@ public class IceAgentImpl implements IceAgent {
 
     private void processRemoteCandidates(final ByteBuffer encodedCandidates) {
         // TODO: We should process all possible media streams.
-        if (this.m_closed.get()) {
-            m_log.info("Already closed -- not processing remote candidates");
+        if (this.closed.get()) {
+            log.info("Already closed -- not processing remote candidates");
             return;
         }
 
@@ -177,9 +191,9 @@ public class IceAgentImpl implements IceAgent {
         final Collection<IceCandidate> remoteCandidates;
         try {
             remoteCandidates = decoder.decode(encodedCandidates,
-                    !this.m_controlling);
+                    !this.controlling);
         } catch (final IOException e) {
-            m_log.warn("Could not process remote candidates", e);
+            log.warn("Could not process remote candidates", e);
             setIceState(IceState.FAILED);
             return;
         }
@@ -187,26 +201,26 @@ public class IceAgentImpl implements IceAgent {
         // This should result in the stream entering either the Completed or
         // the Failed state.
         try {
-            this.m_mediaStream.establishStream(remoteCandidates);
+            this.mediaStream.establishStream(remoteCandidates);
         } catch (final RuntimeException e) {
-            m_log.error("Error establishing stream", e);
+            log.error("Error establishing stream", e);
             setIceState(IceState.FAILED);
         }
     }
 
     public Collection<IceMediaStream> getMediaStreams() {
-        return Collections.unmodifiableCollection(this.m_mediaStreams);
+        return Collections.unmodifiableCollection(this.mediaStreams);
     }
 
     public void onNominatedPair(final IceCandidatePair pair,
             final IceMediaStream mediaStream) {
-        if (m_log.isDebugEnabled()) {
-            m_log.debug("Received nominated pair on agent.  "
+        if (log.isDebugEnabled()) {
+            log.debug("Received nominated pair on agent.  "
                     + "Controlling: {} pair: {}", isControlling(), pair);
         }
 
-        if (this.m_closed.get()) {
-            m_log.info("Agent closed. Ignoring nomination.");
+        if (this.closed.get()) {
+            log.info("Agent closed. Ignoring nomination.");
             return;
         }
         // We now need to set the state of the check list as specified in
@@ -229,7 +243,7 @@ public class IceAgentImpl implements IceAgent {
 
         else if (state == IceCheckListState.FAILED) {
             if (allCheckListsInState(IceCheckListState.FAILED)) {
-                m_log.debug("All check lists are failed...agent is failed");
+                log.debug("All check lists are failed...agent is failed");
                 setIceState(IceState.FAILED);
             } else if (anyCheckListInState(IceCheckListState.COMPLETED)) {
                 // TODO: We SHOULD remove the failed media stream from the
@@ -241,8 +255,8 @@ public class IceAgentImpl implements IceAgent {
     }
 
     private boolean anyCheckListInState(final IceCheckListState state) {
-        synchronized (this.m_mediaStreams) {
-            for (final IceMediaStream stream : this.m_mediaStreams) {
+        synchronized (this.mediaStreams) {
+            for (final IceMediaStream stream : this.mediaStreams) {
                 final IceCheckListState curState = stream.getCheckListState();
                 if (state == curState) {
                     return true;
@@ -253,8 +267,8 @@ public class IceAgentImpl implements IceAgent {
     }
 
     private boolean allCheckListsInState(final IceCheckListState state) {
-        synchronized (this.m_mediaStreams) {
-            for (final IceMediaStream stream : this.m_mediaStreams) {
+        synchronized (this.mediaStreams) {
+            for (final IceMediaStream stream : this.mediaStreams) {
                 final IceCheckListState curState = stream.getCheckListState();
                 if (state != curState) {
                     return false;
@@ -265,11 +279,11 @@ public class IceAgentImpl implements IceAgent {
     }
 
     public IceState getIceState() {
-        return m_iceState.get();
+        return iceState.get();
     }
 
     public Queue<IceCandidatePair> getNominatedPairs() {
-        return this.m_mediaStream.getNominatedPairs();
+        return this.mediaStream.getNominatedPairs();
     }
 
     public void onValidPairs(final IceMediaStream mediaStream) {
@@ -283,22 +297,22 @@ public class IceAgentImpl implements IceAgent {
         //
         // In this case, we have few enough candidates that we can nominate
         // pairs once we've completed checks for all high priority pairs.
-        m_log.debug("Processing valid pair...");
+        log.debug("Processing valid pair...");
 
-        if (this.m_closed.get()) {
-            m_log.info("Already closed...ingoring");
+        if (this.closed.get()) {
+            log.info("Already closed...ingoring");
             return;
         }
 
         if (!isControlling()) {
-            m_log.debug("Not the controlling agent, so not sending a message "
+            log.debug("Not the controlling agent, so not sending a message "
                     + "to select the final pair.");
         } else {
             final Queue<IceCandidatePair> validPairs = mediaStream
                     .getValidPairs();
             final IceCandidatePair pair = validPairs.peek();
             if (pair.isNominated()) {
-                m_log.debug("Pair already nominated!!!");
+                log.debug("Pair already nominated!!!");
                 return;
             }
 
@@ -308,7 +322,7 @@ public class IceAgentImpl implements IceAgent {
              * "completed their checks"); } else
              */
             {
-                m_log.debug("Repeating check that produced the valid pair "
+                log.debug("Repeating check that produced the valid pair "
                         + "using USE-CANDIDATE");
                 pair.useCandidate();
                 mediaStream.addTriggeredPair(pair);
@@ -321,33 +335,33 @@ public class IceAgentImpl implements IceAgent {
 
         final IceCandidatePair topPriorityPair = pairs.peek();
         if (topPriorityPair == null) {
-            m_log.warn("No nominated pairs");
+            log.warn("No nominated pairs");
             return null;
         }
         return topPriorityPair;
     }
 
     public void close() {
-        final boolean wasClosed = m_closed.getAndSet(true);
+        final boolean wasClosed = closed.getAndSet(true);
         if (wasClosed) {
-            m_log.debug("Aleady closed.");
+            log.debug("Aleady closed.");
             return;
         }
 
-        m_log.debug("Closing ICE agent.");
+        log.debug("Closing ICE agent.");
         // Close all the media streams.
-        synchronized (this.m_mediaStreams) {
-            for (final IceMediaStream stream : this.m_mediaStreams) {
+        synchronized (this.mediaStreams) {
+            for (final IceMediaStream stream : this.mediaStreams) {
                 stream.close();
             }
         }
     }
 
     public void onNoMorePairs() {
-        m_log.debug("No more pairs.");
-        if (this.m_iceState.get() != IceState.COMPLETED
-                && this.m_iceState.get() != IceState.FAILED) {
-            m_log.debug("Setting ice state to failed -- no more pairs.");
+        log.debug("No more pairs.");
+        if (this.iceState.get() != IceState.COMPLETED
+                && this.iceState.get() != IceState.FAILED) {
+            log.debug("Setting ice state to failed -- no more pairs.");
             setIceState(IceState.FAILED);
         }
     }
@@ -361,11 +375,11 @@ public class IceAgentImpl implements IceAgent {
     }
 
     public Collection<? extends IceCandidate> gatherCandidates() {
-        return this.m_mediaStream.getLocalCandidates();
+        return this.mediaStream.getLocalCandidates();
     }
 
     public InetAddress getPublicAdress() {
-        return this.m_mediaStream.getPublicAddress();
+        return this.mediaStream.getPublicAddress();
     }
 
     public void useRelay() {
@@ -373,6 +387,6 @@ public class IceAgentImpl implements IceAgent {
     }
 
     public boolean isClosed() {
-        return this.m_closed.get();
+        return this.closed.get();
     }
 }
