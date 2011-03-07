@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Map;
 
-import org.lastbamboo.common.ice.IceMediaStreamDesc;
+import org.lastbamboo.common.offer.answer.IceMediaStreamDesc;
 import org.lastbamboo.common.stun.client.StunClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

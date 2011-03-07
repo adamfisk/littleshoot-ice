@@ -13,6 +13,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
+import org.lastbamboo.common.offer.answer.IceMediaStreamDesc;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.littleshoot.mina.common.IoSession;
@@ -90,7 +91,8 @@ public class IceAgentImpl implements IceAgent {
         // Much of the action takes place as a result of the following call.
         // When this call completes, the TCP and UDP clients and servers
         // are both started, the candidates are gathered, etc.
-        this.mediaStream = mediaStreamFactory.newStream(this);
+        this.mediaStream = 
+            mediaStreamFactory.newStream(this, iceMediaStreamDesc);
         this.stunUdpPeer = this.mediaStream.getStunUdpPeer();
         this.mediaStreams.add(this.mediaStream);
     }

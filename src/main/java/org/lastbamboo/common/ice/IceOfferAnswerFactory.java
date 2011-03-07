@@ -10,6 +10,7 @@ import javax.net.SocketFactory;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
+import org.lastbamboo.common.offer.answer.IceMediaStreamDesc;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerConnectException;
 import org.lastbamboo.common.offer.answer.OfferAnswerFactory;
@@ -33,7 +34,6 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     
     private final IceMediaStreamFactory m_mediaStreamFactory;
     private final UdpSocketFactory m_udpSocketFactory;
-    private final IceMediaStreamDesc m_streamDesc;
     private final CandidateProvider<InetSocketAddress> m_turnCandidateProvider;
     private final NatPmpService m_natPmpService;
     private final UpnpService m_upnpService;
@@ -67,7 +67,6 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     public IceOfferAnswerFactory(
             final IceMediaStreamFactory mediaStreamFactory,
             final UdpSocketFactory udpSocketFactory,
-            final IceMediaStreamDesc streamDesc,
             final CandidateProvider<InetSocketAddress> turnCandidateProvider,
             final NatPmpService natPmpService, final UpnpService upnpService,
             final MappedTcpAnswererServer answererServer,
@@ -77,7 +76,6 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             final SocketFactory socketFactory) {
         this.m_mediaStreamFactory = mediaStreamFactory;
         this.m_udpSocketFactory = udpSocketFactory;
-        this.m_streamDesc = streamDesc;
         this.m_turnCandidateProvider = turnCandidateProvider;
         this.m_natPmpService = natPmpService;
         this.m_upnpService = upnpService;
@@ -92,25 +90,28 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     public OfferAnswer createAnswerer(
             final OfferAnswerListener offerAnswerListener)
             throws OfferAnswerConnectException {
-        return createOfferAnswer(false, offerAnswerListener);
+        return createOfferAnswer(false, offerAnswerListener, 
+                IceMediaStreamDesc.allStreams());
     }
 
     public OfferAnswer createOfferer(
-            final OfferAnswerListener offerAnswerListener)
+            final OfferAnswerListener offerAnswerListener,
+            final IceMediaStreamDesc desc)
             throws OfferAnswerConnectException {
-        return createOfferAnswer(true, offerAnswerListener);
+        return createOfferAnswer(true, offerAnswerListener, desc);
     }
 
     private OfferAnswer createOfferAnswer(final boolean controlling,
-            final OfferAnswerListener offerAnswerListener)
+            final OfferAnswerListener offerAnswerListener,
+            final IceMediaStreamDesc mediaDesc)
             throws OfferAnswerConnectException {
         final IceOfferAnswer turnOfferAnswer = newTurnOfferAnswer(controlling,
-                offerAnswerListener);
+                offerAnswerListener, mediaDesc);
         final IceOfferAnswer udp = newUdpOfferAnswer(controlling,
-                offerAnswerListener);
+                offerAnswerListener, mediaDesc);
 
         final IceOfferAnswer tcp = newTcpOfferAnswer(this.m_publicAddress,
-                offerAnswerListener, controlling);
+                offerAnswerListener, controlling,mediaDesc);
 
         // We create a high-level class that starts a race between the TCP
         // and UDP connections. The TCP approach does not use ICE, instead
@@ -119,11 +120,13 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         // the peers is on the public Internet.
         return new OfferAnswer() {
             public byte[] generateOffer() {
-                return encodeCandidates(controlling, tcp, udp, turnOfferAnswer);
+                return encodeCandidates(controlling, tcp, udp, turnOfferAnswer, 
+                    mediaDesc);
             }
 
             public byte[] generateAnswer() {
-                return encodeCandidates(controlling, tcp, udp, turnOfferAnswer);
+                return encodeCandidates(controlling, tcp, udp, turnOfferAnswer,
+                        mediaDesc);
             }
 
             public void close() {
@@ -138,26 +141,26 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             public void processAnswer(final ByteBuffer answer) {
                 m_log.info("Processing answer...");
                 m_log.info("Turn offer answer: {}", turnOfferAnswer);
-                if (m_streamDesc.isUseRelay() && turnOfferAnswer != null) {
+                if (mediaDesc.isUseRelay() && turnOfferAnswer != null) {
                     turnOfferAnswer.processAnswer(answer.duplicate());
                 }
-                if (m_streamDesc.isTcp() && tcp != null) {
+                if (mediaDesc.isTcp() && tcp != null) {
                     tcp.processAnswer(answer.duplicate());
                 }
-                if (m_streamDesc.isUdp() && udp != null) {
+                if (mediaDesc.isUdp() && udp != null) {
                     udp.processAnswer(answer.duplicate());
                 }
             }
 
             public void processOffer(final ByteBuffer offer) {
                 m_log.info("Processing offer...");
-                if (m_streamDesc.isTcp() && tcp != null) {
+                if (mediaDesc.isTcp() && tcp != null) {
                     tcp.processOffer(offer);
                 }
-                if (m_streamDesc.isUdp() && udp != null) {
+                if (mediaDesc.isUdp() && udp != null) {
                     udp.processOffer(offer);
                 }
-                if (m_streamDesc.isUseRelay() && turnOfferAnswer != null) {
+                if (mediaDesc.isUseRelay() && turnOfferAnswer != null) {
                     turnOfferAnswer.processOffer(offer);
                 }
                 m_log.info("Done processing offer...");
@@ -201,8 +204,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     
     private IceOfferAnswer newTcpOfferAnswer(final InetAddress publicAddress,
             final OfferAnswerListener offerAnswerListener,
-            final boolean controlling) {
-        if (this.m_streamDesc.isTcp()) {
+            final boolean controlling, final IceMediaStreamDesc mediaDesc) {
+        if (mediaDesc.isTcp()) {
             m_log.info("Creating new TCP offer answer");
             return new TcpOfferAnswer(publicAddress, offerAnswerListener,
                 controlling, m_natPmpService, m_upnpService,
@@ -214,13 +217,14 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     }
 
     private IceOfferAnswer newUdpOfferAnswer(final boolean controlling,
-            final OfferAnswerListener offerAnswerListener)
+            final OfferAnswerListener offerAnswerListener,
+            final IceMediaStreamDesc mediaDesc)
             throws OfferAnswerConnectException {
-        if (this.m_streamDesc.isUdp()) {
+        if (mediaDesc.isUdp()) {
             try {
                 return new IceAgentImpl(this.m_mediaStreamFactory, controlling,
                         offerAnswerListener, this.m_udpSocketFactory,
-                        new RawUdpSocketFactory(), this.m_streamDesc);
+                        new RawUdpSocketFactory(), mediaDesc);
             } catch (final IceUdpConnectException e) {
                 throw new OfferAnswerConnectException(
                         "Could not create UDP connection", e);
@@ -231,10 +235,11 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
 
     private byte[] encodeCandidates(final boolean controlling,
             final IceOfferAnswer tcp, final IceOfferAnswer udp,
-            final IceOfferAnswer tcpTurn) {
+            final IceOfferAnswer tcpTurn,
+            final IceMediaStreamDesc mediaDesc) {
         final IceCandidateSdpEncoder encoder = new IceCandidateSdpEncoder(
-                m_streamDesc.getMimeContentType(),
-                m_streamDesc.getMimeContentSubtype());
+                mediaDesc.getMimeContentType(),
+                mediaDesc.getMimeContentSubtype());
 
         final Collection<IceCandidate> localCandidates = 
             new HashSet<IceCandidate>();
@@ -244,7 +249,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         if (udp != null) {
             localCandidates.addAll(udp.gatherCandidates());
         }
-        if (!controlling && m_streamDesc.isUseRelay() && tcpTurn != null) {
+        if (!controlling && mediaDesc.isUseRelay() && tcpTurn != null) {
             localCandidates.addAll(tcpTurn.gatherCandidates());
         }
         encoder.visitCandidates(localCandidates);
@@ -259,8 +264,9 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
      * @return The offer/answer for TURN.
      */
     private IceOfferAnswer newTurnOfferAnswer(final boolean controlling,
-            final OfferAnswerListener offerAnswerListener) {
-        if (!this.m_streamDesc.isUseRelay()) {
+            final OfferAnswerListener offerAnswerListener,
+            final IceMediaStreamDesc mediaDesc) {
+        if (!mediaDesc.isUseRelay()) {
             return null;
         }
 

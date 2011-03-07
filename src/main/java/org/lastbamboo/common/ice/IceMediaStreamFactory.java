@@ -1,5 +1,7 @@
 package org.lastbamboo.common.ice;
 
+import org.lastbamboo.common.offer.answer.IceMediaStreamDesc;
+
 
 /**
  * Factory for creating specialized media streams, such as for RTP, file
@@ -17,6 +19,7 @@ public interface IceMediaStreamFactory
      * @throws IceUdpConnectException If there's an error connecting the ICE
      * UDP peer.
      */
-    IceMediaStream newStream(IceAgent iceAgent) throws IceUdpConnectException;
+    IceMediaStream newStream(IceAgent iceAgent, IceMediaStreamDesc streamDesc) 
+        throws IceUdpConnectException;
 
     }

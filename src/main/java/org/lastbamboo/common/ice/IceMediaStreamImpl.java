@@ -20,6 +20,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidatePair;
 import org.lastbamboo.common.ice.candidate.IceCandidatePairState;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpEncoder;
+import org.lastbamboo.common.offer.answer.IceMediaStreamDesc;
 import org.littleshoot.stun.stack.message.BindingRequest;
 import org.littleshoot.stun.stack.message.attributes.StunAttribute;
 import org.littleshoot.stun.stack.message.attributes.StunAttributeType;

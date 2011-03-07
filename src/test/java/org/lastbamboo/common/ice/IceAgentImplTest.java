@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.lastbamboo.common.offer.answer.IceMediaStreamDesc;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.turn.client.TurnClientListener;
@@ -117,7 +118,8 @@ public class IceAgentImplTest {
 
         final IceMediaStreamFactory mediaStreamFactory1 = new IceMediaStreamFactory() {
 
-            public IceMediaStream newStream(final IceAgent iceAgent)
+            public IceMediaStream newStream(final IceAgent iceAgent,
+                    final IceMediaStreamDesc streamDesc)
                     throws IceUdpConnectException {
                 // final DemuxableProtocolCodecFactory otherCodecFactory =
                 // new StunDemuxableProtocolCodecFactory();
@@ -132,7 +134,8 @@ public class IceAgentImplTest {
 
         final IceMediaStreamFactory mediaStreamFactory2 = new IceMediaStreamFactory() {
 
-            public IceMediaStream newStream(final IceAgent iceAgent)
+            public IceMediaStream newStream(final IceAgent iceAgent, 
+                final IceMediaStreamDesc streamDesc)
                     throws IceUdpConnectException {
                 // final DemuxableProtocolCodecFactory otherCodecFactory =
                 // new StunDemuxableProtocolCodecFactory();

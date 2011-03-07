@@ -8,9 +8,9 @@ import org.lastbamboo.common.ice.GeneralIceMediaStreamFactory;
 import org.lastbamboo.common.ice.GeneralIceMediaStreamFactoryImpl;
 import org.lastbamboo.common.ice.IceAgent;
 import org.lastbamboo.common.ice.IceMediaStream;
-import org.lastbamboo.common.ice.IceMediaStreamDesc;
 import org.lastbamboo.common.ice.IceMediaStreamFactory;
 import org.lastbamboo.common.ice.IceUdpConnectException;
+import org.lastbamboo.common.offer.answer.IceMediaStreamDesc;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.lastbamboo.common.turn.http.server.ServerDataFeeder;
 import org.littleshoot.util.CandidateProvider;
@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 public class IceMediaStreamFactoryImpl implements IceMediaStreamFactory {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
-    private final IceMediaStreamDesc m_streamDesc;
     private final CandidateProvider<InetSocketAddress> m_stunServerCandidateProvider;
 
     /**
@@ -37,13 +36,12 @@ public class IceMediaStreamFactoryImpl implements IceMediaStreamFactory {
      * @param rudpService The service for RUDP connections.
      */
     public IceMediaStreamFactoryImpl(
-            final IceMediaStreamDesc streamDesc,
             final CandidateProvider<InetSocketAddress> stunServerCandidateProvider) {
-        m_streamDesc = streamDesc;
         this.m_stunServerCandidateProvider = stunServerCandidateProvider;
     }
 
-    public IceMediaStream newStream(final IceAgent iceAgent)
+    public IceMediaStream newStream(final IceAgent iceAgent,
+            final IceMediaStreamDesc streamDesc)
             throws IceUdpConnectException {
         final InetAddress serverAddress;
         try {
@@ -61,7 +59,7 @@ public class IceMediaStreamFactoryImpl implements IceMediaStreamFactory {
             new GeneralIceMediaStreamFactoryImpl(
                 this.m_stunServerCandidateProvider);
         final IceMediaStream stream = streamFactory.newIceMediaStream(
-                this.m_streamDesc, iceAgent, delegateListener);
+                streamDesc, iceAgent, delegateListener);
         return stream;
     }
 }

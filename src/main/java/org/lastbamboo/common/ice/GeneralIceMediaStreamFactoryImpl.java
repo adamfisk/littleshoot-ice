@@ -16,6 +16,7 @@ import org.littleshoot.stun.stack.message.StunMessage;
 import org.littleshoot.stun.stack.message.StunMessageVisitorFactory;
 import org.littleshoot.stun.stack.transaction.StunTransactionTracker;
 import org.littleshoot.stun.stack.transaction.StunTransactionTrackerImpl;
+import org.lastbamboo.common.offer.answer.IceMediaStreamDesc;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.littleshoot.util.CandidateProvider;
 import org.littleshoot.mina.common.IoHandler;

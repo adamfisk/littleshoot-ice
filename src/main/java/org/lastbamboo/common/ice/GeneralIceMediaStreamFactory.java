@@ -1,5 +1,6 @@
 package org.lastbamboo.common.ice;
 
+import org.lastbamboo.common.offer.answer.IceMediaStreamDesc;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 
 /**
