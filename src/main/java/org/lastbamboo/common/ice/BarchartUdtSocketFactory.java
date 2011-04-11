@@ -45,6 +45,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             return;
         }
 
+        clear(session, stunUdpPeer);
         stunUdpPeer.close();
         if (!controlling) {
             // The CONTROLLED agent is notified to start the media stream first
