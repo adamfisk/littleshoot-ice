@@ -47,8 +47,8 @@ public class IceUdpStunCheckerTest
         final IoHandler clientIoHandler = new IoHandlerAdapter();
         
         final InetSocketAddress remoteAddress =
-            new InetSocketAddress("stun01.sipphone.com", 3478);
-        
+            //new InetSocketAddress("stun01.sipphone.com", 3478);
+            new InetSocketAddress("stun.xten.com", 3478);
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
         final StunMessageVisitorFactory visitorFactory = 
