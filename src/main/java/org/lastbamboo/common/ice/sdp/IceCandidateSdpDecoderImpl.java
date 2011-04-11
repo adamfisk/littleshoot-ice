@@ -6,7 +6,6 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -48,15 +47,8 @@ public final class IceCandidateSdpDecoderImpl
     
     private static final String CANDIDATE_KEY = "candidate";
 
-    private final SdpFactory sdpFactory;
-
-    /**
-     * Creates a new decoder.
-     */
-    public IceCandidateSdpDecoderImpl() {
-        sdpFactory = new SdpFactory();
-    }
-
+    private final SdpFactory sdpFactory = new SdpFactory();
+    
     public Collection<IceCandidate> decode(final ByteBuffer buf,
             final boolean controlling) throws IOException {
         final String responseBodyString = MinaUtils.toAsciiString(buf);
@@ -64,7 +56,8 @@ public final class IceCandidateSdpDecoderImpl
         try {
             final SessionDescription sdp = this.sdpFactory
                     .createSessionDescription(responseBodyString);
-            final Collection mediaDescriptions = sdp.getMediaDescriptions(true);
+            final Collection<MediaDescription> mediaDescriptions = 
+                sdp.getMediaDescriptions(true);
             log.debug("Creating candidates from media descs:\n"
                     + mediaDescriptions);
             return createCandidates(mediaDescriptions, controlling);
@@ -84,14 +77,14 @@ public final class IceCandidateSdpDecoderImpl
      * @param controlling Whether or not to create controlling candidates.
      */
     private Collection<IceCandidate> createCandidates(
-            final Collection remoteMediaDescriptions, final boolean controlling) {
+        final Collection<MediaDescription> remoteMediaDescriptions, 
+        final boolean controlling) {
         final Collection<IceCandidate> candidates = 
             new ArrayList<IceCandidate>();
-        for (final Iterator iter = remoteMediaDescriptions.iterator(); iter.hasNext();) {
-            final MediaDescription mediaDesc = (MediaDescription) iter.next();
-            final Collection attributes = mediaDesc.getAttributes(true);
-            for (final Iterator iterator = attributes.iterator(); iterator.hasNext();) {
-                final Attribute attribute = (Attribute) iterator.next();
+        for (final MediaDescription mediaDesc : remoteMediaDescriptions) {
+            final Collection<Attribute> attributes = 
+                mediaDesc.getAttributes(true);
+            for (final Attribute attribute : attributes) {
                 try {
                     if (attribute.getName().equals(CANDIDATE_KEY)) {
                         final String attributeValue = attribute.getValue();
