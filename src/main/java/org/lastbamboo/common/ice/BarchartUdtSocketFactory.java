@@ -196,7 +196,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             m_log.info("Open: "+dgChannel.isOpen());
             m_log.info("Connected: "+dgChannel.isConnected());
             m_log.info("Sleeping on channel");
-            Thread.sleep(4000);
+            Thread.sleep(800);
             m_log.info("Closed channel");
         } catch (final Exception e) {
             m_log.error("Error clearing session!!", e);
