@@ -43,8 +43,6 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
 
     private final CandidateProvider<InetSocketAddress> m_stunCandidateProvider;
 
-    private InetAddress m_publicAddress;
-
     private final MappedTcpOffererServerPool m_offererServer;
 
     private final SocketFactory m_socketFactory;
@@ -84,7 +82,6 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         this.m_stunCandidateProvider = stunCandidateProvider;
         this.m_offererServer = offererServer;
         this.m_socketFactory = socketFactory;
-        this.m_publicAddress = determinePublicAddress(stunCandidateProvider);
     }
 
     public OfferAnswer createAnswerer(
@@ -110,8 +107,8 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         final IceOfferAnswer udp = newUdpOfferAnswer(controlling,
                 offerAnswerListener, mediaDesc);
 
-        final IceOfferAnswer tcp = newTcpOfferAnswer(this.m_publicAddress,
-                offerAnswerListener, controlling,mediaDesc);
+        final IceOfferAnswer tcp = 
+            newTcpOfferAnswer(offerAnswerListener, controlling,mediaDesc);
 
         // We create a high-level class that starts a race between the TCP
         // and UDP connections. The TCP approach does not use ICE, instead
@@ -188,26 +185,12 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         };
     }
     
-    private InetAddress determinePublicAddress(
-        final CandidateProvider<InetSocketAddress> provider) {
-        try {
-            final StunClient sc = new UdpStunClient(provider);
-            sc.connect();
-            final InetAddress ia = sc.getServerReflexiveAddress().getAddress();
-            sc.close();
-            return ia;
-        } catch (final IOException e) {
-            m_log.warn("Could not get server reflexive address", e);
-            return null;
-        }
-    }
-    
-    private IceOfferAnswer newTcpOfferAnswer(final InetAddress publicAddress,
+    private IceOfferAnswer newTcpOfferAnswer(
             final OfferAnswerListener offerAnswerListener,
             final boolean controlling, final IceMediaStreamDesc mediaDesc) {
         if (mediaDesc.isTcp()) {
             m_log.info("Creating new TCP offer answer");
-            return new TcpOfferAnswer(publicAddress, offerAnswerListener,
+            return new TcpOfferAnswer(offerAnswerListener,
                 controlling, m_natPmpService, m_upnpService,
                 m_answererServer, this.m_stunCandidateProvider, 
                 this.m_offererServer, m_socketFactory);

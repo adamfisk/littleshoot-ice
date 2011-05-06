@@ -21,6 +21,7 @@ import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.UpnpService;
+import org.lastbamboo.common.stun.client.PublicIpAddress;
 import org.littleshoot.stun.stack.StunAddressProvider;
 import org.littleshoot.util.CandidateProvider;
 import org.littleshoot.util.RuntimeIoException;
@@ -41,7 +42,6 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     private Collection<IceCandidate> m_candidates;
     private final boolean m_controlling;
     private final OfferAnswerListener m_offerAnswerListener;
-    private final InetAddress m_publicAddress;
     
     private final MappedTcpOffererServerPool m_offererServer;
     private PortMappedServerSocket m_portMappedServerSocket;
@@ -60,7 +60,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
      * the answering server socket. 
      * @param stunCandidateProvider Provider for STUN addresses.
      */
-    public TcpOfferAnswer(final InetAddress publicAddress,
+    public TcpOfferAnswer(
         final OfferAnswerListener offerAnswerListener,
         final boolean controlling, final NatPmpService natPmpService,
         final UpnpService upnpService,
@@ -68,7 +68,6 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         final CandidateProvider<InetSocketAddress> stunCandidateProvider,
         final MappedTcpOffererServerPool offererServer,
         final SocketFactory socketFactory) {
-        this.m_publicAddress = publicAddress;
         this.m_offerAnswerListener = offerAnswerListener;
         this.m_controlling = controlling;
         this.m_offererServer = offererServer;
@@ -308,13 +307,15 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             hostAddress, this.m_controlling);
         candidates.add(hostCandidate);
 
+        final InetAddress publicIp = PublicIpAddress.getPublicIpAddress();
+        
         // OK, the following is non-standard. If we have a public address
         // for the host from our UDP STUN check, we use the address part for
         // a new candidate because we always make an effort to map our TCP
         // host port with UPnP. This is not a simultaneous open candidate,
         // although there may be cases where this actually succeeds when UPnP
         // mapping failed due to simultaneous open behavior on the NAT.
-        if (this.m_publicAddress != null && m_mappedServerSocket.isPortMapped()) {
+        if (publicIp != null && m_mappedServerSocket.isPortMapped()) {
             m_log.info("Adding public TCP address");
             // We're not completely sure if the port has been mapped yet at
             // this point. We know there hasn't been an error, but that's 
@@ -326,14 +327,14 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             // requested. That mapping should theoretically work by the time
             // the external side tries to use it.
             final InetSocketAddress publicHostAddress = new InetSocketAddress(
-                this.m_publicAddress, m_mappedServerSocket.getMappedPort());
+                publicIp, m_mappedServerSocket.getMappedPort());
 
             final IceCandidate publicHostCandidate = 
                 new IceTcpHostPassiveCandidate(publicHostAddress, 
                     this.m_controlling);
             candidates.add(publicHostCandidate);
         } else {
-            m_log.info("Not adding public candidate. PA: "+m_publicAddress + 
+            m_log.info("Not adding public candidate. PA: "+publicIp + 
                 " mapped: " + m_mappedServerSocket.isPortMapped());
         }
         m_candidates = candidates;
@@ -354,10 +355,6 @@ public class TcpOfferAnswer implements IceOfferAnswer,
 
     public InetAddress getStunServerAddress() {
         return null;
-    }
-
-    public InetAddress getPublicAdress() {
-        return this.m_publicAddress;
     }
 
     public void useRelay() {
