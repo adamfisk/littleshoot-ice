@@ -346,7 +346,7 @@ public class IceAgentImpl implements IceAgent {
     public void close() {
         final boolean wasClosed = closed.getAndSet(true);
         if (wasClosed) {
-            log.debug("Aleady closed.");
+            log.debug("Already closed.");
             return;
         }
 
