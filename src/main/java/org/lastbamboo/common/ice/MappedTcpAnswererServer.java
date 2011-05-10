@@ -15,8 +15,9 @@ import org.slf4j.LoggerFactory;
  * This class is a server socket for all ICE answerers for a given user agent.
  * Using the single server socket allows us to map the port a single time. On
  * the answerer this makes sense because all the answerer does is forward 
- * data to the HTTP server. We can't do the same on the offerer/client side
- * because we have to map incoming sockets to the particular ICE session.
+ * data to a server, such as a local HTTP server or a local HTTP proxy server. 
+ * We can't do the same on the offerer/client side because we have to map 
+ * incoming sockets to the particular ICE session.
  */
 public class MappedTcpAnswererServer implements PortMapListener,
     MappedServerSocket {
