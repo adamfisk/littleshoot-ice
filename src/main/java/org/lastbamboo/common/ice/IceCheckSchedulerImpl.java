@@ -94,6 +94,11 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
     }
 
     private void checkPair(final Timer timer) {
+        if (this.m_agent.isClosed()) {
+            m_log.debug("ICE agent is closed");
+            timer.cancel();
+            return;
+        }
         if (this.m_checkList.getState() == IceCheckListState.COMPLETED) {
             m_log.debug("Checks are completed!  Returning");
             // This technically violates section 8.3. We should be continuing
