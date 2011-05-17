@@ -1,7 +1,6 @@
 package org.lastbamboo.common.ice;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashSet;
@@ -17,11 +16,9 @@ import org.lastbamboo.common.offer.answer.OfferAnswerFactory;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.UpnpService;
-import org.lastbamboo.common.stun.client.StunClient;
-import org.lastbamboo.common.stun.client.UdpStunClient;
 import org.lastbamboo.common.turn.client.TurnClientListener;
-import org.littleshoot.util.CandidateProvider;
 import org.littleshoot.mina.common.ByteBuffer;
+import org.littleshoot.util.CandidateProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
