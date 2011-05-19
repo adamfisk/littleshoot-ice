@@ -132,12 +132,14 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     m_log.info("Got incoming socket from "+
                         sock.getRemoteSocketAddress() +"!! Controlling: {}",
                         m_controlling);
-                    //sock.setKeepAlive(true);
+                    sock.setKeepAlive(true);
                     onSocket(sock);
                 } catch (final IOException e) {
                     // This could also be a socket timeout because we limit
                     // the length of time allowed on accept calls.
-                    m_log.info("Exception accepting socket!!", e);
+                    m_log.info("Exception accepting socket. This will often " +
+                        "happen when the client side connects first, and we " +
+                        "simply return the socket back to the pool.", e);
                 } finally {
                     // Adding back server socket.
                     m_offererServer.addServerSocket(m_portMappedServerSocket);
