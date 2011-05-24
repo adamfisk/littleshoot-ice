@@ -6,8 +6,7 @@ import org.littleshoot.mina.common.IoSession;
 /**
  * Interface for creating sockets from reliable UDP "connections."
  */
-public interface UdpSocketFactory
-    {
+public interface UdpSocketFactory {
 
     /**
      * Creates a new socket, notifying the listener when the socket is 
@@ -22,4 +21,4 @@ public interface UdpSocketFactory
     void newSocket(IoSession session, boolean controlling, 
         OfferAnswerListener offerAnswerListener, IceStunUdpPeer stunUdpPeer);
 
-    }
+}
