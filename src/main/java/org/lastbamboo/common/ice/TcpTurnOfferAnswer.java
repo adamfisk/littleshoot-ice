@@ -27,8 +27,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Processes offers and answers for a TURN server connection.
  */
-public class TcpTurnOfferAnswer implements IceOfferAnswer 
-    {
+public class TcpTurnOfferAnswer implements IceOfferAnswer {
     
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final TcpTurnClient m_turnClient;
@@ -50,167 +49,138 @@ public class TcpTurnOfferAnswer implements IceOfferAnswer
         final CandidateProvider<InetSocketAddress> turnCandidateProvider,
         final boolean controlling,
         final OfferAnswerListener offerAnswerListener,
-        final TurnClientListener clientListener) 
-        {
+            final TurnClientListener clientListener) {
         this.m_controlling = controlling;
         this.m_offerAnswerListener = offerAnswerListener;
-        final ProtocolCodecFactory codecFactory = 
-            new StunProtocolCodecFactory();
-        this.m_turnClient = 
-            new TcpTurnClient(clientListener, turnCandidateProvider, 
-                codecFactory);
-        }
+        final ProtocolCodecFactory codecFactory = new StunProtocolCodecFactory();
+        this.m_turnClient = new TcpTurnClient(clientListener,
+                turnCandidateProvider, codecFactory);
+    }
     
     /**
      * Connects to the TURN server
      * 
      * @throws IOException If we can't connect.
      */
-    public void connect() throws IOException 
-        {
+    public void connect() throws IOException {
         this.m_turnClient.connect();
-        }
-    
-    public void close() 
-        {
+    }
+
+    public void close() {
         this.m_turnClient.close();
-        }
+    }
 
-    public void closeTcp() 
-        {
+    public void closeTcp() {
         this.m_turnClient.close();
-        }
+    }
 
-    public void closeUdp() 
-        {
-        }
+    public void closeUdp() {
+    }
 
-    public byte[] generateAnswer() 
-        {
+    public byte[] generateAnswer() {
         return null;
-        }
+    }
 
-    public byte[] generateOffer() 
-        {
+    public byte[] generateOffer() {
         return null;
-        }
+    }
 
-    public void processAnswer(final ByteBuffer answer) 
-        {
+    public void processAnswer(final ByteBuffer answer) {
         this.m_encodedCandidates = answer;
-        }
+    }
 
-    public void processOffer(final ByteBuffer offer) 
-        {
+    public void processOffer(final ByteBuffer offer) {
         this.m_encodedCandidates = offer;
-        }
+    }
 
-    public Collection<? extends IceCandidate> gatherCandidates() 
-        {
+    public Collection<? extends IceCandidate> gatherCandidates() {
         m_log.info("Gathering TURN candidates");
-        // For relayed candidates, the related address is the mapped 
+        // For relayed candidates, the related address is the mapped
         // address.
-        final InetSocketAddress relatedAddress = 
-            m_turnClient.getServerReflexiveAddress();
-        
-        final InetAddress stunServerAddress = 
-            m_turnClient.getStunServerAddress();
-        
-        final InetSocketAddress relayAddress = 
-            this.m_turnClient.getRelayAddress();
-        final IceCandidate relayCandidate = 
-            new IceTcpRelayPassiveCandidate(relayAddress, 
-                stunServerAddress, relatedAddress.getAddress(), 
+        final InetSocketAddress relatedAddress = m_turnClient
+                .getServerReflexiveAddress();
+
+        final InetAddress stunServerAddress = m_turnClient
+                .getStunServerAddress();
+
+        final InetSocketAddress relayAddress = this.m_turnClient
+                .getRelayAddress();
+        final IceCandidate relayCandidate = new IceTcpRelayPassiveCandidate(
+                relayAddress, stunServerAddress, relatedAddress.getAddress(),
                 relatedAddress.getPort(), this.m_controlling);
-        
+
         return Arrays.asList(relayCandidate);
-        }
+    }
 
-    public InetAddress getPublicAdress() 
-        {
+    public InetAddress getPublicAdress() {
         return this.m_turnClient.getMappedAddress().getAddress();
-        }
+    }
 
-    private void processRemoteCandidates(final ByteBuffer encodedCandidates) 
-        {
+    private void processRemoteCandidates(final ByteBuffer encodedCandidates) {
         m_log.info("Decoding TURN relay candidates");
         final IceCandidateSdpDecoder decoder = new IceCandidateSdpDecoderImpl();
         final Collection<IceCandidate> remoteCandidates;
-        try
-            {
+        try {
             // Note the second argument doesn't matter at all.
             remoteCandidates = decoder.decode(encodedCandidates, false);
-            }
-        catch (final IOException e)
-            {
+        } catch (final IOException e) {
             m_log.warn("Could not process remote candidates", e);
             return;
-            }
+        }
 
         m_log.info("Processing TURN relay candidates: {}", remoteCandidates);
-        
-        // OK, we've got the candidates. We'll now parallelize connection 
-        // attempts to all of them, taking the first to succeed. Note there's 
+
+        // OK, we've got the candidates. We'll now parallelize connection
+        // attempts to all of them, taking the first to succeed. Note there's
         // typically a single local network candidate that will only succeed
-        // if we're on same subnet and then a public candidate that's 
+        // if we're on same subnet and then a public candidate that's
         // either there because the remote host is on the public Internet or
         // because the public address was mapped using UPnP.
         final IceCandidateVisitor<Object> visitor = 
-            new IceCandidateVisitorAdapter<Object>()
-                {
-                
-                @Override
-                public Object visitTcpRelayPassiveCandidate(
-                    final IceTcpRelayPassiveCandidate candidate)
-                    {
-                    m_log.info("Connecting to turn candidate");
-                    connectToCandidate(candidate);
-                    return null;
-                    }
-                };
-        for (final IceCandidate candidate : remoteCandidates)
-            {
-            candidate.accept(visitor);
+            new IceCandidateVisitorAdapter<Object>() {
+
+            @Override
+            public Object visitTcpRelayPassiveCandidate(
+                    final IceTcpRelayPassiveCandidate candidate) {
+                m_log.info("Connecting to turn candidate");
+                connectToCandidate(candidate);
+                return null;
             }
+        };
+        for (final IceCandidate candidate : remoteCandidates) {
+            candidate.accept(visitor);
         }
-    
-    public void useRelay() 
-        {
+    }
+
+    public void useRelay() {
         m_log.info("Using relay");
         // We wait until here to process the TURN candidates. If there is a
         // relay candidate, we'll connect to it.
         processRemoteCandidates(this.m_encodedCandidates);
-        }
-    
-    private void connectToCandidate(final IceCandidate candidate) 
-        {
-        if (candidate == null) 
-            {
-            m_log.warn("Null candidate?? "+ThreadUtils.dumpStack());
+    }
+
+    private void connectToCandidate(final IceCandidate candidate) {
+        if (candidate == null) {
+            m_log.warn("Null candidate?? " + ThreadUtils.dumpStack());
             return;
-            }
-        final Runnable threadRunner = new Runnable()
-            {
-            public void run()
-                {
+        }
+        final Runnable threadRunner = new Runnable() {
+            public void run() {
                 Socket sock = null;
-                try
-                    {
+                try {
                     m_log.info("Connecting to: {}", candidate);
                     sock = new Socket();
-                    sock.connect(candidate.getSocketAddress(), 20*1000);
+                    sock.connect(candidate.getSocketAddress(), 20 * 1000);
                     m_log.info("Connected to: {}", candidate);
                     m_offerAnswerListener.onTcpSocket(sock);
-                    }
-                catch (final IOException e)
-                    {
+                } catch (final IOException e) {
                     m_log.warn("Could not connect to relay?", e);
-                    }
                 }
-            };
-        final Thread connectorThread = 
-            new Thread(threadRunner, "ICE-TCP-Connect-"+candidate);
+            }
+        };
+        final Thread connectorThread = new Thread(threadRunner,
+                "ICE-TCP-Connect-" + candidate);
         connectorThread.setDaemon(true);
         connectorThread.start();
-        }
     }
+}
