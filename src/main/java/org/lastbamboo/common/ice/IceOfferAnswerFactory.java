@@ -82,10 +82,12 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     }
 
     public OfferAnswer createAnswerer(
-            final OfferAnswerListener offerAnswerListener)
+            final OfferAnswerListener offerAnswerListener, 
+            final boolean useRelay)
             throws OfferAnswerConnectException {
         return createOfferAnswer(false, offerAnswerListener, 
-                IceMediaStreamDesc.allStreams());
+            new IceMediaStreamDesc(true, true, "message", "http", 1, useRelay, 
+                true));
     }
 
     public OfferAnswer createOfferer(
