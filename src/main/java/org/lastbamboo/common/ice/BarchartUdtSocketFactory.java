@@ -113,7 +113,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             local.getPort()));
 
         // Wait for a bit to make sure the server side has a chance to come up.
-        final long sleepTime = 4000;
+        final long sleepTime = 700;
         m_log.info("Client side sleeping for {} milliseconds", sleepTime);
         Thread.sleep(sleepTime);
         m_log.info("About to connect...");
@@ -196,8 +196,8 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             dgChannel.close();
             m_log.info("Open: "+dgChannel.isOpen());
             m_log.info("Connected: "+dgChannel.isConnected());
-            m_log.info("Sleeping on channel");
-            
+            m_log.info("Sleeping on channel to make sure it unbinds");
+            Thread.sleep(400);
             m_log.info("Closed channel");
         } catch (final Exception e) {
             m_log.error("Error clearing session!!", e);

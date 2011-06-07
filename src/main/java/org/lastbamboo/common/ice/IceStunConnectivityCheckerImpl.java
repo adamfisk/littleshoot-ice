@@ -274,6 +274,11 @@ public final class IceStunConnectivityCheckerImpl<T>
                     // We need to cancel the in-progress transaction.  
                     // This just means we won't re-submit requests and will
                     // not treat the lack of response as a failure.
+                    
+                    // The following code doesn't seem to be necessary and
+                    // broke NAT traversal in at least one scenario when 
+                    // trying to traverse a NAT from OSX to Windows, ethernet
+                    // to wireless.
                     /*
                     m_log.debug("Canceling in progress transaction...");
                     existingPair.cancelStunTransaction();
@@ -282,6 +287,7 @@ public final class IceStunConnectivityCheckerImpl<T>
                     existingPair.setState(IceCandidatePairState.WAITING);
                     this.m_iceMediaStream.addTriggeredPair(existingPair);
                     */
+                    m_log.info("Pair is IN PROGRESS...nominating on success");
                     break;
                 case FAILED:
                     existingPair.setState(IceCandidatePairState.WAITING);
