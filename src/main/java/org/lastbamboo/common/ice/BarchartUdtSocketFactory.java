@@ -47,6 +47,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
 
         clear(session, stunUdpPeer);
         stunUdpPeer.close();
+
         if (!controlling) {
             // The CONTROLLED agent is notified to start the media stream first
             // in the ICE process, so this is called before the other side
@@ -112,7 +113,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             local.getPort()));
 
         // Wait for a bit to make sure the server side has a chance to come up.
-        final long sleepTime = 700;
+        final long sleepTime = 4000;
         m_log.info("Client side sleeping for {} milliseconds", sleepTime);
         Thread.sleep(sleepTime);
         m_log.info("About to connect...");
@@ -196,7 +197,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             m_log.info("Open: "+dgChannel.isOpen());
             m_log.info("Connected: "+dgChannel.isConnected());
             m_log.info("Sleeping on channel");
-            Thread.sleep(800);
+            
             m_log.info("Closed channel");
         } catch (final Exception e) {
             m_log.error("Error clearing session!!", e);

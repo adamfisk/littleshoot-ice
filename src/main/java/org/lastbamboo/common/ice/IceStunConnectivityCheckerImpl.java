@@ -274,12 +274,14 @@ public final class IceStunConnectivityCheckerImpl<T>
                     // We need to cancel the in-progress transaction.  
                     // This just means we won't re-submit requests and will
                     // not treat the lack of response as a failure.
+                    /*
                     m_log.debug("Canceling in progress transaction...");
                     existingPair.cancelStunTransaction();
                 
                     // Add the pair to the triggered check queue.
                     existingPair.setState(IceCandidatePairState.WAITING);
                     this.m_iceMediaStream.addTriggeredPair(existingPair);
+                    */
                     break;
                 case FAILED:
                     existingPair.setState(IceCandidatePairState.WAITING);
