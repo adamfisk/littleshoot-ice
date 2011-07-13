@@ -4,10 +4,14 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
 import org.lastbamboo.common.portmapping.PortMapListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PortMappedServerSocket implements PortMapListener,
     MappedServerSocket {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final ServerSocket serverSocket;
     private int externalPort;
     private boolean hasMappedPort;
@@ -17,11 +21,13 @@ public class PortMappedServerSocket implements PortMapListener,
     }
 
     public void onPortMap(final int port) {
+        log.info("Got port mapped!! "+port);
         this.externalPort = port;
         hasMappedPort = true;
     }
 
     public void onPortMapError() {
+        log.info("Error mapping port...");
         hasMappedPort = false;
     }
     
