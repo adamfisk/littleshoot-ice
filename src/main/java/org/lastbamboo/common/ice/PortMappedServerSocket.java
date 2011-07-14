@@ -16,8 +16,15 @@ public class PortMappedServerSocket implements PortMapListener,
     private int externalPort;
     private boolean hasMappedPort;
 
-    public PortMappedServerSocket(final ServerSocket serverSocket) {
+    private final boolean isPublic;
+
+    public PortMappedServerSocket(final ServerSocket serverSocket, 
+        final boolean isPublic) {
         this.serverSocket = serverSocket;
+        this.isPublic = isPublic;
+        if (isPublic) {
+            this.hasMappedPort = true;
+        }
     }
 
     public void onPortMap(final int port) {
@@ -28,7 +35,9 @@ public class PortMappedServerSocket implements PortMapListener,
 
     public void onPortMapError() {
         log.info("Error mapping port...");
-        hasMappedPort = false;
+        if (!isPublic) {
+            hasMappedPort = false;
+        }
     }
     
 

@@ -127,8 +127,9 @@ public class MappedTcpOffererServerPool {
                 // With this set, calls to accept will timeout after the 
                 // specified interval.
                 ss.setSoTimeout(30*1000);
+                final boolean isPublic = NetworkUtils.isPublicAddress(lh);
                 final PortMappedServerSocket pmss = 
-                    new PortMappedServerSocket(ss);
+                    new PortMappedServerSocket(ss, isPublic);
                 upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
                     port, pmss);
                 natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
