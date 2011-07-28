@@ -132,7 +132,7 @@ public class IceStunClientCandidateProcessor
             }
         
         // TODO: Obtain RTO properly.
-        final long rto = 100L;
+        final long rto = 40L;
         
         m_log.debug("Writing Binding Request: {}", request);
         
