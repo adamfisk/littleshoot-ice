@@ -56,6 +56,7 @@ public class MappedTcpAnswererServer implements PortMapListener,
         // different port, we'll get notified and will reset it.
         this.externalPort = port;
         if (!NetworkUtils.isPublicAddress(local)) {
+            log.info("Mapping ports...");
             upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
                 port, MappedTcpAnswererServer.this);
             natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
@@ -69,9 +70,9 @@ public class MappedTcpAnswererServer implements PortMapListener,
     }
 
     @Override
-    public void onPortMap(final int externalPort) {
-        log.info("Received port maped: {}", externalPort);
-        this.externalPort = externalPort;
+    public void onPortMap(final int port) {
+        log.info("Received port mapped: {}", port);
+        this.externalPort = port;
         if (this.externalPort > 0) {
             this.isPortMapped = true;
         }
