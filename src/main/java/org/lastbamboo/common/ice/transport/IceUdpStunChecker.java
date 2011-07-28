@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class that performs STUN connectivity checks for ICE over UDP.  Each 
+ * Class that performs STUN connectivity checks for ICE over UDP. Each 
  * ICE candidate pair has its own connectivity checker. 
  */
 public class IceUdpStunChecker extends AbstractIceStunChecker {
@@ -86,6 +86,7 @@ public class IceUdpStunChecker extends AbstractIceStunChecker {
                 // have close the session (if ICE processing has finished and
                 // this pair is not being used, for example).
                 if (this.m_ioSession.isConnected()) {
+                    LOG.info("Writing binding request: {}", bindingRequest);
                     this.m_ioSession.write(bindingRequest);
                 }
 
