@@ -25,9 +25,9 @@ import com.barchart.udt.net.NetServerSocketUDT;
  */
 public class BarchartUdtSocketFactory implements UdpSocketFactory {
 
-    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final ExecutorService m_threadPool = 
+    private final ExecutorService threadPool = 
         Executors.newCachedThreadPool(new ThreadFactory() {
             public Thread newThread(final Runnable r) {
                 final Thread t = new Thread(r, "UDT-Socket-Accept-Thread");
@@ -39,9 +39,9 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
     public void newSocket(final IoSession session, final boolean controlling,
             final OfferAnswerListener socketListener,
             final IceStunUdpPeer stunUdpPeer) {
-        m_log.info("Creating new Barchart UDT Socket");
+        log.info("Creating new Barchart UDT Socket");
         if (session == null) {
-            m_log.error("Null session: {}", session);
+            log.error("Null session: {}", session);
             return;
         }
 
@@ -53,43 +53,43 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             // in the ICE process, so this is called before the other side
             // starts sending media. We have to consider this in terms of
             // making sure we wait until the other side is ready.
-            m_log.debug("Creating UDT client socket on CONTROLLED agent.");
+            log.debug("Creating UDT socket on CONTROLLED agent.");
             final Runnable clientRunner = new Runnable() {
                 public void run() {
                     try {
                         // openClientSocket(session, socketListener);
                         openServerSocket(session, socketListener);
                     } catch (final Throwable t) {
-                        m_log.error("Client socket exception", t);
+                        log.error("Barchart socket exception", t);
                     }
                 }
             };
 
             final Thread udtClientThread = new Thread(clientRunner,
-                    "UDT Client Thread");
+                    "UDT-Controlled-Thread");
             udtClientThread.setDaemon(true);
             udtClientThread.start();
         } else {
             // This actually happens second in the ICE process -- the
             // controlled agent is notified to start sending media first!
-            m_log.debug("Creating UDT server socket on CONTROLLING agent.");
-            m_log.debug("Listening on: {}", session);
+            log.debug("Creating UDT socket on CONTROLLING agent.");
+            log.debug("Listening on: {}", session);
 
             // If we call "accept" right away here, we'll kill the
             // IoSession thread and won't receive messages, so we
             // need to start a new thread.
-            final Runnable serverRunner = new Runnable() {
+            final Runnable socketRunner = new Runnable() {
                 public void run() {
                     try {
                         // openServerSocket(session, socketListener);
                         openClientSocket(session, socketListener);
                     } catch (final Throwable t) {
-                        m_log.error("Server socket exception", t);
+                        log.error("Barchart socket exception", t);
                     }
                 }
             };
-            final Thread serverThread = new Thread(serverRunner,
-                    "UDT Accepting Thread");
+            final Thread serverThread = new Thread(socketRunner,
+                    "UDT-Controlling-Thread");
             serverThread.setDaemon(true);
             serverThread.start();
         }
@@ -103,28 +103,28 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         final InetSocketAddress remote = 
             (InetSocketAddress) session.getRemoteAddress();
 
-        m_log.info("Session local was: {}", local);
-        m_log.info("Binding to port: {}", local.getPort());
+        log.info("Session local was: {}", local);
+        log.info("Binding to port: {}", local.getPort());
 
         final Socket clientSocket = new NetSocketUDTWrapper();
         
-        m_log.info("Binding to address and port");
+        log.info("Binding to address and port");
         clientSocket.bind(new InetSocketAddress(local.getAddress(),
             local.getPort()));
 
         // Wait for a bit to make sure the server side has a chance to come up.
         final long sleepTime = 700;
-        m_log.info("Client side sleeping for {} milliseconds", sleepTime);
+        log.info("Client side sleeping for {} milliseconds", sleepTime);
         Thread.sleep(sleepTime);
-        m_log.info("About to connect...");
+        log.info("About to connect...");
         clientSocket.connect(new InetSocketAddress(remote.getAddress(), remote.getPort()));
-        m_log.info("Connected!!!");
+        log.info("Connected!!!");
 
         //final Socket sock = client.getSocket();
-        m_log.info("Got socket...notifying listener");
+        log.info("Got socket...notifying listener");
 
         socketListener.onUdpSocket(clientSocket);
-        m_log.info("Exiting...");
+        log.info("Exiting...");
     }
 
     protected void openServerSocket(final IoSession session,
@@ -132,8 +132,8 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
 
-        m_log.info("Session local was: {}", local);
-        m_log.info("Binding to port: {}", local.getPort());
+        log.info("Session local was: {}", local);
+        log.info("Binding to port: {}", local.getPort());
         final ServerSocket ss = new NetServerSocketUDT();
         ss.bind(new InetSocketAddress(local.getAddress(), local.getPort()));
         final Socket sock = ss.accept();
@@ -143,7 +143,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
 
         final UDTSocket sock = server.accept();
         */
-        m_threadPool.execute(new RequestRunner(socketListener, sock));
+        threadPool.execute(new RequestRunner(socketListener, sock));
     }
 
     private static class RequestRunner implements Runnable {
@@ -166,7 +166,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
 
     private void clear(final IoSession session, 
         final IceStunUdpPeer stunUdpPeer) {
-        m_log.info("Clearing session: {}", session);
+        log.info("Clearing session: {}", session);
         final DatagramSessionImpl dgSession = (DatagramSessionImpl) session;
         final DatagramChannel dgChannel = dgSession.getChannel();
         /*
@@ -185,22 +185,22 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         stunServer.close();
         try {
             final IoService service = session.getService();
-            m_log.info("Service is: {}", service);
+            log.info("Service is: {}", service);
             if (IoAcceptor.class.isAssignableFrom(service.getClass())) {
-                m_log.info("Unbinding all!!");
+                log.info("Unbinding all!!");
                 final IoAcceptor acceptor = (IoAcceptor) service;
                 acceptor.unbindAll();
             }
             session.getService().getFilterChain().clear();
             dgChannel.disconnect();
             dgChannel.close();
-            m_log.info("Open: "+dgChannel.isOpen());
-            m_log.info("Connected: "+dgChannel.isConnected());
-            m_log.info("Sleeping on channel to make sure it unbinds");
+            log.info("Open: "+dgChannel.isOpen());
+            log.info("Connected: "+dgChannel.isConnected());
+            log.info("Sleeping on channel to make sure it unbinds");
             Thread.sleep(400);
-            m_log.info("Closed channel");
+            log.info("Closed channel");
         } catch (final Exception e) {
-            m_log.error("Error clearing session!!", e);
+            log.error("Error clearing session!!", e);
         } finally {
             stunUdpPeer.close();
         }
