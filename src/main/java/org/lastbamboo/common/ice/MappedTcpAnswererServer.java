@@ -63,6 +63,9 @@ public class MappedTcpAnswererServer implements PortMapListener,
             natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
                 port, MappedTcpAnswererServer.this);
                 */
+        } else {
+            // We effectively consider public addresses to be port mapped.
+            this.isPortMapped = true;
         }
     }
     

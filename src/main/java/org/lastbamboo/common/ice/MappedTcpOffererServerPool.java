@@ -65,15 +65,12 @@ public class MappedTcpOffererServerPool {
 
             @Override
             public void run() {
-                try {
-                    addServerSocket(serverSocket());
-                } catch (final IOException e) {
-                    log.error("Could not create socket!");
-                }
-                try {
-                    addServerSocket(serverSocket());
-                } catch (final IOException e) {
-                    log.error("Could not create socket!");
+                for (int i = 0; i < 6; i++) {
+                    try {
+                        addServerSocket(serverSocket());
+                    } catch (final IOException e) {
+                        log.error("Could not create server socket!");
+                    }
                 }
             }
         };
@@ -130,8 +127,10 @@ public class MappedTcpOffererServerPool {
                 final boolean isPublic = NetworkUtils.isPublicAddress(lh);
                 final PortMappedServerSocket pmss = 
                     new PortMappedServerSocket(ss, isPublic);
+                log.info("Attempting to map port {} via UPnP", port);
                 upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
                     port, pmss);
+                log.info("Attempting to map port {} via NAT-PMP", port);
                 natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
                     port, pmss);
                 return pmss;

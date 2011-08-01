@@ -129,7 +129,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     m_log.info("Waiting for incoming socket on: {}",
                             socketAddress);
                     final Socket sock = ss.accept();
-                    m_log.info("Got incoming socket from "+
+                    m_log.info("GOT INCOMING SOCKET FROM "+
                         sock.getRemoteSocketAddress() +"!! Controlling: {}",
                         m_controlling);
                     sock.setKeepAlive(true);
@@ -141,7 +141,10 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                         "happen when the client side connects first, and we " +
                         "simply return the socket back to the pool.", e);
                 } finally {
-                    // Adding back server socket.
+                    // Adding back server socket. Note this is fine to do no
+                    // matter what actual processing happened with the socket
+                    // just received, as that's just an independent Socket, 
+                    // while the ServerSocket is available for more connections.
                     m_offererServer.addServerSocket(m_portMappedServerSocket);
                 }
             }
