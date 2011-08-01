@@ -57,12 +57,10 @@ public class MappedTcpAnswererServer implements PortMapListener,
         this.externalPort = port;
         if (!NetworkUtils.isPublicAddress(local)) {
             log.info("Mapping port: " + port);
-            /*
             upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
                 port, MappedTcpAnswererServer.this);
             natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
                 port, MappedTcpAnswererServer.this);
-                */
         } else {
             // We effectively consider public addresses to be port mapped.
             this.isPortMapped = true;
