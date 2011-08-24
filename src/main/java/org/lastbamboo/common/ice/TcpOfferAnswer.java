@@ -37,7 +37,6 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private final AtomicReference<Socket> m_socketRef = 
         new AtomicReference<Socket>();
-    private Collection<IceCandidate> m_candidates;
     private final boolean m_controlling;
     private final OfferAnswerListener m_offerAnswerListener;
     
@@ -288,9 +287,6 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     }
 
     public Collection<? extends IceCandidate> gatherCandidates() {
-        if (m_candidates != null) {
-            return m_candidates;
-        }
         final Collection<IceCandidate> candidates = 
             new ArrayList<IceCandidate>();
 
@@ -340,8 +336,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             m_log.info("Not adding public candidate. PA: "+publicIp + 
                 " mapped: " + m_mappedServerSocket.isPortMapped());
         }
-        m_candidates = candidates;
-        return m_candidates;
+        return candidates;
     }
 
     public InetSocketAddress getHostAddress() {
