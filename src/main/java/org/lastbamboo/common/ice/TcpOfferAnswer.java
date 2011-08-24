@@ -288,7 +288,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
 
     public Collection<? extends IceCandidate> gatherCandidates() {
         final Collection<IceCandidate> candidates = 
-            new ArrayList<IceCandidate>();
+            new ArrayList<IceCandidate>(2);
 
         // Only add the TURN candidate on the non-controlling side to save
         // resources. This is non-standard as well, but we should only need
