@@ -14,8 +14,6 @@ import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerConnectException;
 import org.lastbamboo.common.offer.answer.OfferAnswerFactory;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
-import org.lastbamboo.common.portmapping.NatPmpService;
-import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.turn.client.TurnClientListener;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.littleshoot.util.CandidateProvider;
@@ -32,8 +30,6 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     private final IceMediaStreamFactory m_mediaStreamFactory;
     private final UdpSocketFactory m_udpSocketFactory;
     private final CandidateProvider<InetSocketAddress> m_turnCandidateProvider;
-    private final NatPmpService m_natPmpService;
-    private final UpnpService m_upnpService;
     private final MappedTcpAnswererServer m_answererServer;
 
     private final TurnClientListener m_turnClientListener;
@@ -63,7 +59,6 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             final IceMediaStreamFactory mediaStreamFactory,
             final UdpSocketFactory udpSocketFactory,
             final CandidateProvider<InetSocketAddress> turnCandidateProvider,
-            final NatPmpService natPmpService, final UpnpService upnpService,
             final MappedTcpAnswererServer answererServer,
             final TurnClientListener turnClientListener, 
             final CandidateProvider<InetSocketAddress> stunCandidateProvider, 
@@ -72,8 +67,6 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         this.m_mediaStreamFactory = mediaStreamFactory;
         this.m_udpSocketFactory = udpSocketFactory;
         this.m_turnCandidateProvider = turnCandidateProvider;
-        this.m_natPmpService = natPmpService;
-        this.m_upnpService = upnpService;
         this.m_answererServer = answererServer;
         this.m_turnClientListener = turnClientListener;
         this.m_stunCandidateProvider = stunCandidateProvider;
@@ -200,8 +193,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
         if (mediaDesc.isTcp()) {
             m_log.info("Creating new TCP offer answer");
             return new TcpOfferAnswer(offerAnswerListener,
-                controlling, m_natPmpService, m_upnpService,
-                m_answererServer, this.m_stunCandidateProvider, 
+                controlling, m_answererServer, this.m_stunCandidateProvider, 
                 this.m_offererServer, m_socketFactory);
         } else {
             return null;

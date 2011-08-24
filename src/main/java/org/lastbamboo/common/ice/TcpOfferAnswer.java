@@ -19,14 +19,12 @@ import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
-import org.lastbamboo.common.portmapping.NatPmpService;
-import org.lastbamboo.common.portmapping.UpnpService;
 import org.lastbamboo.common.stun.client.PublicIpAddress;
+import org.littleshoot.mina.common.ByteBuffer;
 import org.littleshoot.stun.stack.StunAddressProvider;
 import org.littleshoot.util.CandidateProvider;
 import org.littleshoot.util.RuntimeIoException;
 import org.littleshoot.util.ThreadUtils;
-import org.littleshoot.mina.common.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,8 +60,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
      */
     public TcpOfferAnswer(
         final OfferAnswerListener offerAnswerListener,
-        final boolean controlling, final NatPmpService natPmpService,
-        final UpnpService upnpService,
+        final boolean controlling, 
         final MappedTcpAnswererServer answererServer, 
         final CandidateProvider<InetSocketAddress> stunCandidateProvider,
         final MappedTcpOffererServerPool offererServer,
@@ -203,7 +200,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // typically a single local network candidate that will only succeed
         // if we're on same subnet and then a public candidate that's
         // either there because the remote host is on the public Internet or
-        // because the public address was mapped using UPnP.
+        // because the public address was mapped using UPnP or NAT-PMP.
         final IceCandidateVisitor<Object> visitor = 
             new IceCandidateVisitorAdapter<Object>() {
             @Override
@@ -224,6 +221,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             return null;
         }
         final Runnable threadRunner = new Runnable() {
+            @Override
             public void run() {
                 Socket sock = null;
                 try {
@@ -231,7 +229,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     //sock = new Socket();
                     sock = socketFactory.createSocket();
                     sock.setKeepAlive(true);
-                    sock.connect(candidate.getSocketAddress(), 20 * 1000);
+                    sock.connect(candidate.getSocketAddress(), 30 * 1000);
                     
                     m_log.info("Client socket connected to: {}", 
                         sock.getRemoteSocketAddress());
