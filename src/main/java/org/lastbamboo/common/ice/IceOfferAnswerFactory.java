@@ -270,4 +270,14 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             return null;
         }
     }
+
+    @Override
+    public boolean isAnswererPortMapped() {
+        return this.m_answererServer.isPortMapped();
+    }
+    
+    @Override
+    public int getMappedPort() {
+        return this.m_answererServer.getMappedPort();
+    }
 }

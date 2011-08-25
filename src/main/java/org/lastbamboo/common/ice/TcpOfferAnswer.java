@@ -23,6 +23,7 @@ import org.lastbamboo.common.stun.client.PublicIpAddress;
 import org.littleshoot.mina.common.ByteBuffer;
 import org.littleshoot.stun.stack.StunAddressProvider;
 import org.littleshoot.util.CandidateProvider;
+import org.littleshoot.util.PublicIp;
 import org.littleshoot.util.RuntimeIoException;
 import org.littleshoot.util.ThreadUtils;
 import org.slf4j.Logger;
@@ -306,7 +307,8 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             hostAddress, this.m_controlling);
         candidates.add(hostCandidate);
 
-        final InetAddress publicIp = PublicIpAddress.getPublicIpAddress();
+        final PublicIp ip = new PublicIpAddress();
+        final InetAddress publicIp = ip.getPublicIpAddress();
         
         // OK, the following is non-standard. If we have a public address
         // for the host from our UDP STUN check, we use the address part for
