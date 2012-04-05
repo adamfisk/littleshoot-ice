@@ -48,7 +48,7 @@ public class IceUdpStunCheckerTest
         
         final InetSocketAddress remoteAddress =
             //new InetSocketAddress("stun01.sipphone.com", 3478);
-            new InetSocketAddress("stun.xten.com", 3478);
+            new InetSocketAddress("stun.l.google.com", 19302);
         final StunTransactionTracker<StunMessage> tracker = 
             new StunTransactionTrackerImpl();
         final StunMessageVisitorFactory visitorFactory = 
@@ -71,6 +71,6 @@ public class IceUdpStunCheckerTest
         final long rto = 20;
         final StunMessage response = checker.write(bindingRequest, rto);
         
-        Assert.assertTrue(response instanceof BindingSuccessResponse);
+        Assert.assertTrue("Got "+response, response instanceof BindingSuccessResponse);
         }
     }
