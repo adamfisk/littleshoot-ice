@@ -10,10 +10,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.net.ServerSocketFactory;
 
 import org.apache.commons.io.IOExceptionWithCause;
-import org.apache.commons.lang.math.RandomUtils;
 import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMappingProtocol;
 import org.lastbamboo.common.portmapping.UpnpService;
+import org.littleshoot.util.CommonUtils;
 import org.littleshoot.util.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +116,7 @@ public class MappedTcpOffererServerPool {
             try {
                 final ServerSocket ss = 
                     this.serverSocketFactory.createServerSocket();
-                final int port = randomPort();
+                final int port = CommonUtils.randomPort();
                 final InetSocketAddress endpoint = 
                     new InetSocketAddress(lh, port);
                 ss.bind(endpoint);
@@ -145,9 +145,5 @@ public class MappedTcpOffererServerPool {
         }
         throw new IOExceptionWithCause(
             "Could not create server socket after many tries", ioe);
-    }
-
-    private int randomPort() {
-        return 1024 + (RandomUtils.nextInt() % 60000);
     }
 }
