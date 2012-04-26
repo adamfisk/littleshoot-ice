@@ -28,26 +28,51 @@ import udt.UDTSocket;
  */
 public class UdtSocketFactory implements UdpSocketFactory {
     
-    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     private final ExecutorService m_threadPool = 
         Executors.newCachedThreadPool(new ThreadFactory() {
+            private int threadNumber = 0;
             public Thread newThread(final Runnable r) {
-                final Thread t = new Thread(r, "UDT-Socket-Accept-Thread");
+                final Thread t = 
+                    new Thread(r, "UDT-Socket-Accept-Thread-"+threadNumber);
                 t.setDaemon(true);
+                threadNumber++;
                 return t;
             }
         });
     
     public void newSocket(final IoSession session, final boolean controlling,
         final OfferAnswerListener socketListener, 
-        final IceStunUdpPeer stunUdpPeer) 
- {
+        final IceStunUdpPeer stunUdpPeer) {
         if (session == null) {
-            m_log.error("Null session: {}", session);
+            log.error("Null session: {}", session);
             return;
         }
 
+        // Wait for a bit before we clear the decoders and such on that port -
+        // basically the client side may have sent a USE-CANDIDATE binding
+        // request for a pair that's still in the in progress state on the
+        // other end -- i.e. the server side hasn't verified the pair works
+        // for it. So the server side could still be doing STUN checks at that
+        // point, and we need to wait.
+        //
+        // We only do this on the controlling side due to an implementation
+        // detail of how we're using this -- basically using HTTP the client
+        // side always sends data before the server side (request -> response),
+        // so there's no chance the server side could start sending media data
+        // while we're still looking for STUN messages (the potential problem
+        // on the server side that this sleep solves).
+        if (controlling) {
+            final long sleepTime = 1200;
+            log.info("Client side sleeping for {} milliseconds", sleepTime);
+            try {
+                Thread.sleep(sleepTime);
+            } catch (final InterruptedException e) {
+                log.warn("Sleep interrupted?", e);
+            }
+        }
+        
         UDTReceiver.connectionExpiryDisabled = true;
         clear(session, stunUdpPeer);
         if (!controlling) {
@@ -55,14 +80,14 @@ public class UdtSocketFactory implements UdpSocketFactory {
             // in the ICE process, so this is called before the other side
             // starts sending media. We have to consider this in terms of
             // making sure we wait until the other side is ready.
-            m_log.debug("Creating UDT client socket on CONTROLLED agent.");
+            log.debug("Creating UDT client socket on CONTROLLED agent.");
             final Runnable clientRunner = new Runnable() {
                 public void run() {
                     try {
                         // openClientSocket(session, socketListener);
                         openServerSocket(session, socketListener);
                     } catch (final Throwable t) {
-                        m_log.error("Client socket exception", t);
+                        log.error("Client socket exception", t);
                     }
                 }
             };
@@ -74,8 +99,8 @@ public class UdtSocketFactory implements UdpSocketFactory {
         } else {
             // This actually happens second in the ICE process -- the
             // controlled agent is notified to start sending media first!
-            m_log.debug("Creating UDT server socket on CONTROLLING agent.");
-            m_log.debug("Listening on: {}", session);
+            log.debug("Creating UDT server socket on CONTROLLING agent.");
+            log.debug("Listening on: {}", session);
 
             // If we call "accept" right away here, we'll kill the
             // IoSession thread and won't receive messages, so we
@@ -86,7 +111,7 @@ public class UdtSocketFactory implements UdpSocketFactory {
                         // openServerSocket(session, socketListener);
                         openClientSocket(session, socketListener);
                     } catch (final Throwable t) {
-                        m_log.error("Server socket exception", t);
+                        log.error("Server socket exception", t);
                     }
                 }
             };
@@ -105,25 +130,22 @@ public class UdtSocketFactory implements UdpSocketFactory {
         final InetSocketAddress remote = (InetSocketAddress) session
                 .getRemoteAddress();
 
-        m_log.info("Session local was: {}", local);
-        m_log.info("Binding to port: {}", local.getPort());
+        log.info("Session local was: {}", local);
+        log.info("Binding to port: {}", local.getPort());
 
         final UDTClient client = new UDTClient(local.getAddress(),
                 local.getPort());
 
-        // Wait for a bit to make sure the server side has a chance to come up.
-        final long sleepTime = 700;
-        m_log.info("Client side sleeping for {} milliseconds", sleepTime);
-        Thread.sleep(sleepTime);
-        m_log.info("About to connect...");
+
+        log.info("About to connect...");
         client.connect(remote.getAddress(), remote.getPort());
-        m_log.info("Connected!!!");
+        log.info("Connected!!!");
 
         final Socket sock = client.getSocket();
-        m_log.info("Got socket...notifying listener");
+        log.info("Got socket...notifying listener");
 
         socketListener.onUdpSocket(sock);
-        m_log.info("Exiting...");
+        log.info("Exiting...");
     }
 
     protected void openServerSocket(final IoSession session,
@@ -132,8 +154,8 @@ public class UdtSocketFactory implements UdpSocketFactory {
         final InetSocketAddress local = (InetSocketAddress) session
                 .getLocalAddress();
 
-        m_log.info("Session local was: {}", local);
-        m_log.info("Binding to port: {}", local.getPort());
+        log.info("Session local was: {}", local);
+        log.info("Binding to port: {}", local.getPort());
         final UDTServerSocket server = new UDTServerSocket(local.getAddress(),
                 local.getPort());
 
@@ -143,7 +165,7 @@ public class UdtSocketFactory implements UdpSocketFactory {
 
     public static class RequestRunner implements Runnable {
 
-        private final Logger m_log = LoggerFactory.getLogger(getClass());
+        private final Logger log = LoggerFactory.getLogger(getClass());
         private final UDTSocket sock;
         private final OfferAnswerListener socketListener;
 
@@ -154,17 +176,17 @@ public class UdtSocketFactory implements UdpSocketFactory {
         }
 
         public void run() {
-            m_log.info("NOTIFYING SOCKET LISTENER!!");
+            log.info("NOTIFYING SOCKET LISTENER!!");
             socketListener.onUdpSocket(sock);
         }
     }
 
     private void clear(final IoSession session, final IceStunUdpPeer stunUdpPeer) {
-        m_log.info("Clearing session!!");
+        log.info("Clearing session!!");
         final DatagramSessionImpl dgSession = (DatagramSessionImpl) session;
         final DatagramChannel dgChannel = dgSession.getChannel();
         final DatagramSocket dgSock = dgChannel.socket();
-        m_log.info("Closing socket on local address: {}",
+        log.info("Closing socket on local address: {}",
                 dgSock.getLocalSocketAddress());
         session.close().join(10 * 1000);
 
@@ -172,9 +194,9 @@ public class UdtSocketFactory implements UdpSocketFactory {
         stunServer.close();
         try {
             final IoService service = session.getService();
-            m_log.info("Service is: {}", service);
+            log.info("Service is: {}", service);
             if (IoAcceptor.class.isAssignableFrom(service.getClass())) {
-                m_log.info("Unbinding all!!");
+                log.info("Unbinding all!!");
                 final IoAcceptor acceptor = (IoAcceptor) service;
                 acceptor.unbindAll();
             }
@@ -182,7 +204,7 @@ public class UdtSocketFactory implements UdpSocketFactory {
             dgChannel.disconnect();
             dgChannel.close();
         } catch (final Exception e) {
-            m_log.error("Error clearing session!!", e);
+            log.error("Error clearing session!!", e);
         }
     }
 }

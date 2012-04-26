@@ -86,7 +86,8 @@ public class IceUdpStunChecker extends AbstractIceStunChecker {
                 // have close the session (if ICE processing has finished and
                 // this pair is not being used, for example).
                 if (this.m_ioSession.isConnected()) {
-                    LOG.info("Writing binding request: {}", bindingRequest);
+                    LOG.info("Writing binding request: {} on {}", 
+                        bindingRequest, this.m_ioSession);
                     this.m_ioSession.write(bindingRequest);
                 }
 
