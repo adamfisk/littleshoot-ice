@@ -39,8 +39,7 @@ import org.slf4j.LoggerFactory;
  * Class containing an ICE media stream.  Each media stream contains a single
  * ICE check list, as described in ICE section 5.7.
  */
-public class IceMediaStreamImpl implements IceMediaStream
-    {
+public class IceMediaStreamImpl implements IceMediaStream {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     private IceCheckList m_checkList;
@@ -74,115 +73,98 @@ public class IceMediaStreamImpl implements IceMediaStream
      * @param gatherer The class that will gather ICE candidates for the 
      * stream.
      */
-    public IceMediaStreamImpl(final IceAgent iceAgent, 
-        final IceMediaStreamDesc streamDesc, 
-        final IceCandidateGatherer gatherer,
-        final IceStunUdpPeer udpPeer)
-        {
+    public IceMediaStreamImpl(final IceAgent iceAgent,
+            final IceMediaStreamDesc streamDesc,
+            final IceCandidateGatherer gatherer, final IceStunUdpPeer udpPeer) {
         m_iceAgent = iceAgent;
         m_desc = streamDesc;
         m_gatherer = gatherer;
         this.m_udpPeer = udpPeer;
-        }
+    }
 
-    public void start(final IceCheckList checkList, 
-        final Collection<IceCandidate> localCandidates, 
-        final IceCheckScheduler scheduler)
-        {
+    public void start(final IceCheckList checkList,
+            final Collection<IceCandidate> localCandidates,
+            final IceCheckScheduler scheduler) {
         this.m_localCandidates = localCandidates;
         this.m_checkList = checkList;
         this.m_checkScheduler = scheduler;
-        }
+    }
 
-    public byte[] encodeCandidates()
-        {
-        final IceCandidateSdpEncoder encoder = 
-            new IceCandidateSdpEncoder(m_desc.getMimeContentType(), 
-                m_desc.getMimeContentSubtype());
+    public byte[] encodeCandidates() {
+        final IceCandidateSdpEncoder encoder = new IceCandidateSdpEncoder(
+                m_desc.getMimeContentType(), m_desc.getMimeContentSubtype());
         encoder.visitCandidates(getLocalCandidates());
         return encoder.getSdp();
-        }
-    
-    public void establishStream(final Collection<IceCandidate> remoteCandidates)
-        {
-        synchronized (this.m_remoteCandidates)
-            {
-            synchronized (this.m_remoteSdpCandidates)
-                {
-                synchronized (remoteCandidates)
-                    {
+    }
+
+    public void establishStream(final Collection<IceCandidate> remoteCandidates) {
+        synchronized (this.m_remoteCandidates) {
+            synchronized (this.m_remoteSdpCandidates) {
+                synchronized (remoteCandidates) {
                     this.m_remoteCandidates.addAll(remoteCandidates);
                     this.m_remoteSdpCandidates.addAll(remoteCandidates);
-                    this.m_remoteSdpCandidates = 
-                        Collections.unmodifiableCollection(
-                            this.m_remoteSdpCandidates);
-                    }
+                    this.m_remoteSdpCandidates = Collections
+                            .unmodifiableCollection(this.m_remoteSdpCandidates);
                 }
             }
-        
+        }
+
         m_checkList.formCheckList(remoteCandidates);
-        
+
         processPairGroups();
-        
-        if (this.m_closed)
-            {
+
+        if (this.m_closed) {
             m_log.info("Already closed - not scheduling checks!!");
             return;
-            }
-        
+        }
+
         this.m_checkScheduler.scheduleChecks();
         m_checkList.check();
-        }
-    
+    }
+
     public IceCandidate addRemotePeerReflexive(final BindingRequest request,
-        final InetSocketAddress localAddress, 
-        final InetSocketAddress remoteAddress, final boolean isUdp)
-        {
+            final InetSocketAddress localAddress,
+            final InetSocketAddress remoteAddress, final boolean isUdp) {
         // See ICE section 7.2.1.3.
-        final Map<StunAttributeType, StunAttribute> attributes = 
-            request.getAttributes();
-        final IcePriorityAttribute priorityAttribute = 
-            (IcePriorityAttribute) attributes.get(
-                StunAttributeType.ICE_PRIORITY);
+        final Map<StunAttributeType, StunAttribute> attributes = request
+                .getAttributes();
+        final IcePriorityAttribute priorityAttribute = (IcePriorityAttribute) attributes
+                .get(StunAttributeType.ICE_PRIORITY);
         final long priority = priorityAttribute.getPriority();
-        
+
         // We set the foundation to a random value.
         final String foundation = String.valueOf(RandomUtils.nextLong());
-        
+
         // Find the local candidate for the address the request was sent to.
         // We use that to determine the component ID of the new peer
         // reflexive candidate.
-        final IceCandidate localCandidate = 
-            getLocalCandidate(localAddress, isUdp);
-        if (localCandidate == null)
-            {
+        final IceCandidate localCandidate = getLocalCandidate(localAddress,
+                isUdp);
+        if (localCandidate == null) {
             // We need to synchronized for toString to work on local candidates.
-            synchronized (this)
-                {
-                m_log.warn("Could not find local candidate "+localAddress+
-                    " in: "+ this.getLocalCandidates()+".  Aborting.");
-                }
-            return null;
+            synchronized (this) {
+                m_log.warn("Could not find local candidate " + localAddress
+                        + " in: " + this.getLocalCandidates() + ".  Aborting.");
             }
+            return null;
+        }
         final int componentId = localCandidate.getComponentId();
-        
+
         m_log.debug("Creating new peer reflexive candidate");
-        final IceCandidate prc = 
-            new IceUdpPeerReflexiveCandidate(remoteAddress, foundation, 
-                componentId, this.m_iceAgent.isControlling(), priority);
+        final IceCandidate prc = new IceUdpPeerReflexiveCandidate(
+                remoteAddress, foundation, componentId,
+                this.m_iceAgent.isControlling(), priority);
 
         addRemoteCandidate(prc);
 
         return prc;
-        }
+    }
 
-    private void addRemoteCandidate(final IceCandidate candidate)
-        {
-        synchronized (this.m_remoteCandidates)
-            {
+    private void addRemoteCandidate(final IceCandidate candidate) {
+        synchronized (this.m_remoteCandidates) {
             this.m_remoteCandidates.add(candidate);
-            }
         }
+    }
 
     /**
      * Groups the pairs as specified in ICE section 5.7.4. The purpose of this
@@ -192,234 +174,192 @@ public class IceMediaStreamImpl implements IceMediaStream
      * @param pairs The pairs to form into foundation-based groups for setting 
      * the state of the pair with the lowest component ID to waiting.
      */
-    private void processPairGroups()
-        {
+    private void processPairGroups() {
         final Map<String, List<IceCandidatePair>> groupsMap = 
             new HashMap<String, List<IceCandidatePair>>();
-        
+
         // Group together pairs with the same foundation.
-        final Closure<IceCandidatePair> groupClosure = 
-            new Closure<IceCandidatePair>()
-            {
-            public void execute(final IceCandidatePair pair)
-                {
+        final Closure<IceCandidatePair> groupClosure = new Closure<IceCandidatePair>() {
+            public void execute(final IceCandidatePair pair) {
                 final String foundation = pair.getFoundation();
                 final List<IceCandidatePair> foundationPairs;
-                if (groupsMap.containsKey(foundation))
-                    {
+                if (groupsMap.containsKey(foundation)) {
                     foundationPairs = groupsMap.get(foundation);
-                    }
-                else
-                    {
+                } else {
                     foundationPairs = new LinkedList<IceCandidatePair>();
                     groupsMap.put(foundation, foundationPairs);
-                    }
-                foundationPairs.add(pair);
                 }
-            };
-        this.m_checkList.executeOnPairs(groupClosure);
-        
-        final Collection<List<IceCandidatePair>> groups = 
-            groupsMap.values();
-        
-        m_log.debug(groups.size()+ " before sorting...");
-        for (final List<IceCandidatePair> group : groups)
-            {
-            setLowestComponentIdToWaiting(group);
+                foundationPairs.add(pair);
             }
+        };
+        this.m_checkList.executeOnPairs(groupClosure);
+
+        final Collection<List<IceCandidatePair>> groups = groupsMap.values();
+
+        m_log.debug(groups.size() + " before sorting...");
+        for (final List<IceCandidatePair> group : groups) {
+            setLowestComponentIdToWaiting(group);
         }
-    
+    }
+
     private void setLowestComponentIdToWaiting(
-        final List<IceCandidatePair> pairs)
-        {
+            final List<IceCandidatePair> pairs) {
         IceCandidatePair pairToSet = null;
-        for (final IceCandidatePair pair : pairs)
-            {
-            if (pairToSet == null)
-                {
+        for (final IceCandidatePair pair : pairs) {
+            if (pairToSet == null) {
                 pairToSet = pair;
                 continue;
-                }
-            
+            }
+
             // Always use the lowest component ID.
-            if (pair.getComponentId() < pairToSet.getComponentId())
-                {
+            if (pair.getComponentId() < pairToSet.getComponentId()) {
                 pairToSet = pair;
-                }
-            
+            }
+
             // If the component IDs match, use the one with the highest
-            // priority.  See ICE section 5.7.4
-            else if (pair.getComponentId() == pairToSet.getComponentId())
-                {
-                if (pair.getPriority() > pairToSet.getPriority())
-                    {
+            // priority. See ICE section 5.7.4
+            else if (pair.getComponentId() == pairToSet.getComponentId()) {
+                if (pair.getPriority() > pairToSet.getPriority()) {
                     pairToSet = pair;
-                    }
                 }
             }
-        
-        if (pairToSet != null)
-            {
+        }
+
+        if (pairToSet != null) {
             pairToSet.setState(IceCandidatePairState.WAITING);
-            }
-        else
-            {
+        } else {
             m_log.warn("No pair to set!!!");
-            }
         }
+    }
 
-    public Queue<IceCandidatePair> getValidPairs()
-        {
+    public Queue<IceCandidatePair> getValidPairs() {
         return m_validPairs;
-        }
+    }
 
-    public void addLocalCandidate(final IceCandidate localCandidate)
-        {
-        synchronized (this.getLocalCandidates())
-            {
+    public void addLocalCandidate(final IceCandidate localCandidate) {
+        synchronized (this.getLocalCandidates()) {
             this.getLocalCandidates().add(localCandidate);
-            }
         }
+    }
 
     public IceCandidate getLocalCandidate(final InetSocketAddress localAddress,
-        final boolean isUdp)
-        {
+            final boolean isUdp) {
         return getCandidate(this.getLocalCandidates(), localAddress, isUdp);
-        }
+    }
 
     public IceCandidate getRemoteCandidate(
-        final InetSocketAddress remoteAddress, final boolean isUdp)
-        {
+            final InetSocketAddress remoteAddress, final boolean isUdp) {
         return getCandidate(this.m_remoteCandidates, remoteAddress, isUdp);
-        }
-    
+    }
+
     public boolean hasRemoteCandidate(final InetSocketAddress remoteAddress,
-        final boolean isUdp)
-        {
-        final IceCandidate remoteCandidate = 
-            getCandidate(this.m_remoteCandidates, remoteAddress, isUdp);
-        
+            final boolean isUdp) {
+        final IceCandidate remoteCandidate = getCandidate(
+                this.m_remoteCandidates, remoteAddress, isUdp);
+
         return remoteCandidate != null;
-        }
-    
-    
-    public boolean hasRemoteCandidateInSdp(final InetSocketAddress remoteAddress,
-        final boolean isUdp)
-        {
-        final IceCandidate remoteCandidate = 
-            getCandidate(this.m_remoteSdpCandidates, remoteAddress, isUdp);
-        
+    }
+
+    public boolean hasRemoteCandidateInSdp(
+            final InetSocketAddress remoteAddress, final boolean isUdp) {
+        final IceCandidate remoteCandidate = getCandidate(
+                this.m_remoteSdpCandidates, remoteAddress, isUdp);
+
         return remoteCandidate != null;
-        }
-    
-    private IceCandidate getCandidate(final Collection<IceCandidate> candidates,
-        final InetSocketAddress address, final boolean isUdp)
-        {
+    }
+
+    private IceCandidate getCandidate(
+            final Collection<IceCandidate> candidates,
+            final InetSocketAddress address, final boolean isUdp) {
         // A little inefficient here, but we're not talking about a lot of
         // candidates.
-        synchronized (candidates)
-            {
-            for (final IceCandidate candidate : candidates)
-                {
-                if (candidate.isUdp())
-                    {
-                    if (!isUdp) continue;
-                    }
-                else 
-                    {
-                    if (isUdp) continue;
-                    }
-                if (address.equals(candidate.getSocketAddress()))
-                    {
-                    return candidate;
-                    }
+        synchronized (candidates) {
+            for (final IceCandidate candidate : candidates) {
+                if (candidate.isUdp()) {
+                    if (!isUdp)
+                        continue;
+                } else {
+                    if (isUdp)
+                        continue;
                 }
-            m_log.debug(address+" with transport: "+ (isUdp ? "UDP" : "TCP") +
-                " not found in "+candidates);
+                if (address.equals(candidate.getSocketAddress())) {
+                    return candidate;
+                }
             }
-        
-        return null;
+            m_log.debug(address + " with transport: " + (isUdp ? "UDP" : "TCP")
+                    + " not found in " + candidates);
         }
 
-    public IceCandidatePair getPair(final InetSocketAddress localAddress, 
-        final InetSocketAddress remoteAddress, final boolean isUdp)
-        {
+        return null;
+    }
+
+    public IceCandidatePair getPair(final InetSocketAddress localAddress,
+            final InetSocketAddress remoteAddress, final boolean isUdp) {
         // The check list might not exist yet if the offerer receives incoming
         // requests before it has received an answer.
-        if (this.m_checkList == null)
-            {
+        if (this.m_checkList == null) {
             return null;
-            }
-        final Predicate<IceCandidatePair> pred = 
-            new Predicate<IceCandidatePair>()
-            {
-            public boolean evaluate(final IceCandidatePair pair)
-                {
+        }
+        final Predicate<IceCandidatePair> pred = new Predicate<IceCandidatePair>() {
+            public boolean evaluate(final IceCandidatePair pair) {
                 final IceCandidate lc = pair.getLocalCandidate();
                 final IceCandidate rc = pair.getRemoteCandidate();
-                if ((isUdp && lc.isUdp()) ||
-                    (!isUdp && !lc.isUdp()))
-                    {
-                    if (lc.getSocketAddress().equals(localAddress) &&
-                        rc.getSocketAddress().equals(remoteAddress))
-                        {
+                if ((isUdp && lc.isUdp()) || (!isUdp && !lc.isUdp())) {
+                    if (lc.getSocketAddress().equals(localAddress)
+                            && rc.getSocketAddress().equals(remoteAddress)) {
                         return true;
-                        }
                     }
-                return false;
                 }
-            };
-        
-        return this.m_checkList.selectAnyPair(pred);
-        }
+                return false;
+            }
+        };
 
-    public void updatePairStates(final IceCandidatePair generatingPair)
-        {
+        return this.m_checkList.selectAnyPair(pred);
+    }
+
+    public void updatePairStates(final IceCandidatePair generatingPair) {
         m_log.debug("Updating pair states...");
         // Set the state of the pair that *generated* the check to succeeded.
         generatingPair.setState(IceCandidatePairState.SUCCEEDED);
-        
-        // Now set FROZEN pairs with the same foundation as the pair that 
+
+        // Now set FROZEN pairs with the same foundation as the pair that
         // *generated* the check for this media stream to waiting.
         updateToWaiting(generatingPair);
-        }
+    }
     
-    public void updateCheckListAndTimerStates()
-        {
-        // Update check list and timer states.  See section 7.1.2.3.
-        if (allFailedOrSucceeded())
-            {
-            // 1) Set the check list to failed if there is not a pair in the 
+    public void updateCheckListAndTimerStates() {
+        // Update check list and timer states. See section 7.1.2.3.
+        if (allFailedOrSucceeded()) {
+            // 1) Set the check list to failed if there is not a pair in the
             // valid list for all components.
             m_log.debug("All check lists are either failed or succeeded");
-            
+
             // TODO: We only currently have one component!!
-            if (this.m_validPairs.isEmpty())
-                {
+            if (this.m_validPairs.isEmpty()) {
                 // The check list is definitely created at this point, as
                 // we're updating pair state for a pair that had to have
                 // been on the check list.
                 m_log.debug("Setting check list state to failed...");
                 this.m_checkList.setState(IceCheckListState.FAILED);
-                }
-            
+            }
+
             // 2) Agent changes state of pairs in frozen check lists.
             this.m_iceAgent.onUnfreezeCheckLists(this);
-            }
-        
+        }
+
         // The final part of this section states the following:
         //
         // If none of the pairs in the check list are in the Waiting or Frozen
         // state, the check list is no longer considered active, and will not
         // count towards the value of N in the computation of timers for
         // ordinary checks as described in Section 5.8.
-        
-        // NOTE:  This requires no action on our part.  The definition of 
-        // and "active" check list is "a check list with at least one pair 
-        // that is Waiting" from 5.7.4.  When computing the value of N, that's
+
+        // NOTE: This requires no action on our part. The definition of
+        // and "active" check list is "a check list with at least one pair
+        // that is Waiting" from 5.7.4. When computing the value of N, that's
         // the definition that's used, and the active state is determined
-        // dynamically at that time.        
-        }
+        // dynamically at that time.
+    }
 
     /**
      * Checks to see if all pairs are in either the SUCCEEDED or the FIALED
@@ -428,33 +368,26 @@ public class IceMediaStreamImpl implements IceMediaStream
      * @return <code>true</code> if all pairs are in either the SUCCEEDED or
      * the FAILED state, otherwise <code>false</code>.
      */
-    private boolean allFailedOrSucceeded()
-        {
-        final Predicate<IceCandidatePair> pred = 
-            new Predicate<IceCandidatePair>()
-            {
+    private boolean allFailedOrSucceeded() {
+        final Predicate<IceCandidatePair> pred = new Predicate<IceCandidatePair>() {
 
-            public boolean evaluate(final IceCandidatePair pair)
-                {
-                if (pair.getState() != IceCandidatePairState.SUCCEEDED &&
-                    pair.getState() != IceCandidatePairState.FAILED)
-                    {
+            public boolean evaluate(final IceCandidatePair pair) {
+                if (pair.getState() != IceCandidatePairState.SUCCEEDED
+                        && pair.getState() != IceCandidatePairState.FAILED) {
                     return false;
-                    }
-                return true;
                 }
-            };
-        
-        return this.m_checkList.matchesAll(pred);
-        }
-
-    public void addValidPair(final IceCandidatePair pair)
-        {
-        synchronized (this.m_validPairs)
-            {
-            this.m_validPairs.add(pair);
+                return true;
             }
+        };
+
+        return this.m_checkList.matchesAll(pred);
+    }
+
+    public void addValidPair(final IceCandidatePair pair) {
+        synchronized (this.m_validPairs) {
+            this.m_validPairs.add(pair);
         }
+    }
     
     /**
      * Implements part 1 of "7.1.2.2.3. Updating Pair States."  All pairs with
@@ -463,185 +396,147 @@ public class IceMediaStreamImpl implements IceMediaStream
      *  
      * @param successfulPair The pair that succeeded.
      */
-    private void updateToWaiting(final IceCandidatePair successfulPair)
-        {
-        // TODO: This should happen for ALL components.  We only currently
-        // support one component.  See:
+    private void updateToWaiting(final IceCandidatePair successfulPair) {
+        // TODO: This should happen for ALL components. We only currently
+        // support one component. See:
         // http://tools.ietf.org/html/draft-ietf-mmusic-ice-17#section-7.1.2.2.3
-        final Closure<IceCandidatePair> closure =
-            new Closure<IceCandidatePair>()
-            {
-            public void execute(final IceCandidatePair pair)
-                {
+        final Closure<IceCandidatePair> closure = new Closure<IceCandidatePair>() {
+            public void execute(final IceCandidatePair pair) {
                 // We just update pairs with the same foundation that are in
                 // the frozen state to the waiting state.
-                if (pair.getFoundation().equals(successfulPair.getFoundation()) &&
-                    pair.getState() == IceCandidatePairState.FROZEN)
-                    {
+                if (pair.getFoundation().equals(successfulPair.getFoundation())
+                        && pair.getState() == IceCandidatePairState.FROZEN) {
                     pair.setState(IceCandidatePairState.WAITING);
-                    }
                 }
-            };
-        this.m_checkList.executeOnPairs(closure);
-        }
-
-    public void recomputePairPriorities(final boolean controlling)
-        {
-        this.m_checkList.recomputePairPriorities(controlling);
-        }
-
-
-    public void addTriggeredPair(final IceCandidatePair pair)
-        {
-        if (this.m_iceAgent.getIceState() == IceState.COMPLETED)
-            {
-            m_log.debug("Pair already nominated...not adding pair");
             }
-        else
-            {
+        };
+        this.m_checkList.executeOnPairs(closure);
+    }
+
+    public void recomputePairPriorities(final boolean controlling) {
+        this.m_checkList.recomputePairPriorities(controlling);
+    }
+
+    public void addTriggeredPair(final IceCandidatePair pair) {
+        if (this.m_iceAgent.getIceState() == IceState.COMPLETED) {
+            m_log.debug("Pair already nominated...not adding pair");
+        } else {
             m_log.debug("Adding triggered pair to media stream: {}", this);
             this.m_checkList.addTriggeredPair(pair);
-            
+
             // This call notifies the scheduler to start scheduling again in
             // the case where we've run out of pairs.
             this.m_checkScheduler.onPair();
-            }
         }
-    
-    public void addPair(final IceCandidatePair pair)
-        {
-        if (this.m_iceAgent.getIceState() == IceState.COMPLETED)
-            {
+    }
+
+    public void addPair(final IceCandidatePair pair) {
+        if (this.m_iceAgent.getIceState() == IceState.COMPLETED) {
             m_log.debug("Pair already nominated...not adding pair");
-            }
-        else
-            {
+        } else {
             m_log.debug("Adding pair to media stream: {}", this);
             this.m_checkList.addPair(pair);
-            }
         }
-    
-    public IceCheckListState getCheckListState()
-        {
-        return this.m_checkList.getState();
-        }
-    
-    public void setCheckListState(final IceCheckListState state)
-        {
-        this.m_checkList.setState(state);
-        if (state == IceCheckListState.COMPLETED)
-            {
-            //this.m_checkScheduler.
-            }
-        }
-    
-    public boolean hasHigherPriorityPendingPair(final IceCandidatePair pair)
-        {
-        return this.m_checkList.hasHigherPriorityPendingPair(pair);
-        }
+    }
 
-    public void onNominated(final IceCandidatePair pair)
-        {
-        if (pair == null)
-            {
+    public IceCheckListState getCheckListState() {
+        return this.m_checkList.getState();
+    }
+
+    public void setCheckListState(final IceCheckListState state) {
+        this.m_checkList.setState(state);
+        if (state == IceCheckListState.COMPLETED) {
+            // this.m_checkScheduler.
+        }
+    }
+
+    public boolean hasHigherPriorityPendingPair(final IceCandidatePair pair) {
+        return this.m_checkList.hasHigherPriorityPendingPair(pair);
+    }
+
+    public void onNominated(final IceCandidatePair pair) {
+        if (pair == null) {
             throw new NullPointerException("Can't nominate null pair");
-            }
+        }
         // First, remove all Waiting and Frozen pairs on the check list and
         // triggered check queue.
         this.m_checkList.removeWaitingAndFrozenPairs(pair);
-        synchronized (this.m_nominatedPairs)
-            {
+        synchronized (this.m_nominatedPairs) {
             this.m_nominatedPairs.add(pair);
-            }
         }
+    }
 
-    public Queue<IceCandidatePair> getNominatedPairs()
-        {
+    public Queue<IceCandidatePair> getNominatedPairs() {
         // Return a copy of the pairs to maintain immutability.
-        synchronized (this.m_nominatedPairs)
-            {
-            final Queue<IceCandidatePair> pairs = 
-                new PriorityQueue<IceCandidatePair>();
+        synchronized (this.m_nominatedPairs) {
+            final Queue<IceCandidatePair> pairs = new PriorityQueue<IceCandidatePair>();
             pairs.addAll(this.m_nominatedPairs);
             return pairs;
-            }
         }
+    }
 
-    public void serviceActivated(final IoService service, 
-        final SocketAddress serviceAddress, final IoHandler handler, 
-        final IoServiceConfig config)
-        {
-        }
+    public void serviceActivated(final IoService service,
+            final SocketAddress serviceAddress, final IoHandler handler,
+            final IoServiceConfig config) {
+    }
 
-    public void serviceDeactivated(final IoService service, 
-        final SocketAddress serviceAddress, final IoHandler handler, 
-        final IoServiceConfig config)
-        {
-        }
+    public void serviceDeactivated(final IoService service,
+            final SocketAddress serviceAddress, final IoHandler handler,
+            final IoServiceConfig config) {
+    }
 
-    public void sessionCreated(final IoSession session)
-        {
+    public void sessionCreated(final IoSession session) {
         m_log.debug("Setting media stream on session");
-        if (m_closed)
-            {
+        if (m_closed) {
             m_log.info("Already closed. Closing session.");
             session.close();
             return;
-            }
+        }
         session.setAttribute(IceMediaStream.class.getSimpleName(), this);
-        
-        final InetSocketAddress localAddress = 
-            (InetSocketAddress) session.getLocalAddress();
-        final InetSocketAddress remoteAddress =
-            (InetSocketAddress) session.getRemoteAddress();
-        
+
+        final InetSocketAddress localAddress = (InetSocketAddress) session
+                .getLocalAddress();
+        final InetSocketAddress remoteAddress = (InetSocketAddress) session
+                .getRemoteAddress();
+
         final boolean isUdp = MinaUtils.isUdp(session);
-        final IceCandidatePair pair = 
-            getPair(localAddress, remoteAddress, isUdp);
-        
-        if (pair == null)
-            {
+        final IceCandidatePair pair = getPair(localAddress, remoteAddress,
+                isUdp);
+
+        if (pair == null) {
             return;
-            }
-        if (pair.getIoSession() == null)
-            {
+        }
+        if (pair.getIoSession() == null) {
             pair.setIoSession(session);
-            }
         }
+    }
 
-    public void sessionDestroyed(final IoSession session)
-        {
-        }
+    public void sessionDestroyed(final IoSession session) {
+    }
 
-    public void close()
-        {
+    public void close() {
         this.m_closed = true;
         this.m_checkList.close();
         this.m_gatherer.close();
-        }
-    
-    public Collection<IceCandidate> getLocalCandidates() 
-        {
-        synchronized (this.m_localCandidates)
-            {
-            return new ArrayList<IceCandidate>(this.m_localCandidates);
-            }
-        }
-    
-    public InetAddress getPublicAddress() 
-        {
-        return this.m_gatherer.getPublicAddress();
-        }
-    
-    @Override
-    public String toString()
-        {
-        return getClass().getSimpleName() + " controlling: "+
-            this.m_iceAgent.isControlling();
-        }
+    }
 
-    public IceStunUdpPeer getStunUdpPeer() 
-        {
-        return this.m_udpPeer;
+    public Collection<IceCandidate> getLocalCandidates() {
+        synchronized (this.m_localCandidates) {
+            return new ArrayList<IceCandidate>(this.m_localCandidates);
         }
     }
+
+    public InetAddress getPublicAddress() {
+        return this.m_gatherer.getPublicAddress();
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " controlling: "
+                + this.m_iceAgent.isControlling();
+    }
+
+    public IceStunUdpPeer getStunUdpPeer() {
+        return this.m_udpPeer;
+    }
+}
