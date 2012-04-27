@@ -2,6 +2,9 @@ package org.lastbamboo.common.ice;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidatePair;
@@ -25,6 +28,8 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
     private final Timer m_timer;
     
     private final Object m_queueLock = new Object();
+    
+    private final ExecutorService threadPool;
 
     /**
      * Creates a new scheduler for the specified pairs.
@@ -44,11 +49,21 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
         m_existingSessionPairFactory = existingSessionPairFactory;
         final String offererOrAnswerer;
         if (this.m_agent.isControlling()) {
-            offererOrAnswerer = "ICE-Controlling-Timer";
+            offererOrAnswerer = "ICE-Controlling";
         } else {
-            offererOrAnswerer = "ICE-Not-Controlling-Timer";
+            offererOrAnswerer = "ICE-Not-Controlling";
         }
-        this.m_timer = new Timer(offererOrAnswerer, true);
+        this.m_timer = new Timer(offererOrAnswerer+"-Timer", true);
+        this.threadPool = Executors.newCachedThreadPool(new ThreadFactory() {
+            private volatile int threadNumber = 0;
+            public Thread newThread(final Runnable r) {
+                final Thread t = 
+                    new Thread(r, offererOrAnswerer+"-Timer-ThreadPool-"+threadNumber);
+                t.setDaemon(true);
+                threadNumber++;
+                return t;
+            }
+        });
     }
 
     public void scheduleChecks() {
@@ -65,17 +80,29 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
                     m_log.debug("UDP agent is closed, not checking next pair");
                     return;
                 }
-                m_log.debug("About to check pair...");
-                try {
-                    checkPair(timer);
-                } catch (final Throwable t) {
-                    m_log.warn("Caught throwable in check", t);
-                }
+                
+                // We offload this to a thread pool because the timer needs to
+                // run at exact times and can't be subject to anything blocking
+                // on its thread.
+                final Runnable runner = new Runnable() {
+                    @Override
+                    public void run() {
+                        m_log.debug("About to check pair...");
+                        try {
+                            checkPair(timer);
+                        } catch (final Throwable t) {
+                            m_log.warn("Caught throwable in check", t);
+                        }
+                    }
+                };
+                threadPool.submit(runner);
+
                 // This means there are no more pairs we know about, but we
                 // might get a triggered pair. We wait to see if we do
                 // before giving up.
                 synchronized (m_queueLock) {
                     if (m_queueEmpty) {
+                        m_log.info("WAITING ON QUEUE - NO PAIRS");
                         try {
                             m_queueLock.wait(10000);
                         } catch (final InterruptedException e) {
