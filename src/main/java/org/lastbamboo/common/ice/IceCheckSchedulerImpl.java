@@ -107,37 +107,41 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
             timer.cancel();
             return;
         }
+        
+        // We create the new timer task here because the pair fetching and 
+        // checking itself can take time that can throw the timer off.
+        final TimerTask task = createTimerTask(timer);
+
+        // Section 16.2 says this SHOULD be configurable and SHOULD have
+        // a default value of 500 ms. That would make ICE take a long
+        // time, though, so we're more aggressive.
+        final int Ta_i = 500;
+
+        // TODO: The recommended formula for this is:
+        // (stunPacketSize / rtpPacketSize) * rtpPtime;
+        // We'd have to allow this to be configurable for an arbitrary
+        // protocol in use, not just RTP. For now, we just use the
+        // relatively safe value of 20ms supported in most NATs.
+        //
+        // Note also that our goal isn't necessarily to keep the
+        // bandwidth in line with the ultimate protocol, as the formula
+        // above intends, but rather to make sure the NAT can handle
+        // the number of mappings we're requesting.
+        timer.schedule(task, this.m_agent.calculateDelay(Ta_i));
+        
         final IceCandidatePair activePair = getNextPair();
         if (activePair == null) {
-            // No more pairs to try. Note we don't actually cancel the timer
-            // here. This goes against the draft, but it's because TCP
-            // checks can take unpredictable time, causing agents on either
-            // end to finish at potentially radically different times. As
-            // a result, we always need to be ready for triggered checks.
             m_log.debug("No more active pairs...");
             m_queueEmpty = true;
+            timer.cancel();
         } else {
+            m_log.debug("Scheduling new timer task...");
+            
+            // We make the call to perform a check after scheduling the next
+            // timer task because the check itself could take time and throw
+            // off the timer.
             m_log.debug("About to perform check on:{}", activePair);
             performCheck(activePair);
-            m_log.debug("Scheduling new timer task...");
-            final TimerTask task = createTimerTask(timer);
-
-            // Section 16.2 says this SHOULD be configurable and SHOULD have
-            // a default value of 500 ms. That would make ICE take a long
-            // time, though, so we're more aggressive.
-            final int Ta_i = 300;
-
-            // TODO: The recommended formula for this is:
-            // (stunPacketSize / rtpPacketSize) * rtpPtime;
-            // We'd have to allow this to be configurable for an arbitrary
-            // protocol in use, not just RTP. For now, we just use the
-            // relatively safe value of 20ms supported in most NATs.
-            //
-            // Note also that our goal isn't necessarily to keep the
-            // bandwidth in line with the ultimate protocol, as the formula
-            // above intends, but rather to make sure the NAT can handle
-            // the number of mappings we're requesting.
-            timer.schedule(task, this.m_agent.calculateDelay(Ta_i));
         }
     }
 
