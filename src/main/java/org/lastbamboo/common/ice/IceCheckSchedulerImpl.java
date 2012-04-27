@@ -25,11 +25,12 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
     private final IceAgent m_agent;
     private final ExistingSessionIceCandidatePairFactory m_existingSessionPairFactory;
     private volatile boolean m_queueEmpty = false;
-    private final Timer m_timer;
+    private Timer m_timer;
     
     private final Object m_queueLock = new Object();
     
     private final ExecutorService threadPool;
+    private final String timerName;
 
     /**
      * Creates a new scheduler for the specified pairs.
@@ -53,7 +54,8 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
         } else {
             offererOrAnswerer = "ICE-Not-Controlling";
         }
-        this.m_timer = new Timer(offererOrAnswerer+"-Timer", true);
+        this.timerName = offererOrAnswerer+"-Timer";
+        this.m_timer = new Timer(this.timerName, true);
         this.threadPool = Executors.newCachedThreadPool(new ThreadFactory() {
             private volatile int threadNumber = 0;
             public Thread newThread(final Runnable r) {
@@ -225,6 +227,7 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
     public void onPair() {
         synchronized (m_queueLock) {
             if (m_queueEmpty) {
+                m_timer = new Timer(timerName+"-Restarted", true);
                 m_queueEmpty = false;
                 scheduleChecks();
             }

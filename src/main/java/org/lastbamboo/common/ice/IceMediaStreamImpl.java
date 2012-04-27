@@ -57,9 +57,9 @@ public class IceMediaStreamImpl implements IceMediaStream {
     private final IceAgent m_iceAgent;
     private final IceMediaStreamDesc m_desc;
     private final Collection<IceCandidate> m_remoteCandidates = 
-        new LinkedList<IceCandidate>();
+        new ArrayList<IceCandidate>(10);
     private Collection<IceCandidate> m_remoteSdpCandidates = 
-        new LinkedList<IceCandidate>();
+        new ArrayList<IceCandidate>(10);
     private final IceCandidateGatherer m_gatherer;
     private IceCheckScheduler m_checkScheduler;
     private boolean m_closed;
