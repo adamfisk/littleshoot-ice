@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocket;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
@@ -17,6 +18,7 @@ import org.lastbamboo.common.ice.candidate.IceCandidateVisitorAdapter;
 import org.lastbamboo.common.ice.candidate.IceTcpHostPassiveCandidate;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoder;
 import org.lastbamboo.common.ice.sdp.IceCandidateSdpDecoderImpl;
+import org.lastbamboo.common.offer.answer.IceConfig;
 import org.lastbamboo.common.offer.answer.OfferAnswer;
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.stun.client.PublicIpAddress;
@@ -126,6 +128,18 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     m_log.info("Waiting for incoming socket on: {}",
                             socketAddress);
                     final Socket sock = ss.accept();
+                    
+                    // Set custom cipher suites we accept if the user has
+                    // specified them. Note that we only do this on the server
+                    // side to avoid leaking information in the client
+                    // handshake.
+                    if (sock instanceof SSLSocket) {
+                        final String[] cs = IceConfig.getCipherSuites();
+                        if (cs != null && cs.length > 0) {
+                            final SSLSocket ssl = (SSLSocket) sock;
+                            ssl.setEnabledCipherSuites(cs);
+                        }
+                    }
                     m_log.info("GOT INCOMING SOCKET FROM "+
                         sock.getRemoteSocketAddress() +"!! Controlling: {}",
                         m_controlling);
