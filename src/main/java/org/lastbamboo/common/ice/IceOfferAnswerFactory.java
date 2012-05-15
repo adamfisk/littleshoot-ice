@@ -206,6 +206,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             throws OfferAnswerConnectException {
         if (mediaDesc.isUdp()) {
             try {
+                m_log.info("Creating UDP offer answer...");
                 return new IceAgentImpl(this.m_mediaStreamFactory, controlling,
                         offerAnswerListener, this.m_udpSocketFactory,
                         new RawUdpSocketFactory(), mediaDesc);
