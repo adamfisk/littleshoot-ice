@@ -6,10 +6,13 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
 
 import org.lastbamboo.common.ice.candidate.IceCandidate;
 import org.lastbamboo.common.ice.candidate.IceCandidateVisitor;
@@ -35,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public class TcpOfferAnswer implements IceOfferAnswer, 
     StunAddressProvider {
 
-    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final AtomicReference<Socket> m_socketRef = 
         new AtomicReference<Socket>();
     private final boolean m_controlling;
@@ -75,32 +78,32 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // server socket across all ICE sessions, forwarding their data to
         // the HTTP server.
         if (controlling || answererServer == null) {
-            m_log.info("Using pooled offerer server");
+            log.info("Using pooled offerer server");
             try {
                 this.m_portMappedServerSocket = m_offererServer.serverSocket();
                 this.m_mappedServerSocket = m_portMappedServerSocket;
 
                 // Accept incoming sockets on a listening thread.
                 listen();
-                m_log.info("Starting offer answer");
+                log.info("Starting offer answer");
             } catch (final IOException e) {
-                m_log.error("Could not bind server socket", e);
+                log.error("Could not bind server socket", e);
                 throw new RuntimeIoException("Could not bind server socket", e);
             }
         } else {
-            m_log.info("Using mapped server socket");
+            log.info("Using mapped server socket");
             this.m_mappedServerSocket = answererServer;
         }
     }
 
     public void close() {
-        m_log.info("Closing!!");
+        log.info("Closing!!");
         final Socket sock = m_socketRef.get();
         if (sock != null) {
             try {
                 sock.close();
             } catch (final IOException e) {
-                m_log.info("Exception closing socket", e);
+                log.info("Exception closing socket", e);
             }
         }
     }
@@ -118,15 +121,27 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         final InetSocketAddress socketAddress = 
             (InetSocketAddress) ss.getLocalSocketAddress();
 
+        if (ss instanceof SSLServerSocket) {
+            log.info("Enabled cipher suites on SSL server socket: {}", 
+                Arrays.asList(((SSLServerSocket)ss).getEnabledCipherSuites()));
+        }
         final Runnable serverRunner = new Runnable() {
             public void run() {
                 // We just accept the single socket on this port instead of
                 // the typical "while (true)".
                 try {
-                    m_log.info("Waiting for incoming socket on: {}",
+                    log.info("Waiting for incoming socket on: {}",
                             socketAddress);
                     final Socket sock = ss.accept();
-                    m_log.info("GOT INCOMING SOCKET FROM "+
+                    
+                    // Just for debugging.
+                    if (sock instanceof SSLSocket) {
+                        final SSLSocket ssl = (SSLSocket) sock;
+                        log.info("Enabled cipher suites on accepted " +
+                            "server socket: {}", 
+                            Arrays.asList(ssl.getEnabledCipherSuites()));
+                    }
+                    log.info("GOT INCOMING SOCKET FROM "+
                         sock.getRemoteSocketAddress() +"!! Controlling: {}",
                         m_controlling);
                     sock.setKeepAlive(true);
@@ -134,7 +149,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 } catch (final IOException e) {
                     // This could also be a socket timeout because we limit
                     // the length of time allowed on accept calls.
-                    m_log.info("Exception accepting socket. This will often " +
+                    log.info("Exception accepting socket. This will often " +
                         "happen when the client side connects first, and we " +
                         "simply return the socket back to the pool.", e);
                 } finally {
@@ -157,7 +172,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // theoretically generate the SDP for the TCP candidates.
         final String msg = 
             "We fallback to the old code for gathering this for now.";
-        m_log.error("TCP implemenation can't generate offers or answers");
+        log.error("TCP implemenation can't generate offers or answers");
         throw new UnsupportedOperationException(msg);
     }
 
@@ -166,7 +181,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // theoretically generate the SDP for the TCP candidates.
         final String msg = 
             "We fallback to the old code for gathering this for now.";
-        m_log.error("TCP implemenation can't generate offers or answers");
+        log.error("TCP implemenation can't generate offers or answers");
         throw new UnsupportedOperationException(msg);
     }
 
@@ -177,7 +192,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     public void processAnswer(final ByteBuffer answer) {
         // We don't need to do any processing if we've already got the socket.
         if (this.m_socketRef.get() != null) {
-            m_log.info("Controlling side already has a socket -- "
+            log.info("Controlling side already has a socket -- "
                     + "ignoring answer.");
             return;
         }
@@ -191,7 +206,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             // Note the second argument doesn't matter at all.
             remoteCandidates = decoder.decode(encodedCandidates, m_controlling);
         } catch (final IOException e) {
-            m_log.warn("Could not process remote candidates", e);
+            log.warn("Could not process remote candidates", e);
             return;
         }
 
@@ -206,7 +221,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             @Override
             public Object visitTcpHostPassiveCandidate(
                     final IceTcpHostPassiveCandidate candidate) {
-                m_log.info("Visiting TCP passive host candidate: {}", candidate);
+                log.info("Visiting TCP passive host candidate: {}", candidate);
                 return connectToCandidate(candidate);
             }
         };
@@ -217,7 +232,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
 
     private Object connectToCandidate(final IceCandidate candidate) {
         if (candidate == null) {
-            m_log.warn("Null candidate?? " + ThreadUtils.dumpStack());
+            log.warn("Null candidate?? " + ThreadUtils.dumpStack());
             return null;
         }
         final Runnable threadRunner = new Runnable() {
@@ -225,18 +240,26 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             public void run() {
                 Socket sock = null;
                 try {
-                    m_log.info("Connecting to: {}", candidate);
+                    log.info("Connecting to: {}", candidate);
                     //sock = new Socket();
                     sock = socketFactory.createSocket();
                     sock.setKeepAlive(true);
                     sock.connect(candidate.getSocketAddress(), 30 * 1000);
+
+                    if (sock instanceof SSLSocket) {
+                        // This is just for debugging.
+                        final SSLSocket ssl = (SSLSocket) sock;
+                        log.info("Enabled cipher suites on " +
+                            "client side SSL socket: {}", 
+                            Arrays.asList(ssl.getEnabledCipherSuites()));
+                    }
                     
-                    m_log.info("Client socket connected to: {}", 
+                    log.info("Client socket connected to: {}", 
                         sock.getRemoteSocketAddress());
                     onSocket(sock);
                     // Close this at the end in case it throws an exception.
                 } catch (final IOException e) {
-                    m_log.info("IO Exception connecting to: "+candidate, e);
+                    log.info("IO Exception connecting to: "+candidate, e);
                 }
             }
         };
@@ -257,13 +280,13 @@ public class TcpOfferAnswer implements IceOfferAnswer,
      */
     private void onSocket(final Socket sock) {
         if (m_socketRef.compareAndSet(null, sock)) {
-            m_log.info("Notifying listener of TCP socket: {}", 
+            log.info("Notifying listener of TCP socket: {}", 
                 this.m_offerAnswerListener);
             this.m_offerAnswerListener.onTcpSocket(sock);
         }
 
         else {
-            m_log.info("Socket already exists! Ignoring second");
+            log.info("Socket already exists! Ignoring second");
             // If a socket already existed, we close the socket *only if we're
             // the controlling peer*. Otherwise, it's possible for there to be 
             // a race condition where each side gets both possible successful 
@@ -271,14 +294,14 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             // the second socket they receive, ultimately closing all 
             // successful sockets!!
             if (this.m_controlling) {
-                m_log.info("Closing on controlling candidate");
+                log.info("Closing on controlling candidate");
                 try {
                     sock.close();
                 } catch (final IOException e) {
-                    m_log.error("Could not close socket", e);
+                    log.error("Could not close socket", e);
                 }
             } else {
-                m_log.info("Not closing on controlled candidate");
+                log.info("Not closing on controlled candidate");
 
                 // We also need to notify the listener a new socket has come in.
                 // The controlling side will take care of closing it.
@@ -317,7 +340,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // although there may be cases where this actually succeeds when UPnP
         // mapping failed due to simultaneous open behavior on the NAT.
         if (publicIp != null && m_mappedServerSocket.isPortMapped()) {
-            m_log.info("Adding public TCP address");
+            log.info("Adding public TCP address");
             // We're not completely sure if the port has been mapped yet at
             // this point. We know there hasn't been an error, but that's 
             // about it. The mapped port will actually be the port mapped
@@ -335,7 +358,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     this.m_controlling);
             candidates.add(publicHostCandidate);
         } else {
-            m_log.info("Not adding public candidate. PA: "+publicIp + 
+            log.info("Not adding public candidate. PA: "+publicIp + 
                 " mapped: " + m_mappedServerSocket.isPortMapped());
         }
         return candidates;

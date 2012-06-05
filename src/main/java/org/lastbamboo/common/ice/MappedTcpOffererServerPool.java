@@ -81,7 +81,7 @@ public class MappedTcpOffererServerPool {
     }
 
     /**
-     * Accessor for port-mapped server socket. If there are not cached sockets
+     * Accessor for a port-mapped server socket. If there are not cached sockets
      * around, this will create a new one and return it on demand.
      */
     public PortMappedServerSocket serverSocket() throws IOException {
