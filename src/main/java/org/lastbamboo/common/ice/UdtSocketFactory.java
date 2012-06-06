@@ -185,9 +185,6 @@ public class UdtSocketFactory implements UdpSocketFactory {
         log.info("Clearing session!!");
         final DatagramSessionImpl dgSession = (DatagramSessionImpl) session;
         final DatagramChannel dgChannel = dgSession.getChannel();
-        final DatagramSocket dgSock = dgChannel.socket();
-        log.info("Closing socket on local address: {}",
-                dgSock.getLocalSocketAddress());
         session.close().join(10 * 1000);
 
         final StunServer stunServer = stunUdpPeer.getStunServer();
@@ -205,6 +202,8 @@ public class UdtSocketFactory implements UdpSocketFactory {
             dgChannel.close();
         } catch (final Exception e) {
             log.error("Error clearing session!!", e);
+        } finally {
+            stunUdpPeer.close();
         }
     }
 }

@@ -44,10 +44,31 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             log.error("Null session: {}", session);
             return;
         }
+        
+        // Wait for a bit before we clear the decoders and such on that port -
+        // basically the client side may have sent a USE-CANDIDATE binding
+        // request for a pair that's still in the in progress state on the
+        // other end -- i.e. the server side hasn't verified the pair works
+        // for it. So the server side could still be doing STUN checks at that
+        // point, and we need to wait.
+        //
+        // We only do this on the controlling side due to an implementation
+        // detail of how we're using this -- basically using HTTP the client
+        // side always sends data before the server side (request -> response),
+        // so there's no chance the server side could start sending media data
+        // while we're still looking for STUN messages (the potential problem
+        // on the server side that this sleep solves).
+        if (controlling) {
+            final long sleepTime = 1200;
+            log.info("Client side sleeping for {} milliseconds", sleepTime);
+            try {
+                Thread.sleep(sleepTime);
+            } catch (final InterruptedException e) {
+                log.warn("Sleep interrupted?", e);
+            }
+        }
 
         clear(session, stunUdpPeer);
-        stunUdpPeer.close();
-
         if (!controlling) {
             // The CONTROLLED agent is notified to start the media stream first
             // in the ICE process, so this is called before the other side
@@ -96,8 +117,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
     }
 
     protected void openClientSocket(final IoSession session,
-            final OfferAnswerListener socketListener)
-            throws InterruptedException, IOException {
+        final OfferAnswerListener socketListener) throws IOException {
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
         final InetSocketAddress remote = 
@@ -112,16 +132,10 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         clientSocket.bind(new InetSocketAddress(local.getAddress(),
             local.getPort()));
 
-        // Wait for a bit to make sure the server side has a chance to come up.
-        final long sleepTime = 700;
-        log.info("Client side sleeping for {} milliseconds", sleepTime);
-        Thread.sleep(sleepTime);
         log.info("About to connect...");
-        clientSocket.connect(new InetSocketAddress(remote.getAddress(), remote.getPort()));
-        log.info("Connected!!!");
-
-        //final Socket sock = client.getSocket();
-        log.info("Got socket...notifying listener");
+        clientSocket.connect(
+            new InetSocketAddress(remote.getAddress(), remote.getPort()));
+        log.info("Connected...notifying listener");
 
         socketListener.onUdpSocket(clientSocket);
         log.info("Exiting...");
@@ -137,12 +151,6 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         final ServerSocket ss = new NetServerSocketUDT();
         ss.bind(new InetSocketAddress(local.getAddress(), local.getPort()));
         final Socket sock = ss.accept();
-        /*
-        final UDTServerSocket server = new UDTServerSocket(local.getAddress(),
-                local.getPort());
-
-        final UDTSocket sock = server.accept();
-        */
         threadPool.execute(new RequestRunner(socketListener, sock));
     }
 
@@ -169,16 +177,6 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         log.info("Clearing session: {}", session);
         final DatagramSessionImpl dgSession = (DatagramSessionImpl) session;
         final DatagramChannel dgChannel = dgSession.getChannel();
-        /*
-        try {
-            dgChannel.close();
-        } catch (final IOException e) {
-            m_log.info("Exception closing channgel!", e);
-        }
-        */
-        //final DatagramSocket dgSock = dgChannel.socket();
-        //m_log.info("Closing socket on local address: {}",
-        //        dgSock.getLocalSocketAddress());
         session.close().join(10 * 1000);
 
         final StunServer stunServer = stunUdpPeer.getStunServer();
@@ -194,11 +192,6 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             session.getService().getFilterChain().clear();
             dgChannel.disconnect();
             dgChannel.close();
-            log.info("Open: "+dgChannel.isOpen());
-            log.info("Connected: "+dgChannel.isConnected());
-            log.info("Sleeping on channel to make sure it unbinds");
-            Thread.sleep(400);
-            log.info("Closed channel");
         } catch (final Exception e) {
             log.error("Error clearing session!!", e);
         } finally {
