@@ -29,6 +29,7 @@ import org.lastbamboo.common.ice.candidate.IceUdpHostCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpPeerReflexiveCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpRelayCandidate;
 import org.lastbamboo.common.ice.candidate.IceUdpServerReflexiveCandidate;
+import org.lastbamboo.common.offer.answer.IceConfig;
 import org.littleshoot.util.Closure;
 import org.littleshoot.util.CollectionUtils;
 import org.littleshoot.util.CollectionUtilsImpl;
@@ -219,7 +220,7 @@ public class IceCheckListImpl implements IceCheckList
                 {
                 final InetSocketAddress isa =remoteCandidate.getSocketAddress();
                 final InetAddress remote = isa.getAddress();
-                if (remote.isSiteLocalAddress())
+                if (remote.isSiteLocalAddress() && IceConfig.disableUdpOnLocalNetwork())
                     {
                     // We ignore site local addresses for UDP because those
                     // should be accessible with TCP instead.
