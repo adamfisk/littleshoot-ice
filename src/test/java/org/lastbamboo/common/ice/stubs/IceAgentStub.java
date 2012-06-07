@@ -19,173 +19,149 @@ import org.lastbamboo.common.offer.answer.OfferAnswerMediaListener;
 /**
  * Stun class for an ICE agent.
  */
-public class IceAgentStub implements IceAgent
-    {
+public class IceAgentStub implements IceAgent {
 
-    public IceTieBreaker getTieBreaker()
-        {
+    public IceTieBreaker getTieBreaker() {
         return new IceTieBreaker();
-        }
+    }
 
-    public boolean isControlling()
-        {
+    public boolean isControlling() {
         // TODO Auto-generated method stub
         return false;
-        }
+    }
 
-    public long calculateDelay(int Ta_i)
-        {
+    public long calculateDelay(int Ta_i) {
         // TODO Auto-generated method stub
         return 0;
-        }
+    }
 
-    public void onUnfreezeCheckLists(IceMediaStream mediaStream)
-        {
+    public void onUnfreezeCheckLists(IceMediaStream mediaStream) {
         // TODO Auto-generated method stub
-        
-        }
 
-    public void checkValidPairsForAllComponents(IceMediaStream mediaStream)
-        {
+    }
+
+    public void checkValidPairsForAllComponents(IceMediaStream mediaStream) {
         // TODO Auto-generated method stub
-        
-        }
 
-    public void setControlling(boolean controlling)
-        {
+    }
+
+    public void setControlling(boolean controlling) {
         // TODO Auto-generated method stub
-        
-        }
 
-    public Socket connect(ByteBuffer answer) throws IOException
-        {
+    }
+
+    public Socket connect(ByteBuffer answer) throws IOException {
         // TODO Auto-generated method stub
         return null;
-        }
+    }
 
-    public Collection<IceCandidate> gatherCandidates()
-        {
+    public Collection<IceCandidate> gatherCandidates() {
         // TODO Auto-generated method stub
         return null;
-        }
+    }
 
-    public Socket createSocket(ByteBuffer answer) throws IOException
-        {
+    public Socket createSocket(ByteBuffer answer) throws IOException {
         // TODO Auto-generated method stub
         return null;
-        }
+    }
 
-    public byte[] generateAnswer()
-        {
+    public byte[] generateAnswer() {
         // TODO Auto-generated method stub
         return null;
-        }
+    }
 
-    public byte[] generateOffer()
-        {
+    public byte[] generateOffer() {
         // TODO Auto-generated method stub
         return null;
-        }
+    }
 
-    public void recomputePairPriorities()
-        {
+    public void recomputePairPriorities() {
         // TODO Auto-generated method stub
-        
-        }
 
-    public Collection<IceMediaStream> getMediaStreams()
-        {
+    }
+
+    public Collection<IceMediaStream> getMediaStreams() {
         // TODO Auto-generated method stub
         return null;
-        }
+    }
 
-    public void processOffer(ByteBuffer offer) 
-        {
+    public void processOffer(ByteBuffer offer) {
         // TODO Auto-generated method stub
-        
-        }
 
-    public IceState getIceState()
-        {
+    }
+
+    public IceState getIceState() {
         // TODO Auto-generated method stub
         return null;
-        }
+    }
 
-    public void onNominatedPair(IceCandidatePair pair, IceMediaStream iceMediaStream)
-        {
+    public void onNominatedPair(IceCandidatePair pair,
+            IceMediaStream iceMediaStream) {
         // TODO Auto-generated method stub
-        
-        }
 
-    public Queue<IceCandidatePair> getNominatedPairs()
-        {
-        // TODO Auto-generated method stub
-        return null;
-        }
+    }
 
-    public void processAnswer(ByteBuffer answer)
-        {
-        // TODO Auto-generated method stub
-        
-        }
-
-    public void onValidPairs(IceMediaStream mediaStream)
-        {
-        // TODO Auto-generated method stub
-        
-        }
-
-    public Socket createSocket()
-        {
+    public Queue<IceCandidatePair> getNominatedPairs() {
         // TODO Auto-generated method stub
         return null;
-        }
+    }
 
-    public void processAnswer(ByteBuffer answer, OfferAnswerListener offerAnswerListener)
-        {
+    public void processAnswer(ByteBuffer answer) {
         // TODO Auto-generated method stub
-        
-        }
 
-    public void processOffer(ByteBuffer offer, OfferAnswerListener offerAnswerListener)
-        {
+    }
+
+    public void onValidPairs(IceMediaStream mediaStream) {
         // TODO Auto-generated method stub
-        
-        }
 
-    public void listen()
-        {
+    }
+
+    public Socket createSocket() {
         // TODO Auto-generated method stub
-        
-        }
+        return null;
+    }
 
-    public void startMedia(OfferAnswerMediaListener mediaListener)
-        {
+    public void processAnswer(ByteBuffer answer,
+            OfferAnswerListener offerAnswerListener) {
         // TODO Auto-generated method stub
-        
-        }
 
-    public void close()
-        {
+    }
+
+    public void processOffer(ByteBuffer offer,
+            OfferAnswerListener offerAnswerListener) {
         // TODO Auto-generated method stub
-        
-        }
 
-    public void onNoMorePairs()
-        {
+    }
+
+    public void listen() {
         // TODO Auto-generated method stub
-        
-        }
 
-	public void closeTcp() {
-		// TODO Auto-generated method stub
-		
-	}
+    }
 
-	public void closeUdp() {
-		// TODO Auto-generated method stub
-		
-	}
+    public void startMedia(OfferAnswerMediaListener mediaListener) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void close() {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void onNoMorePairs() {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void closeTcp() {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void closeUdp() {
+        // TODO Auto-generated method stub
+
+    }
 
     public InetAddress getPublicAdress() {
         // TODO Auto-generated method stub
@@ -194,7 +170,7 @@ public class IceAgentStub implements IceAgent
 
     public void useRelay() {
         // TODO Auto-generated method stub
-        
+
     }
 
     public boolean isClosed() {
@@ -202,4 +178,4 @@ public class IceAgentStub implements IceAgent
         return false;
     }
 
-    }
+}
