@@ -220,7 +220,7 @@ public class IceCheckListImpl implements IceCheckList
                 {
                 final InetSocketAddress isa =remoteCandidate.getSocketAddress();
                 final InetAddress remote = isa.getAddress();
-                if (remote.isSiteLocalAddress() && IceConfig.disableUdpOnLocalNetwork())
+                if (remote.isSiteLocalAddress() && IceConfig.isDisableUdpOnLocalNetwork())
                     {
                     // We ignore site local addresses for UDP because those
                     // should be accessible with TCP instead.
