@@ -60,157 +60,136 @@ public class IceStunUdpPeer implements StunClient, StunServer
      * @param transactionTracker The class for tracking STUN transactions.
      * @throws IOException If there's an error connecting the client or server.
      */
-    public IceStunUdpPeer(final ProtocolCodecFactory demuxingCodecFactory, 
-        final IoHandler ioHandler, final boolean controlling, 
+    public IceStunUdpPeer(
+        final ProtocolCodecFactory demuxingCodecFactory,
+        final IoHandler ioHandler,
+        final boolean controlling,
         final StunTransactionTracker<StunMessage> transactionTracker,
-        final CandidateProvider<InetSocketAddress> stunServerCandidateProvider) 
-        throws IOException 
-        {
-        // We pass the IoHandler here because we need to be prepared to handle 
-        // STUN and protocol specific messages on all code bound to the same 
-        // local port.  This is because different OSes handle  
-        // SO_REUSEADDRESS slightly differently, particularly with regards to 
-        // sockets that are "connected" to specific external hosts.  We need 
-        // to use the same IoHandler for all of them to make sure it's 
-        // created here as well as the separate connectors created when we're 
-        // making connectivity consistent, with "all of them" meaning the STUN 
+        final CandidateProvider<InetSocketAddress> stunServerCandidateProvider)
+        throws IOException {
+        // We pass the IoHandler here because we need to be prepared to handle
+        // STUN and protocol specific messages on all code bound to the same
+        // local port. This is because different OSes handle
+        // SO_REUSEADDRESS slightly differently, particularly with regards to
+        // sockets that are "connected" to specific external hosts. We need
+        // to use the same IoHandler for all of them to make sure it's
+        // created here as well as the separate connectors created when we're
+        // making connectivity consistent, with "all of them" meaning the STUN
         // client and server checks.
-        this.m_stunClient = 
-            new UdpStunClient(transactionTracker, ioHandler, 
+        this.m_stunClient = new UdpStunClient(transactionTracker, ioHandler,
                 stunServerCandidateProvider);
         this.m_stunClient.connect();
-        this.m_serverReflexiveAddress = 
-            this.m_stunClient.getServerReflexiveAddress();
-        if (this.m_serverReflexiveAddress == null)
-            {
-            final String msg = "Could not get server reflexive address.  " +
-                "Did STUN server respond??";
+        this.m_serverReflexiveAddress = this.m_stunClient
+                .getServerReflexiveAddress();
+        if (this.m_serverReflexiveAddress == null) {
+            final String msg = "Could not get server reflexive address.  "
+                    + "Did STUN server respond??";
             m_log.error(msg);
             throw new IOException(msg);
-            }
+        }
         // We also add whether we're controlling for thread
         // naming here just to make log reading easier.
         final String controllingString;
-        if (controlling)
-            {
+        if (controlling) {
             controllingString = "-Controlling";
-            }
-        else
-            {
+        } else {
             controllingString = "-Not-Controlling";
-            }
-        
+        }
+
         // NOTE: We're starting the server here before external code has
-        // had the chance to add listeners.  In this case, it will be fine
+        // had the chance to add listeners. In this case, it will be fine
         // because the caller cannot have sent the offer or answer until
         // the listeners are added (or SHOULD not have), so there's no way
         // of missing any relevant events.
-        this.m_stunServer = 
-            new UdpStunServer(demuxingCodecFactory, 
-                ioHandler, controllingString);
-        
+        this.m_stunServer = new UdpStunServer(demuxingCodecFactory, ioHandler,
+                controllingString);
+
         // Just bind to the same port as the client.
-        // Note this only works because both the client and server are using 
+        // Note this only works because both the client and server are using
         // the SO_REUSEADDRESS option.
         this.m_stunServer.start(this.m_stunClient.getHostAddress());
-        
-        m_log.debug("Started STUN CLIENT on local address: {}",
-            this.m_stunClient.getHostAddress());
-        m_log.debug("Started STUN SERVER on local address: {}",
-            this.m_stunServer.getBoundAddress());
-        
-        }
 
-    public void connect() throws IOException
-        {
+        m_log.debug("Started STUN CLIENT on local address: {}",
+                this.m_stunClient.getHostAddress());
+        m_log.debug("Started STUN SERVER on local address: {}",
+                this.m_stunServer.getBoundAddress());
+
+    }
+
+    public void connect() throws IOException {
         // We don't do anything here because the client is already connected
         // in the constructor!!
-        //this.m_stunClient.connect();
-        }
+        // this.m_stunClient.connect();
+    }
 
-    public InetSocketAddress getHostAddress()
-        {
+    public InetSocketAddress getHostAddress() {
         return this.m_stunClient.getHostAddress();
-        }
+    }
 
-    public InetSocketAddress getRelayAddress()
-        {
+    public InetSocketAddress getRelayAddress() {
         return this.m_stunClient.getRelayAddress();
-        }
+    }
 
-    public InetSocketAddress getServerReflexiveAddress()
-        {
+    public InetSocketAddress getServerReflexiveAddress() {
         m_log.info("Getting server reflexive address");
         // We return the cached server reflexive address because we need to
-        // get it before the "server side" UDP handler binds to the same 
+        // get it before the "server side" UDP handler binds to the same
         // port, as it can "steal" incoming packets on Windows.
         return this.m_serverReflexiveAddress;
-        }
+    }
 
-    public InetAddress getStunServerAddress()
-        {
+    public InetAddress getStunServerAddress() {
         return this.m_stunClient.getStunServerAddress();
-        }
+    }
 
-    public StunMessage write(final BindingRequest request, 
-        final InetSocketAddress remoteAddress)
-        {
-        //return this.m_stunClient.write(request, remoteAddress);
+    public StunMessage write(final BindingRequest request,
+            final InetSocketAddress remoteAddress) {
+        // return this.m_stunClient.write(request, remoteAddress);
         m_log.error("Unsupported!!!!!!!");
         throw new IllegalStateException("Not implemented.");
-        }
-    
-    public StunMessage write(final BindingRequest request, 
-        final InetSocketAddress remoteAddress, final long rto)
-        {
-        //return this.m_stunClient.write(request, remoteAddress, rto);
+    }
+
+    public StunMessage write(final BindingRequest request,
+            final InetSocketAddress remoteAddress, final long rto) {
+        // return this.m_stunClient.write(request, remoteAddress, rto);
         m_log.error("Unsupported!!!!!!!");
         throw new IllegalStateException("Not implemented.");
-        }
+    }
 
-    public void start()
-        {
+    public void start() {
         // We've already started the server for ICE.
-        }
+    }
 
-    public void start(final InetSocketAddress bindAddress)
-        {
+    public void start(final InetSocketAddress bindAddress) {
         // We've already started the server for ICE.
-        }
+    }
 
-    public InetSocketAddress getBoundAddress()
-        {
+    public InetSocketAddress getBoundAddress() {
         return this.m_stunServer.getBoundAddress();
-        }
+    }
 
-    public void addIoServiceListener(final IoServiceListener serviceListener)
-        {
+    public void addIoServiceListener(final IoServiceListener serviceListener) {
         this.m_stunClient.addIoServiceListener(serviceListener);
         this.m_stunServer.addIoServiceListener(serviceListener);
-        }
-    
+    }
 
-    public void close()
-        {
+    public void close() {
         m_log.debug("Closing ICE UDP peer...");
         this.m_stunClient.close();
         this.m_stunServer.close();
-        }
+    }
 
-    public boolean hostPortMapped()
-        {
+    public boolean hostPortMapped() {
         // We don't currently do any mapping for UDP.
         return false;
-        }
-    
-    public StunServer getStunServer() 
-        {
-        return m_stunServer;
-        }
-    
-    @Override
-    public String toString()
-        {
-        return getClass().getSimpleName();
-        }
     }
+
+    public StunServer getStunServer() {
+        return m_stunServer;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
+    }
+}
