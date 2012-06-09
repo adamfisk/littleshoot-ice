@@ -64,6 +64,9 @@ public class IceCheckListImpl implements IceCheckList {
     private final Collection<IceCandidate> m_localCandidates;
 
     private final IceCandidatePairFactory m_iceCandidatePairFactory;
+    
+    private final Collection<IceCandidatePair> allPairs =
+        new HashSet<IceCandidatePair>();
 
     /**
      * Creates a new check list, starting with only local candidates.
@@ -132,6 +135,7 @@ public class IceCheckListImpl implements IceCheckList {
             if (!this.m_triggeredQueue.contains(pair)) {
                 m_log.debug("Adding triggered pair:{}", pair);
                 this.m_triggeredQueue.add(pair);
+                this.allPairs.add(pair);
             } else {
                 m_log.debug("Triggered queue already has pair:{}", pair);
             }
@@ -145,6 +149,7 @@ public class IceCheckListImpl implements IceCheckList {
         }
         synchronized (this) {
             this.m_pairs.add(pair);
+            this.allPairs.add(pair);
             Collections.sort(this.m_pairs);
         }
     }
@@ -239,6 +244,7 @@ public class IceCheckListImpl implements IceCheckList {
         final List<IceCandidatePair> sorted = sortPairs(pruned);
         synchronized (this) {
             this.m_pairs.addAll(sorted);
+            this.allPairs.addAll(sorted);
             m_log.debug("Created pairs:\n" + this.m_pairs);
         }
 
@@ -627,7 +633,7 @@ public class IceCheckListImpl implements IceCheckList {
     }
 
     public void close() {
-        m_log.debug("Closing check list...");
+        m_log.info("Closing check list...");
         final Closure<IceCandidatePair> close = new Closure<IceCandidatePair>() {
             public void execute(final IceCandidatePair pair) {
                 pair.close();
@@ -636,5 +642,6 @@ public class IceCheckListImpl implements IceCheckList {
 
         executeOnPairs(close);
         executeOnPairs(this.m_triggeredQueue, close);
+        executeOnPairs(this.allPairs, close);
     }
 }

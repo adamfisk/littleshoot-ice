@@ -38,7 +38,8 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
 
     public void newSocket(final IoSession session, final boolean controlling,
             final OfferAnswerListener socketListener,
-            final IceStunUdpPeer stunUdpPeer) {
+            final IceStunUdpPeer stunUdpPeer,
+            final IceAgent iceAgent) {
         log.info("Creating new Barchart UDT Socket");
         if (session == null) {
             log.error("Null session: {}", session);
@@ -68,7 +69,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             }
         }
 
-        clear(session, stunUdpPeer);
+        clear(session, stunUdpPeer, iceAgent);
         if (!controlling) {
             // The CONTROLLED agent is notified to start the media stream first
             // in the ICE process, so this is called before the other side
@@ -173,7 +174,9 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
     }
 
     private void clear(final IoSession session, 
-        final IceStunUdpPeer stunUdpPeer) {
+        final IceStunUdpPeer stunUdpPeer, final IceAgent iceAgent) {
+        log.info("Closing ICE agent");
+        iceAgent.close();
         log.info("Clearing session: {}", session);
         final DatagramSessionImpl dgSession = (DatagramSessionImpl) session;
         final DatagramChannel dgChannel = dgSession.getChannel();

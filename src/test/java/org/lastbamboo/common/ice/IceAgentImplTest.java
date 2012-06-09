@@ -153,7 +153,7 @@ public class IceAgentImplTest {
             public void newSocket(final IoSession session,
                     final boolean controlling,
                     final OfferAnswerListener offerAnswerListener,
-                    final IceStunUdpPeer stunUdpPeer) {
+                    final IceStunUdpPeer stunUdpPeer, final IceAgent iceAgent) {
                 offerAnswerListener.onUdpSocket(new Socket());
             }
         };

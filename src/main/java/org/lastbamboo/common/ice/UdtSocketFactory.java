@@ -1,7 +1,6 @@
 package org.lastbamboo.common.ice;
 
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.DatagramChannel;
@@ -44,7 +43,7 @@ public class UdtSocketFactory implements UdpSocketFactory {
     
     public void newSocket(final IoSession session, final boolean controlling,
         final OfferAnswerListener socketListener, 
-        final IceStunUdpPeer stunUdpPeer) {
+        final IceStunUdpPeer stunUdpPeer, final IceAgent iceAgent) {
         if (session == null) {
             log.error("Null session: {}", session);
             return;
@@ -74,7 +73,7 @@ public class UdtSocketFactory implements UdpSocketFactory {
         }
         
         UDTReceiver.connectionExpiryDisabled = true;
-        clear(session, stunUdpPeer);
+        clear(session, stunUdpPeer, iceAgent);
         if (!controlling) {
             // The CONTROLLED agent is notified to start the media stream first
             // in the ICE process, so this is called before the other side
@@ -181,7 +180,10 @@ public class UdtSocketFactory implements UdpSocketFactory {
         }
     }
 
-    private void clear(final IoSession session, final IceStunUdpPeer stunUdpPeer) {
+    private void clear(final IoSession session, final IceStunUdpPeer stunUdpPeer, 
+        final IceAgent iceAgent) {
+        log.info("Closing ICE agent");
+        iceAgent.close();
         log.info("Clearing session!!");
         final DatagramSessionImpl dgSession = (DatagramSessionImpl) session;
         final DatagramChannel dgChannel = dgSession.getChannel();

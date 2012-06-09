@@ -17,8 +17,10 @@ public interface UdpSocketFactory {
      * agent.
      * @param offerAnswerListener The listener for the socket.
      * @param stunUdpPeer The STUN UDP peer class.
+     * @param iceAgent The high level ICE agent. 
      */
     void newSocket(IoSession session, boolean controlling, 
-        OfferAnswerListener offerAnswerListener, IceStunUdpPeer stunUdpPeer);
+        OfferAnswerListener offerAnswerListener, IceStunUdpPeer stunUdpPeer, 
+        IceAgent iceAgent);
 
 }

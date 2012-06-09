@@ -27,7 +27,7 @@ public class RawUdpSocketFactory implements UdpSocketFactory {
 
     public void newSocket(final IoSession session, final boolean controlling,
             final OfferAnswerListener socketListener,
-            final IceStunUdpPeer stunUdpPeer) {
+            final IceStunUdpPeer stunUdpPeer, final IceAgent iceAgent) {
         log.info("Creating new raw UDP Socket");
         if (session == null) {
             log.error("Null session: {}", session);

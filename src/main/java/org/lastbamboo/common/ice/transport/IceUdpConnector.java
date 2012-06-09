@@ -76,6 +76,7 @@ public class IceUdpConnector implements IceConnector, IoServiceListener {
         this.m_connector.getFilterChain()
                 .addLast("demuxFilter", demuxingFilter);
 
+        //This is where we need to unbind from -- connecting both to local network host and to remote -- need to keep track of all these sessions and drop 'em!!
         m_log.debug("Connecting from " + localAddress + " to " + remoteAddress);
 
         final ConnectFuture cf = this.m_connector.connect(remoteAddress,

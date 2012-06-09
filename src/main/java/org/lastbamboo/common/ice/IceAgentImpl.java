@@ -104,12 +104,12 @@ public class IceAgentImpl implements IceAgent {
             final IoSession session = pair.getIoSession();
             if (this.iceMediaStreamDesc.isReliable()) {
                 this.reliableUdpSocketFactory.newSocket(session, isControlling(),
-                    this.offerAnswerListener, this.stunUdpPeer);
+                    this.offerAnswerListener, this.stunUdpPeer, this);
             } else {
                 // TODO: This should clearly link to an unreliable version.
                 this.unreliableUdpSocketFactory.newSocket(session, 
                     isControlling(), this.offerAnswerListener, 
-                    this.stunUdpPeer);
+                    this.stunUdpPeer, this);
             }
         } else if (state == IceState.FAILED) {
             log.debug("Got ICE failed.  Closing.");
@@ -351,7 +351,7 @@ public class IceAgentImpl implements IceAgent {
             return;
         }
 
-        log.debug("Closing ICE agent.");
+        log.info("Closing ICE agent.");
         // Close all the media streams.
         synchronized (this.mediaStreams) {
             for (final IceMediaStream stream : this.mediaStreams) {
