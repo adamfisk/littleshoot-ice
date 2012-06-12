@@ -9,6 +9,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 import org.lastbamboo.common.offer.answer.OfferAnswerListener;
 import org.lastbamboo.common.stun.server.StunServer;
 import org.littleshoot.mina.common.IoAcceptor;
@@ -35,6 +38,12 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
                 return t;
             }
         });
+
+    private final SSLSocketFactory sslSocketFactory;
+    
+    public BarchartUdtSocketFactory(final SSLSocketFactory sslSocketFactory) {
+        this.sslSocketFactory = sslSocketFactory;
+    }
 
     public void newSocket(final IoSession session, final boolean controlling,
             final OfferAnswerListener socketListener,
@@ -138,6 +147,14 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             new InetSocketAddress(remote.getAddress(), remote.getPort()));
         log.info("Connected...notifying listener");
 
+        final SSLSocket sslSocket =
+            (SSLSocket)sslSocketFactory.createSocket(clientSocket, 
+                clientSocket.getInetAddress().getHostAddress(), 
+                clientSocket.getPort(), false);
+        
+        sslSocket.setUseClientMode(true);
+        sslSocket.startHandshake();
+        
         socketListener.onUdpSocket(clientSocket);
         log.info("Exiting...");
     }
@@ -152,7 +169,15 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         final ServerSocket ss = new NetServerSocketUDT();
         ss.bind(new InetSocketAddress(local.getAddress(), local.getPort()));
         final Socket sock = ss.accept();
-        threadPool.execute(new RequestRunner(socketListener, sock));
+        
+        final SSLSocket sslSocket =
+            (SSLSocket)this.sslSocketFactory.createSocket(sock,
+                sock.getInetAddress().getHostAddress(),
+                sock.getPort(), false);
+        sslSocket.setUseClientMode(false);
+        sslSocket.startHandshake();
+        
+        threadPool.execute(new RequestRunner(socketListener, sslSocket));
     }
 
     private static class RequestRunner implements Runnable {
