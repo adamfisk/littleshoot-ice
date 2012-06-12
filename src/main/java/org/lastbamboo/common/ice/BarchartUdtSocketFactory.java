@@ -155,7 +155,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         sslSocket.setUseClientMode(true);
         sslSocket.startHandshake();
         
-        socketListener.onUdpSocket(clientSocket);
+        socketListener.onUdpSocket(sslSocket);
         log.info("Exiting...");
     }
 
@@ -183,11 +183,11 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
     private static class RequestRunner implements Runnable {
 
         private final Logger m_log = LoggerFactory.getLogger(getClass());
-        private final Socket sock;
+        private final SSLSocket sock;
         private final OfferAnswerListener socketListener;
 
         public RequestRunner(final OfferAnswerListener socketListener,
-                final Socket sock) {
+                final SSLSocket sock) {
             this.socketListener = socketListener;
             this.sock = sock;
         }
