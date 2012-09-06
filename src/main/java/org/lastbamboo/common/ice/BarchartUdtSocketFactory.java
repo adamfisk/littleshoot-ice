@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -39,9 +40,9 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             }
         });
 
-    private final SSLSocketFactory sslSocketFactory;
+    private final SocketFactory sslSocketFactory;
     
-    public BarchartUdtSocketFactory(final SSLSocketFactory sslSocketFactory) {
+    public BarchartUdtSocketFactory(final SocketFactory sslSocketFactory) {
         this.sslSocketFactory = sslSocketFactory;
     }
 
@@ -147,15 +148,19 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             new InetSocketAddress(remote.getAddress(), remote.getPort()));
         log.info("Connected...notifying listener");
 
-        final SSLSocket sslSocket =
-            (SSLSocket)sslSocketFactory.createSocket(clientSocket, 
-                clientSocket.getInetAddress().getHostAddress(), 
-                clientSocket.getPort(), false);
-        
-        sslSocket.setUseClientMode(true);
-        sslSocket.startHandshake();
-        
-        socketListener.onUdpSocket(sslSocket);
+        if (sslSocketFactory instanceof SSLSocketFactory) {
+            final SSLSocket sslSocket =
+                (SSLSocket)((SSLSocketFactory)sslSocketFactory).createSocket(clientSocket, 
+                    clientSocket.getInetAddress().getHostAddress(), 
+                    clientSocket.getPort(), false);
+            
+            sslSocket.setUseClientMode(true);
+            sslSocket.startHandshake();
+            socketListener.onUdpSocket(sslSocket);
+        } else {
+            socketListener.onUdpSocket(clientSocket);
+        }
+
         log.info("Exiting...");
     }
 
@@ -170,24 +175,28 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         ss.bind(new InetSocketAddress(local.getAddress(), local.getPort()));
         final Socket sock = ss.accept();
         
-        final SSLSocket sslSocket =
-            (SSLSocket)this.sslSocketFactory.createSocket(sock,
-                sock.getInetAddress().getHostAddress(),
-                sock.getPort(), false);
-        sslSocket.setUseClientMode(false);
-        sslSocket.startHandshake();
+        if (sslSocketFactory instanceof SSLSocketFactory) {
+            final SSLSocket sslSocket =
+                (SSLSocket)((SSLSocketFactory)this.sslSocketFactory).createSocket(sock,
+                    sock.getInetAddress().getHostAddress(),
+                    sock.getPort(), false);
+            sslSocket.setUseClientMode(false);
+            sslSocket.startHandshake();
+            threadPool.execute(new RequestRunner(socketListener, sslSocket));
+        } else {
+            threadPool.execute(new RequestRunner(socketListener, sock));
+        }
         
-        threadPool.execute(new RequestRunner(socketListener, sslSocket));
     }
 
     private static class RequestRunner implements Runnable {
 
         private final Logger m_log = LoggerFactory.getLogger(getClass());
-        private final SSLSocket sock;
+        private final Socket sock;
         private final OfferAnswerListener socketListener;
 
         public RequestRunner(final OfferAnswerListener socketListener,
-                final SSLSocket sock) {
+                final Socket sock) {
             this.socketListener = socketListener;
             this.sock = sock;
         }
