@@ -39,14 +39,14 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     StunAddressProvider {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final AtomicReference<Socket> m_socketRef = 
+    private final AtomicReference<Socket> socketRef = 
         new AtomicReference<Socket>();
-    private final boolean m_controlling;
-    private final OfferAnswerListener m_offerAnswerListener;
+    private final boolean controlling;
+    private final OfferAnswerListener offerAnswerListener;
     
-    private final MappedTcpOffererServerPool m_offererServer;
-    private PortMappedServerSocket m_portMappedServerSocket;
-    private final MappedServerSocket m_mappedServerSocket;
+    private final MappedTcpOffererServerPool offererServer;
+    private PortMappedServerSocket portMappedServerSocket;
+    private final MappedServerSocket mappedServerSocket;
     private final SocketFactory socketFactory;
 
     /**
@@ -64,13 +64,13 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     public TcpOfferAnswer(
         final OfferAnswerListener offerAnswerListener,
         final boolean controlling, 
-        final MappedTcpAnswererServer answererServer, 
+        final MappedServerSocket answererServer, 
         final CandidateProvider<InetSocketAddress> stunCandidateProvider,
         final MappedTcpOffererServerPool offererServer,
         final SocketFactory socketFactory) {
-        this.m_offerAnswerListener = offerAnswerListener;
-        this.m_controlling = controlling;
-        this.m_offererServer = offererServer;
+        this.offerAnswerListener = offerAnswerListener;
+        this.controlling = controlling;
+        this.offererServer = offererServer;
         this.socketFactory = socketFactory;
         
         // We only start another server socket on the controlling candidate
@@ -80,8 +80,8 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         if (controlling || answererServer == null) {
             log.info("Using pooled offerer server");
             try {
-                this.m_portMappedServerSocket = m_offererServer.serverSocket();
-                this.m_mappedServerSocket = m_portMappedServerSocket;
+                this.portMappedServerSocket = offererServer.serverSocket();
+                this.mappedServerSocket = portMappedServerSocket;
 
                 // Accept incoming sockets on a listening thread.
                 listen();
@@ -92,13 +92,13 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             }
         } else {
             log.info("Using mapped server socket");
-            this.m_mappedServerSocket = answererServer;
+            this.mappedServerSocket = answererServer;
         }
     }
 
     public void close() {
         log.info("Closing!!");
-        final Socket sock = m_socketRef.get();
+        final Socket sock = socketRef.get();
         if (sock != null) {
             try {
                 sock.close();
@@ -117,7 +117,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     }
 
     private void listen() {
-        final ServerSocket ss = this.m_portMappedServerSocket.getServerSocket();
+        final ServerSocket ss = this.portMappedServerSocket.getServerSocket();
         final InetSocketAddress socketAddress = 
             (InetSocketAddress) ss.getLocalSocketAddress();
 
@@ -144,7 +144,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
 
                     log.info("GOT INCOMING SOCKET FROM "+
                         sock.getRemoteSocketAddress() +"!! Controlling: {}",
-                        m_controlling);
+                        controlling);
                     sock.setKeepAlive(true);
                     onSocket(sock);
                 } catch (final IOException e) {
@@ -158,7 +158,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                     // matter what actual processing happened with the socket
                     // just received, as that's just an independent Socket, 
                     // while the ServerSocket is available for more connections.
-                    m_offererServer.addServerSocket(m_portMappedServerSocket);
+                    offererServer.addServerSocket(portMappedServerSocket);
                 }
             }
         };
@@ -192,7 +192,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
 
     public void processAnswer(final ByteBuffer answer) {
         // We don't need to do any processing if we've already got the socket.
-        if (this.m_socketRef.get() != null) {
+        if (this.socketRef.get() != null) {
             log.info("Controlling side already has a socket -- "
                     + "ignoring answer.");
             return;
@@ -205,7 +205,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         final Collection<IceCandidate> remoteCandidates;
         try {
             // Note the second argument doesn't matter at all.
-            remoteCandidates = decoder.decode(encodedCandidates, m_controlling);
+            remoteCandidates = decoder.decode(encodedCandidates, controlling);
         } catch (final IOException e) {
             log.warn("Could not process remote candidates", e);
             return;
@@ -280,10 +280,10 @@ public class TcpOfferAnswer implements IceOfferAnswer,
      * @param sock The socket to process;
      */
     private void onSocket(final Socket sock) {
-        if (m_socketRef.compareAndSet(null, sock)) {
+        if (socketRef.compareAndSet(null, sock)) {
             log.info("Notifying listener of TCP socket: {}", 
-                this.m_offerAnswerListener);
-            this.m_offerAnswerListener.onTcpSocket(sock);
+                this.offerAnswerListener);
+            this.offerAnswerListener.onTcpSocket(sock);
         }
 
         else {
@@ -294,7 +294,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             // sockets in rapid succession, causing both sides to close 
             // the second socket they receive, ultimately closing all 
             // successful sockets!!
-            if (this.m_controlling) {
+            if (this.controlling) {
                 log.info("Closing on controlling candidate");
                 try {
                     sock.close();
@@ -306,7 +306,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
 
                 // We also need to notify the listener a new socket has come in.
                 // The controlling side will take care of closing it.
-                this.m_offerAnswerListener.onTcpSocket(sock);
+                this.offerAnswerListener.onTcpSocket(sock);
             }
         }
     }
@@ -328,7 +328,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         final InetSocketAddress hostAddress = getHostAddress();
 
         final IceCandidate hostCandidate = new IceTcpHostPassiveCandidate(
-            hostAddress, this.m_controlling);
+            hostAddress, this.controlling);
         candidates.add(hostCandidate);
 
         final PublicIp ip = new PublicIpAddress();
@@ -340,7 +340,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
         // host port with UPnP. This is not a simultaneous open candidate,
         // although there may be cases where this actually succeeds when UPnP
         // mapping failed due to simultaneous open behavior on the NAT.
-        if (publicIp != null && m_mappedServerSocket.isPortMapped()) {
+        if (publicIp != null && mappedServerSocket.isPortMapped()) {
             log.info("Adding public TCP address");
             // We're not completely sure if the port has been mapped yet at
             // this point. We know there hasn't been an error, but that's 
@@ -352,21 +352,21 @@ public class TcpOfferAnswer implements IceOfferAnswer,
             // requested. That mapping should theoretically work by the time
             // the external side tries to use it.
             final InetSocketAddress publicHostAddress = new InetSocketAddress(
-                publicIp, m_mappedServerSocket.getMappedPort());
+                publicIp, mappedServerSocket.getMappedPort());
 
             final IceCandidate publicHostCandidate = 
                 new IceTcpHostPassiveCandidate(publicHostAddress, 
-                    this.m_controlling);
+                    this.controlling);
             candidates.add(publicHostCandidate);
         } else {
             log.info("Not adding public candidate. PA: "+publicIp + 
-                " mapped: " + m_mappedServerSocket.isPortMapped());
+                " mapped: " + mappedServerSocket.isPortMapped());
         }
         return candidates;
     }
 
     public InetSocketAddress getHostAddress() {
-        return m_mappedServerSocket.getHostAddress();
+        return mappedServerSocket.getHostAddress();
     }
 
     public InetSocketAddress getRelayAddress() {

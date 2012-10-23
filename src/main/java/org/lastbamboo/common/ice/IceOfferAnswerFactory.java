@@ -30,7 +30,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     private final IceMediaStreamFactory m_mediaStreamFactory;
     private final UdpSocketFactory m_udpSocketFactory;
     private final CandidateProvider<InetSocketAddress> m_turnCandidateProvider;
-    private final MappedTcpAnswererServer m_answererServer;
+    private final MappedServerSocket m_answererServer;
 
     private final TurnClientListener m_turnClientListener;
 
@@ -59,7 +59,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
             final IceMediaStreamFactory mediaStreamFactory,
             final UdpSocketFactory udpSocketFactory,
             final CandidateProvider<InetSocketAddress> turnCandidateProvider,
-            final MappedTcpAnswererServer answererServer,
+            final MappedServerSocket answererServer,
             final TurnClientListener turnClientListener, 
             final CandidateProvider<InetSocketAddress> stunCandidateProvider, 
             final MappedTcpOffererServerPool offererServer,
