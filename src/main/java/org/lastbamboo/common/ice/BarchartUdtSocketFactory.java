@@ -31,11 +31,15 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final ExecutorService threadPool = 
+    private static final ExecutorService threadPool = 
         Executors.newCachedThreadPool(new ThreadFactory() {
+            private volatile int count = 0;
+            
+            @Override
             public Thread newThread(final Runnable r) {
-                final Thread t = new Thread(r, "UDT-Socket-Accept-Thread");
+                final Thread t = new Thread(r, "UDT-Socket-Thread-"+count);
                 t.setDaemon(true);
+                count++;
                 return t;
             }
         });
@@ -46,6 +50,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
         this.sslSocketFactory = sslSocketFactory;
     }
 
+    @Override
     public void newSocket(final IoSession session, final boolean controlling,
             final OfferAnswerListener socketListener,
             final IceStunUdpPeer stunUdpPeer,
@@ -87,6 +92,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             // making sure we wait until the other side is ready.
             log.debug("Creating UDT socket on CONTROLLED agent.");
             final Runnable clientRunner = new Runnable() {
+                @Override
                 public void run() {
                     try {
                         // openClientSocket(session, socketListener);
@@ -96,11 +102,13 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
                     }
                 }
             };
-
+            /*
             final Thread udtClientThread = new Thread(clientRunner,
                     "UDT-Controlled-Thread");
             udtClientThread.setDaemon(true);
             udtClientThread.start();
+            */
+            threadPool.execute(clientRunner);
         } else {
             // This actually happens second in the ICE process -- the
             // controlled agent is notified to start sending media first!
@@ -111,6 +119,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             // IoSession thread and won't receive messages, so we
             // need to start a new thread.
             final Runnable socketRunner = new Runnable() {
+                @Override
                 public void run() {
                     try {
                         // openServerSocket(session, socketListener);
@@ -120,10 +129,13 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
                     }
                 }
             };
+            /*
             final Thread serverThread = new Thread(socketRunner,
                     "UDT-Controlling-Thread");
             serverThread.setDaemon(true);
             serverThread.start();
+            */
+            threadPool.execute(socketRunner);
         }
     }
 
@@ -191,7 +203,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
 
     private static class RequestRunner implements Runnable {
 
-        private final Logger m_log = LoggerFactory.getLogger(getClass());
+        private final Logger localLog = LoggerFactory.getLogger(getClass());
         private final Socket sock;
         private final OfferAnswerListener socketListener;
 
@@ -201,8 +213,9 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             this.sock = sock;
         }
 
+        @Override
         public void run() {
-            m_log.info("NOTIFYING SOCKET LISTENER!!");
+            localLog.info("NOTIFYING SOCKET LISTENER!!");
             socketListener.onUdpSocket(sock);
         }
     }

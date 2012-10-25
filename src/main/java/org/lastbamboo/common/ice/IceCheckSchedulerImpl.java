@@ -29,7 +29,20 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
     
     private final Object m_queueLock = new Object();
     
-    private final ExecutorService threadPool;
+    private static final ExecutorService threadPool = 
+        Executors.newCachedThreadPool(new ThreadFactory() {
+        private volatile int threadNumber = 0;
+        
+        @Override
+        public Thread newThread(final Runnable r) {
+            final Thread t = 
+                new Thread(r, "IceCheckSchedulerImpl-Timer-ThreadPool-"+threadNumber);
+            t.setDaemon(true);
+            threadNumber++;
+            return t;
+        }
+    });
+    
     private final String timerName;
 
     /**
@@ -56,16 +69,6 @@ public class IceCheckSchedulerImpl implements IceCheckScheduler {
         }
         this.timerName = offererOrAnswerer+"-Timer";
         this.m_timer = new Timer(this.timerName, true);
-        this.threadPool = Executors.newCachedThreadPool(new ThreadFactory() {
-            private volatile int threadNumber = 0;
-            public Thread newThread(final Runnable r) {
-                final Thread t = 
-                    new Thread(r, offererOrAnswerer+"-Timer-ThreadPool-"+threadNumber);
-                t.setDaemon(true);
-                threadNumber++;
-                return t;
-            }
-        });
     }
 
     public void scheduleChecks() {

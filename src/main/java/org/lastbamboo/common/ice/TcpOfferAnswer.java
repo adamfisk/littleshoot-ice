@@ -8,6 +8,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.SocketFactory;
@@ -48,6 +51,20 @@ public class TcpOfferAnswer implements IceOfferAnswer,
     private PortMappedServerSocket portMappedServerSocket;
     private final MappedServerSocket mappedServerSocket;
     private final SocketFactory socketFactory;
+    
+    
+    private static final ExecutorService tcpIceServerThreadPool = 
+        Executors.newCachedThreadPool(new ThreadFactory() {
+            private int count = 0;
+            @Override
+            public Thread newThread(Runnable r) {
+                final Thread t = new Thread(r, 
+                    "TCP-Ice-Server-Thread-" + hashCode() +"-"+count);
+                t.setDaemon(true);
+                count++;
+                return t;
+            }
+        });
 
     /**
      * Creates a new TCP {@link OfferAnswer} class for processing offers and
@@ -162,10 +179,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 }
             }
         };
-        final Thread serverThread = new Thread(serverRunner,
-            "TCP-Ice-Server-Thread-" + hashCode() +": " + socketAddress);
-        serverThread.setDaemon(true);
-        serverThread.start();
+        tcpIceServerThreadPool.execute(serverRunner);
     }
 
     public byte[] generateAnswer() {
@@ -264,11 +278,15 @@ public class TcpOfferAnswer implements IceOfferAnswer,
                 }
             }
         };
+        /*
         final Thread connectorThread = new Thread(threadRunner,
                 "ICE-TCP-Connect-For-Candidate-" + candidate + "-"+
                 threadRunner.hashCode());
         connectorThread.setDaemon(true);
         connectorThread.start();
+        */
+        
+        tcpIceServerThreadPool.execute(threadRunner);
         return null;
     }
 
