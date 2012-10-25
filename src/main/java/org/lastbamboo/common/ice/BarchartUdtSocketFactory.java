@@ -164,7 +164,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             final SSLSocket sslSocket =
                 (SSLSocket)((SSLSocketFactory)sslSocketFactory).createSocket(clientSocket, 
                     clientSocket.getInetAddress().getHostAddress(), 
-                    clientSocket.getPort(), false);
+                    clientSocket.getPort(), true);
             
             sslSocket.setUseClientMode(true);
             sslSocket.startHandshake();
@@ -191,7 +191,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
             final SSLSocket sslSocket =
                 (SSLSocket)((SSLSocketFactory)this.sslSocketFactory).createSocket(sock,
                     sock.getInetAddress().getHostAddress(),
-                    sock.getPort(), false);
+                    sock.getPort(), true);
             sslSocket.setUseClientMode(false);
             sslSocket.startHandshake();
             threadPool.execute(new RequestRunner(socketListener, sslSocket));
