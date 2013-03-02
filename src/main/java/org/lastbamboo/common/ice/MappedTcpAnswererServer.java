@@ -3,6 +3,7 @@ package org.lastbamboo.common.ice;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 
 import org.lastbamboo.common.portmapping.NatPmpService;
 import org.lastbamboo.common.portmapping.PortMapListener;
@@ -40,15 +41,20 @@ public class MappedTcpAnswererServer implements PortMapListener,
      * @throws IOException If there's an error starting the server.
      */
     public MappedTcpAnswererServer(final NatPmpService natPmpService,
-        final UpnpService upnpService, final InetSocketAddress serverAddress)
-        throws IOException {
+        final UpnpService upnpService, final InetSocketAddress serverAddress) {
         if (serverAddress.getPort() == 0) {
             throw new IllegalArgumentException("Cannot map ephemeral port");
         }
 
         final int port = serverAddress.getPort();
         
-        final InetAddress local = NetworkUtils.getLocalHost();
+        final InetAddress local;
+        try {
+            local = NetworkUtils.getLocalHost();
+        } catch (final UnknownHostException e) {
+            log.error("Could not get localhost?", e);
+            throw new Error("Could not get localhost address!", e);
+        }
         this.serverAddress = new InetSocketAddress(local, port);
         
         // We just set the port to the local port for now, as that's the one
@@ -56,7 +62,7 @@ public class MappedTcpAnswererServer implements PortMapListener,
         // different port, we'll get notified and will reset it.
         this.externalPort = port;
         if (!NetworkUtils.isPublicAddress(local)) {
-            log.info("Mapping port: " + port);
+            log.debug("Mapping port: {}", port);
             upnpService.addUpnpMapping(PortMappingProtocol.TCP, port, 
                 port, MappedTcpAnswererServer.this);
             natPmpService.addNatPmpMapping(PortMappingProtocol.TCP, port,
