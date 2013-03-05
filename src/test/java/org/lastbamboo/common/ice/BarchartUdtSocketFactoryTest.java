@@ -5,7 +5,6 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.SocketAddress;
 
-import org.junit.Test;
 import org.lastbamboo.common.ice.stubs.IceAgentStub;
 import org.lastbamboo.common.ice.transport.IceConnector;
 import org.lastbamboo.common.ice.transport.IceUdpConnector;

@@ -21,12 +21,13 @@ import org.slf4j.LoggerFactory;
  * language that sends all the voice data to LittleShoot through a local 
  * socket.
  */
-public class RawUdpSocketFactory implements UdpSocketFactory {
+public class RawUdpSocketFactory implements UdpSocketFactory<Socket> {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public void newSocket(final IoSession session, final boolean controlling,
-            final OfferAnswerListener socketListener,
+    @Override
+    public void newEndpoint(final IoSession session, final boolean controlling,
+            final OfferAnswerListener<Socket> socketListener,
             final IceStunUdpPeer stunUdpPeer, final IceAgent iceAgent) {
         log.info("Creating new raw UDP Socket");
         if (session == null) {

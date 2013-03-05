@@ -49,7 +49,7 @@ public class IceAgentImplTest {
 
         final AtomicBoolean answererCompleted = new AtomicBoolean(false);
         final AtomicBoolean offererCompleted = new AtomicBoolean(false);
-        final OfferAnswerListener offererStateListener = new OfferAnswerListener() {
+        final OfferAnswerListener<Socket> offererStateListener = new OfferAnswerListener<Socket>() {
 
             public void onOfferAnswerFailed(final OfferAnswer mediaOfferAnswer) {
                 synchronized (offererCompleted) {
@@ -71,7 +71,7 @@ public class IceAgentImplTest {
                 }
             }
         };
-        final OfferAnswerListener answererStateListener = new OfferAnswerListener() {
+        final OfferAnswerListener<Socket> answererStateListener = new OfferAnswerListener<Socket>() {
             public void onOfferAnswerFailed(final OfferAnswer mediaOfferAnswer) {
                 synchronized (answererCompleted) {
                     answererCompleted.notifyAll();
@@ -148,11 +148,11 @@ public class IceAgentImplTest {
             }
         };
 
-        final UdpSocketFactory udpSocketFactory = new UdpSocketFactory() {
+        final UdpSocketFactory<Socket> udpSocketFactory = new UdpSocketFactory<Socket>() {
 
-            public void newSocket(final IoSession session,
+            public void newEndpoint(final IoSession session,
                     final boolean controlling,
-                    final OfferAnswerListener offerAnswerListener,
+                    final OfferAnswerListener<Socket> offerAnswerListener,
                     final IceStunUdpPeer stunUdpPeer, final IceAgent iceAgent) {
                 offerAnswerListener.onUdpSocket(new Socket());
             }

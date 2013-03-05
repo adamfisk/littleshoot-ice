@@ -25,7 +25,7 @@ import udt.UDTSocket;
 /**
  * Factory for creating UDT sockets.
  */
-public class UdtSocketFactory implements UdpSocketFactory {
+public class UdtSocketFactory implements UdpSocketFactory<Socket> {
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -41,8 +41,9 @@ public class UdtSocketFactory implements UdpSocketFactory {
             }
         });
     
-    public void newSocket(final IoSession session, final boolean controlling,
-        final OfferAnswerListener socketListener, 
+    @Override
+    public void newEndpoint(final IoSession session, final boolean controlling,
+        final OfferAnswerListener<Socket> socketListener, 
         final IceStunUdpPeer stunUdpPeer, final IceAgent iceAgent) {
         if (session == null) {
             log.error("Null session: {}", session);
@@ -122,7 +123,7 @@ public class UdtSocketFactory implements UdpSocketFactory {
     }
 
     protected void openClientSocket(final IoSession session,
-            final OfferAnswerListener socketListener)
+            final OfferAnswerListener<Socket> socketListener)
             throws InterruptedException, IOException {
         final InetSocketAddress local = (InetSocketAddress) session
                 .getLocalAddress();
@@ -148,7 +149,7 @@ public class UdtSocketFactory implements UdpSocketFactory {
     }
 
     protected void openServerSocket(final IoSession session,
-            final OfferAnswerListener socketListener)
+            final OfferAnswerListener<Socket> socketListener)
             throws InterruptedException, IOException {
         final InetSocketAddress local = (InetSocketAddress) session
                 .getLocalAddress();
@@ -166,9 +167,9 @@ public class UdtSocketFactory implements UdpSocketFactory {
 
         private final Logger log = LoggerFactory.getLogger(getClass());
         private final UDTSocket sock;
-        private final OfferAnswerListener socketListener;
+        private final OfferAnswerListener<Socket> socketListener;
 
-        public RequestRunner(final OfferAnswerListener socketListener,
+        public RequestRunner(final OfferAnswerListener<Socket> socketListener,
                 final UDTSocket sock) {
             this.socketListener = socketListener;
             this.sock = sock;

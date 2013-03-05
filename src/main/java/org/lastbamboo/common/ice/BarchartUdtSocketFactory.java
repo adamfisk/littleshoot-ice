@@ -27,7 +27,7 @@ import com.barchart.udt.net.NetServerSocketUDT;
 /**
  * Factory for creating UDT sockets.
  */
-public class BarchartUdtSocketFactory implements UdpSocketFactory {
+public class BarchartUdtSocketFactory implements UdpSocketFactory<Socket> {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -51,8 +51,8 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
     }
 
     @Override
-    public void newSocket(final IoSession session, final boolean controlling,
-            final OfferAnswerListener socketListener,
+    public void newEndpoint(final IoSession session, final boolean controlling,
+            final OfferAnswerListener<Socket> socketListener,
             final IceStunUdpPeer stunUdpPeer,
             final IceAgent iceAgent) {
         log.info("Creating new Barchart UDT Socket");
@@ -140,7 +140,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
     }
 
     protected void openClientSocket(final IoSession session,
-        final OfferAnswerListener socketListener) throws IOException {
+        final OfferAnswerListener<Socket> socketListener) throws IOException {
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
         final InetSocketAddress remote = 
@@ -177,7 +177,7 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
     }
 
     protected void openServerSocket(final IoSession session,
-            final OfferAnswerListener socketListener) throws IOException {
+            final OfferAnswerListener<Socket> socketListener) throws IOException {
         final InetSocketAddress local = 
             (InetSocketAddress) session.getLocalAddress();
 
@@ -205,9 +205,9 @@ public class BarchartUdtSocketFactory implements UdpSocketFactory {
 
         private final Logger localLog = LoggerFactory.getLogger(getClass());
         private final Socket sock;
-        private final OfferAnswerListener socketListener;
+        private final OfferAnswerListener<Socket> socketListener;
 
-        public RequestRunner(final OfferAnswerListener socketListener,
+        public RequestRunner(final OfferAnswerListener<Socket> socketListener,
                 final Socket sock) {
             this.socketListener = socketListener;
             this.sock = sock;

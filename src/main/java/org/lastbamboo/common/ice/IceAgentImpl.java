@@ -103,11 +103,11 @@ public class IceAgentImpl implements IceAgent {
             final IceCandidatePair pair = getNominatedPair();
             final IoSession session = pair.getIoSession();
             if (this.iceMediaStreamDesc.isReliable()) {
-                this.reliableUdpSocketFactory.newSocket(session, isControlling(),
+                this.reliableUdpSocketFactory.newEndpoint(session, isControlling(),
                     this.offerAnswerListener, this.stunUdpPeer, this);
             } else {
                 // TODO: This should clearly link to an unreliable version.
-                this.unreliableUdpSocketFactory.newSocket(session, 
+                this.unreliableUdpSocketFactory.newEndpoint(session, 
                     isControlling(), this.offerAnswerListener, 
                     this.stunUdpPeer, this);
             }
