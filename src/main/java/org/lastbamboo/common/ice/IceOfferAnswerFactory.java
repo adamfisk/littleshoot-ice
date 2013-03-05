@@ -23,12 +23,12 @@ import org.slf4j.LoggerFactory;
 /**
  * Class for creating ICE agents that process ICE offers and answers.
  */
-public class IceOfferAnswerFactory implements OfferAnswerFactory {
+public class IceOfferAnswerFactory<T> implements OfferAnswerFactory<T> {
 
     private final Logger m_log = LoggerFactory.getLogger(getClass());
     
     private final IceMediaStreamFactory m_mediaStreamFactory;
-    private final UdpSocketFactory m_udpSocketFactory;
+    private final UdpSocketFactory<T> m_udpSocketFactory;
     private final CandidateProvider<InetSocketAddress> m_turnCandidateProvider;
     private final MappedServerSocket m_answererServer;
 
@@ -57,7 +57,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
      */
     public IceOfferAnswerFactory(
             final IceMediaStreamFactory mediaStreamFactory,
-            final UdpSocketFactory udpSocketFactory,
+            final UdpSocketFactory<T> udpSocketFactory,
             final CandidateProvider<InetSocketAddress> turnCandidateProvider,
             final MappedServerSocket answererServer,
             final TurnClientListener turnClientListener, 
@@ -76,7 +76,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
 
     @Override
     public OfferAnswer createAnswerer(
-            final OfferAnswerListener offerAnswerListener, 
+            final OfferAnswerListener<T> offerAnswerListener, 
             final boolean useRelay)
             throws OfferAnswerConnectException {
         return createOfferAnswer(false, offerAnswerListener, 
@@ -86,14 +86,14 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
 
     @Override
     public OfferAnswer createOfferer(
-            final OfferAnswerListener offerAnswerListener,
+            final OfferAnswerListener<T> offerAnswerListener,
             final IceMediaStreamDesc desc)
             throws OfferAnswerConnectException {
         return createOfferAnswer(true, offerAnswerListener, desc);
     }
 
     private OfferAnswer createOfferAnswer(final boolean controlling,
-            final OfferAnswerListener offerAnswerListener,
+            final OfferAnswerListener<T> offerAnswerListener,
             final IceMediaStreamDesc mediaDesc)
             throws OfferAnswerConnectException {
         final IceOfferAnswer turnOfferAnswer = newTurnOfferAnswer(controlling,
@@ -188,7 +188,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     }
     
     private IceOfferAnswer newTcpOfferAnswer(
-            final OfferAnswerListener offerAnswerListener,
+            final OfferAnswerListener<T> offerAnswerListener,
             final boolean controlling, final IceMediaStreamDesc mediaDesc) {
         if (mediaDesc.isTcp()) {
             m_log.info("Creating new TCP offer answer");
@@ -201,7 +201,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
     }
 
     private IceOfferAnswer newUdpOfferAnswer(final boolean controlling,
-            final OfferAnswerListener offerAnswerListener,
+            final OfferAnswerListener<T> offerAnswerListener,
             final IceMediaStreamDesc mediaDesc)
             throws OfferAnswerConnectException {
         if (mediaDesc.isUdp()) {
@@ -249,7 +249,7 @@ public class IceOfferAnswerFactory implements OfferAnswerFactory {
      * @return The offer/answer for TURN.
      */
     private IceOfferAnswer newTurnOfferAnswer(final boolean controlling,
-            final OfferAnswerListener offerAnswerListener,
+            final OfferAnswerListener<T> offerAnswerListener,
             final IceMediaStreamDesc mediaDesc) {
         if (!mediaDesc.isUseRelay()) {
             return null;
