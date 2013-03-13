@@ -38,14 +38,14 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link OfferAnswer} handler for TCP connections.
  */
-public class TcpOfferAnswer implements IceOfferAnswer, 
+public class TcpOfferAnswer<T> implements IceOfferAnswer, 
     StunAddressProvider {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final AtomicReference<Socket> socketRef = 
         new AtomicReference<Socket>();
     private final boolean controlling;
-    private final OfferAnswerListener offerAnswerListener;
+    private final OfferAnswerListener<T> offerAnswerListener;
     
     private final MappedTcpOffererServerPool offererServer;
     private PortMappedServerSocket portMappedServerSocket;
@@ -79,7 +79,7 @@ public class TcpOfferAnswer implements IceOfferAnswer,
      * @param stunCandidateProvider Provider for STUN addresses.
      */
     public TcpOfferAnswer(
-        final OfferAnswerListener offerAnswerListener,
+        final OfferAnswerListener<T> offerAnswerListener,
         final boolean controlling, 
         final MappedServerSocket answererServer, 
         final CandidateProvider<InetSocketAddress> stunCandidateProvider,

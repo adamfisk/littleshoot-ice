@@ -192,7 +192,7 @@ public class IceOfferAnswerFactory<T> implements OfferAnswerFactory<T> {
             final boolean controlling, final IceMediaStreamDesc mediaDesc) {
         if (mediaDesc.isTcp()) {
             m_log.info("Creating new TCP offer answer");
-            return new TcpOfferAnswer(offerAnswerListener,
+            return new TcpOfferAnswer<T>(offerAnswerListener,
                 controlling, m_answererServer, this.m_stunCandidateProvider, 
                 this.m_offererServer, m_socketFactory);
         } else {
