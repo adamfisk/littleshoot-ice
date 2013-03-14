@@ -53,6 +53,7 @@ public class IceUdpConnector implements IceConnector, IoServiceListener {
         m_controlling = controlling;
         this.m_connector = new DatagramConnector();
         
+        // The following all used to take place within the connect method...
         final DatagramConnectorConfig cfg = this.m_connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
 
@@ -65,7 +66,7 @@ public class IceUdpConnector implements IceConnector, IoServiceListener {
                 this.m_demuxingCodecFactory);
         cfg.setThreadModel(threadModel);
 
-        m_log.warn("ABOUT TO SET demuxFilter:\n"+ThreadUtils.dumpStack());
+        m_log.debug("Setting demuxFilter...");
         this.m_connector.getFilterChain()
                 .addLast("demuxFilter", demuxingFilter);
         
