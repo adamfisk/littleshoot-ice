@@ -305,7 +305,7 @@ public class TcpOfferAnswer<T> implements IceOfferAnswer,
         }
 
         else {
-            log.info("Socket already exists! Ignoring second");
+            log.debug("Socket already exists! Ignoring second");
             // If a socket already existed, we close the socket *only if we're
             // the controlling peer*. Otherwise, it's possible for there to be 
             // a race condition where each side gets both possible successful 
@@ -313,14 +313,14 @@ public class TcpOfferAnswer<T> implements IceOfferAnswer,
             // the second socket they receive, ultimately closing all 
             // successful sockets!!
             if (this.controlling) {
-                log.info("Closing on controlling candidate");
+                log.debug("Closing on controlling candidate");
                 try {
                     sock.close();
                 } catch (final IOException e) {
                     log.error("Could not close socket", e);
                 }
             } else {
-                log.info("Not closing on controlled candidate");
+                log.debug("Not closing on controlled candidate");
 
                 // We also need to notify the listener a new socket has come in.
                 // The controlling side will take care of closing it.

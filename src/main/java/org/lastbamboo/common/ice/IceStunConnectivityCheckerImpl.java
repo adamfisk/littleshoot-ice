@@ -39,7 +39,7 @@ public final class IceStunConnectivityCheckerImpl<T>
     
     private final IceAgent m_agent;
 
-    private final IceMediaStream m_iceMediaStream;
+    //private final IceMediaStream m_iceMediaStream;
 
     private final IoSession m_ioSession;
     
@@ -67,8 +67,8 @@ public final class IceStunConnectivityCheckerImpl<T>
         {
         super (transactionTracker);
         m_agent = agent;
-        m_iceMediaStream = (IceMediaStream) session.getAttribute(
-            IceMediaStream.class.getSimpleName());
+        //m_iceMediaStream = (IceMediaStream) session.getAttribute(
+         //   IceMediaStream.class.getSimpleName());
         m_ioSession = session;
         m_bindingRequestTracker = bindingRequestTracker;
         m_candidatePairFactory = 
@@ -207,10 +207,10 @@ public final class IceStunConnectivityCheckerImpl<T>
         final TransportType type = this.m_ioSession.getTransportType();
         final boolean isUdp = type.isConnectionless();
         final IceCandidate remoteCandidate;
-        if (!this.m_iceMediaStream.hasRemoteCandidate(remoteAddress, isUdp))
+        if (!iceMediaStream().hasRemoteCandidate(remoteAddress, isUdp))
             {
             m_log.debug("New remote candidate...");
-            remoteCandidate = this.m_iceMediaStream.addRemotePeerReflexive(
+            remoteCandidate = iceMediaStream().addRemotePeerReflexive(
                 binding, localAddress, remoteAddress, isUdp);
             m_log.debug("Added peer reflexive remote candidate: {}", 
                 remoteCandidate);
@@ -218,11 +218,11 @@ public final class IceStunConnectivityCheckerImpl<T>
         else
             {
             remoteCandidate = 
-                this.m_iceMediaStream.getRemoteCandidate(remoteAddress, isUdp);
+                iceMediaStream().getRemoteCandidate(remoteAddress, isUdp);
             }
         
         final IceCandidate localCandidate = 
-            this.m_iceMediaStream.getLocalCandidate(localAddress, isUdp);
+            iceMediaStream().getLocalCandidate(localAddress, isUdp);
         
         m_log.debug("Using existing local candidate: {}", localCandidate);
         
@@ -243,7 +243,7 @@ public final class IceStunConnectivityCheckerImpl<T>
         
         // 7.2.1.4. Triggered Checks
         final IceCandidatePair existingPair = 
-            this.m_iceMediaStream.getPair(localAddress, remoteAddress, 
+            iceMediaStream().getPair(localAddress, remoteAddress, 
                 localCandidate.isUdp());
         final IceCandidatePair computedPair;
         if (existingPair != null)
@@ -268,7 +268,7 @@ public final class IceStunConnectivityCheckerImpl<T>
                 case FROZEN:
                     m_log.debug("Adding triggered check for previously " +
                         "frozen or waiting pair:\n{}",existingPair);
-                    this.m_iceMediaStream.addTriggeredPair(existingPair);
+                    iceMediaStream().addTriggeredPair(existingPair);
                     break;
                 case IN_PROGRESS:
                     // We need to cancel the in-progress transaction.  
@@ -285,13 +285,13 @@ public final class IceStunConnectivityCheckerImpl<T>
                 
                     // Add the pair to the triggered check queue.
                     existingPair.setState(IceCandidatePairState.WAITING);
-                    this.m_iceMediaStream.addTriggeredPair(existingPair);
+                    iceMediaStream().addTriggeredPair(existingPair);
                     */
                     m_log.info("Pair is IN PROGRESS...nominating on success");
                     break;
                 case FAILED:
                     existingPair.setState(IceCandidatePairState.WAITING);
-                    this.m_iceMediaStream.addTriggeredPair(existingPair);
+                    iceMediaStream().addTriggeredPair(existingPair);
                     break;
                 case SUCCEEDED:
                     // Nothing more to do.
@@ -328,9 +328,9 @@ public final class IceStunConnectivityCheckerImpl<T>
             
             // Add the pair the normal check list, set its state to waiting,
             // and add a triggered check.
-            this.m_iceMediaStream.addPair(computedPair);
+            iceMediaStream().addPair(computedPair);
             computedPair.setState(IceCandidatePairState.WAITING);
-            this.m_iceMediaStream.addTriggeredPair(computedPair);
+            iceMediaStream().addTriggeredPair(computedPair);
             
             // TODO: We should be handling the username fragment and
             // password for the triggered check.
@@ -364,8 +364,7 @@ public final class IceStunConnectivityCheckerImpl<T>
                     // the first to use a nominated pair for media, as the
                     // controlling agent won't use the nominated pair until
                     // it receives the successful binding response.
-                    m_agent.onNominatedPair(computedPair, 
-                        this.m_iceMediaStream);
+                    m_agent.onNominatedPair(computedPair, iceMediaStream());
                     break;
                 case IN_PROGRESS:
                     // Section 7.2.1.5:
@@ -389,6 +388,11 @@ public final class IceStunConnectivityCheckerImpl<T>
                 }
             }
         }
+
+    private IceMediaStream iceMediaStream() {
+        return (IceMediaStream) m_ioSession.getAttribute(
+                IceMediaStream.class.getSimpleName());
+    }
 
     private boolean fromOurselves(final IceAgent agent, 
         final BindingRequest request)
