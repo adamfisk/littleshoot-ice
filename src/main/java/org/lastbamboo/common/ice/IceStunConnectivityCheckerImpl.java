@@ -390,8 +390,15 @@ public final class IceStunConnectivityCheckerImpl<T>
         }
 
     private IceMediaStream iceMediaStream() {
-        return (IceMediaStream) m_ioSession.getAttribute(
+        final IceMediaStream mediaStream = 
+            (IceMediaStream) m_ioSession.getAttribute(
                 IceMediaStream.class.getSimpleName());
+        if (mediaStream == null) {
+            throw new NullPointerException(
+                "No media stream set on:" + m_ioSession+" with hash "+
+                        m_ioSession.hashCode());
+        }
+        return mediaStream;
     }
 
     private boolean fromOurselves(final IceAgent agent, 
