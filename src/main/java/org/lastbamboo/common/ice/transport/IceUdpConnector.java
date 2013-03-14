@@ -18,6 +18,7 @@ import org.littleshoot.mina.filter.codec.ProtocolCodecFactory;
 import org.littleshoot.mina.filter.codec.ProtocolCodecFilter;
 import org.littleshoot.mina.transport.socket.nio.DatagramConnector;
 import org.littleshoot.mina.transport.socket.nio.DatagramConnectorConfig;
+import org.littleshoot.util.ThreadUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,16 +52,7 @@ public class IceUdpConnector implements IceConnector, IoServiceListener {
         m_demuxingIoHandler = demuxingIoHandler;
         m_controlling = controlling;
         this.m_connector = new DatagramConnector();
-        this.m_connector.addListener(this);
-    }
-
-    public IoSession connect(final InetSocketAddress localAddress,
-            final InetSocketAddress remoteAddress) {
-        synchronized (this.m_serviceListeners) {
-            for (final IoServiceListener listener : this.m_serviceListeners) {
-                this.m_connector.addListener(listener);
-            }
-        }
+        
         final DatagramConnectorConfig cfg = this.m_connector.getDefaultConfig();
         cfg.getSessionConfig().setReuseAddress(true);
 
@@ -73,8 +65,21 @@ public class IceUdpConnector implements IceConnector, IoServiceListener {
                 this.m_demuxingCodecFactory);
         cfg.setThreadModel(threadModel);
 
+        m_log.warn("ABOUT TO SET demuxFilter:\n"+ThreadUtils.dumpStack());
         this.m_connector.getFilterChain()
                 .addLast("demuxFilter", demuxingFilter);
+        
+        this.m_connector.addListener(this);
+        
+    }
+
+    public IoSession connect(final InetSocketAddress localAddress,
+            final InetSocketAddress remoteAddress) {
+        synchronized (this.m_serviceListeners) {
+            for (final IoServiceListener listener : this.m_serviceListeners) {
+                this.m_connector.addListener(listener);
+            }
+        }
 
         //This is where we need to unbind from -- connecting both to local network host and to remote -- need to keep track of all these sessions and drop 'em!!
         m_log.debug("Connecting from " + localAddress + " to " + remoteAddress);
