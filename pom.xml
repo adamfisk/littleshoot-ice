@@ -3,14 +3,14 @@
     <groupId>org.littleshoot</groupId>
     <artifactId>littleshoot-ice</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
     <name>Interactive Connectivity Establishment (ICE) Protocol for the LittleShoot P2P Toolkit</name>
     <url>http://www.littleshoot.org</url>
 
     <parent>
         <groupId>org.littleshoot</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.3</version>
     </parent>
 
     <scm>
@@ -30,7 +30,7 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty</artifactId>
-      <version>3.6.3.Final</version>
+      <version>3.6.5.Final</version>
       <scope>compile</scope>
     </dependency>
 
@@ -46,71 +46,72 @@
             <artifactId>barchart-udt4</artifactId>
             <version>1.0.3-SNAPSHOT</version>
         </dependency>
--->
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>mina-port</artifactId>
+            <version>1.4</version>
         </dependency>
+-->
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>offer-answer</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>portmapping</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency> 
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>sdp</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency> 
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>stun-client</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency> 
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>stun-server</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency> 
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>tcp-framing</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency> 
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>turn-client</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency> 
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>turn-http-server</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency> 
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>udt</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency> 
 
         <dependency>
             <groupId>org.littleshoot</groupId>
             <artifactId>util</artifactId>
-            <version>${project.version}</version>
+            <version>${ls.version}</version>
         </dependency> 
 
     </dependencies>
