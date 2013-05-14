@@ -3,7 +3,7 @@
     <groupId>org.littleshoot</groupId>
     <artifactId>littleshoot-ice</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.3</version>
+    <version>1.0.4-SNAPSHOT</version>
     <name>Interactive Connectivity Establishment (ICE) Protocol for the LittleShoot P2P Toolkit</name>
     <url>http://www.littleshoot.org</url>
 
