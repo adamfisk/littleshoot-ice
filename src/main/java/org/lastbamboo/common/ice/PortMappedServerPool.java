@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import org.lastbamboo.common.portmapping.NatPmpService;
@@ -31,12 +29,6 @@ public class PortMappedServerPool {
 
     private final PriorityBlockingQueue<PortMappedServerSocket> m_mappedServers = 
         new PriorityBlockingQueue<PortMappedServerSocket>();
-
-    private final Map<Integer, PortMappedServerSocket> m_upnpCodesToServers = 
-        new ConcurrentHashMap<Integer, PortMappedServerSocket>();
-
-    private final Map<Integer, PortMappedServerSocket> m_natPmpCodesToServers = 
-        new ConcurrentHashMap<Integer, PortMappedServerSocket>();
 
     private final NatPmpService natPmpService;
 
@@ -93,19 +85,12 @@ public class PortMappedServerPool {
             public void onPortMap(int externalPort) {
             }
         };
-        final int upnp = this.upnpService.addUpnpMapping(
+        this.upnpService.addUpnpMapping(
                 PortMappingProtocol.TCP, port, port, upnpPortMapListener);
-        final int natPmp = this.natPmpService.addNatPmpMapping(
+        this.natPmpService.addNatPmpMapping(
                 PortMappingProtocol.TCP, port, port, natPmpPortMapListener);
         final PortMappedServerSocket server = new PortMappedServerSocket(
                 serverSocket, NetworkUtils.isPublicAddress(lh));
         this.m_mappedServers.add(server);
-
-        if (upnp != -1) {
-            this.m_upnpCodesToServers.put(upnp, server);
-        }
-        if (natPmp != -1) {
-            this.m_natPmpCodesToServers.put(natPmp, server);
-        }
     }
 }
