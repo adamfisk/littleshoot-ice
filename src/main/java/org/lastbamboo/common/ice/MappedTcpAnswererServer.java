@@ -80,17 +80,21 @@ public class MappedTcpAnswererServer implements PortMapListener,
 
     @Override
     public void onPortMap(final int port) {
-        log.info("Received port mapped: {}", port);
-        this.externalPort = port;
-        if (this.externalPort > 0) {
+        log.debug("Received port mapped: {}", port);
+        if (port > 0) {
+            this.externalPort = port;
             this.isPortMapped = true;
         }
     }
 
     @Override
     public void onPortMapError() {
-        log.info("Got port map error.");
-        isPortMapped = false;
+        log.debug("Got port map error.");
+        if (!isPortMapped) {
+            isPortMapped = false;
+        } else {
+            log.debug("Port already mapped!");
+        }
     }
 
     @Override
